@@ -1,0 +1,5 @@
+# build tooling
+tools/node_modules/
+tools/package-lock.json
+# generated downloads (rebuild with: node build.js)
+*.zip

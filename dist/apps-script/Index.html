@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scratch Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap">
+<?!= part_('Styles') ?>
+</head>
+<body>
+<div id="app"><div style="padding:60px 16px;text-align:center;font:18px/1.5 system-ui,sans-serif;color:#555">Loading Scratch Quest…</div></div>
+<script>
+/* If anything fails while loading, show it instead of a blank page. */
+window.onerror = function (msg, src, line) {
+  var a = document.getElementById('app');
+  if (a && !window.__sqStarted) a.innerHTML = '<div style="max-width:560px;margin:40px auto;padding:16px;font:16px/1.5 system-ui,sans-serif;border:2px solid #d64545;border-radius:12px;background:#fff"><b>Scratch Quest could not start.</b><br>' +
+    String(msg).replace(/</g, '&lt;') + (line ? ' (line ' + line + ')' : '') + '<br><br>If you just set it up, one of the HTML files was probably cut off while pasting. In the Apps Script editor, check that the end of each HTML file (Styles, Shots, Engine) matches the end of the file you copied. The last line starts with <code>&lt;script&gt;(window.SQ_PARTS</code>.</div>';
+};
+</script>
+<div id="toasts" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/scratchblocks@3.6.4/build/scratchblocks.min.js"></script>
+<?!= part_('Shots') ?>
+<?!= part_('Engine') ?>
+<script>(function(){var need=["Styles","Shots","Engine"],got=window.SQ_PARTS||{},miss=need.filter(function(n){return !got[n];});if(miss.length){window.SQ_BROKEN=true;document.getElementById("app").innerHTML='<div style="max-width:560px;margin:40px auto;padding:16px;font:16px/1.5 system-ui,sans-serif;border:2px solid #d64545;border-radius:12px;background:#fff"><b>Almost ready!</b> These page files did not load all the way: <b>'+miss.join(", ")+'</b>.<br><br>In the Apps Script editor, open each one, select everything, paste the whole file again, and save. Then deploy a new version.</div>';}})();</script>
+</body>
+</html>

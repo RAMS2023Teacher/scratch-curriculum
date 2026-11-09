@@ -1,0 +1,75 @@
+/* Scratch Quest — one consistent set of simple line icons (24×24, 2px stroke), used instead of emojis
+ * for interface chrome. Emojis are kept only where they carry meaning for kids (badges, word bank). */
+var SQ_ICONS = (function () {
+  var P = {
+    'arrow-right': 'M5 12h14M13 6l6 6-6 6',
+    'arrow-left': 'M19 12H5M11 6l-6 6 6 6',
+    external: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
+    check: 'M5 12.5l4.5 4.5L19 7',
+    'check-circle': 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM8 12.5l3 3 5-6',
+    x: 'M6 6l12 12M18 6L6 18',
+    zap: 'M13 2L4 14h7l-1 8 9-12h-7z',
+    lock: 'M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zM8 11V7a4 4 0 0 1 8 0v4',
+    unlock: 'M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zM8 11V7a4 4 0 0 1 7.6-1.7',
+    target: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM17 12a5 5 0 1 1-10 0 5 5 0 0 1 10 0zM12.5 12a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z',
+    send: 'M21 3L10 14M21 3l-7 18-4-7-7-4z',
+    map: 'M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15',
+    sparkles: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z',
+    book: 'M4 19V5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13M8 7h7',
+    award: 'M18 9A6 6 0 1 1 6 9a6 6 0 0 1 12 0zM8.5 14l-1.5 7 5-3 5 3-1.5-7',
+    eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+    undo: 'M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
+    split: 'M16 3h5v5M21 3l-7 7M8 3H3v5M3 3l7 7M12 12v9',
+    clock: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM12 7v5l3 2',
+    star: 'M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z',
+    ruler: 'M3 17L17 3l4 4L7 21zM7 13l2 2M10 10l2 2M13 7l2 2',
+    school: 'M3 10l9-6 9 6M5 9v11h14V9M10 20v-5h4v5',
+    briefcase: 'M5 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18',
+    bulb: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z',
+    blocks: 'M4 6h4l1 1.5h2L12 6h8v5h-8l-1 1.5H9L8 11H4zM4 14h16v4H4z',
+    inbox: 'M22 13h-6l-2 3h-4l-2-3H2M5.5 5h13L22 13v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5z',
+    users: 'M13 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM2 21v-1a6 6 0 0 1 12 0v1M16 4.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.6',
+    compass: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM15.5 8.5l-2 5-5 2 2-5z',
+    alert: 'M12 3L2 20h20zM12 9v5M12 17h.01',
+    chart: 'M3 20h18M6 16v-5M11 16V6M16 16v-8',
+    library: 'M5 4h4v16H5zM10 4h4v16h-4zM15.5 5.5l3.5-1 3 14.5-3.5 1z',
+    sliders: 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M18 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM12 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM20 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0z',
+    video: 'M4 6h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM16 10l6-3v10l-6-3',
+    list: 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
+    user: 'M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21a8 8 0 0 1 16 0',
+    plus: 'M12 5v14M5 12h14',
+    pencil: 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',
+    columns: 'M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM12 4v16',
+    flame: 'M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z',
+    save: 'M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM7 3v5h8M7 21v-7h10v7',
+    monitor: 'M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM8 21h8M12 17v4',
+    message: 'M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z',
+    help: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2.2-2.4 3.7M12 17h.01',
+    upload: 'M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4',
+    trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M9 7V4h6v3',
+    palette: 'M12 3a9 9 0 0 0 0 18c1 0 1.5-.7 1.5-1.5 0-1.2-1-1.5-1-2.5s.8-2 2-2H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8zM8.5 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM11 7a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM16 7a1 1 0 1 1-2 0 1 1 0 0 1 2 0z',
+    flask: 'M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3M7 15h10',
+    search: 'M18 11a7 7 0 1 1-14 0 7 7 0 0 1 14 0zM21 21l-5-5',
+    camera: 'M5 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM15.5 13.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0zM8 7l1.5-3h5L16 7',
+    repeat: 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3',
+    volume: 'M4 9h4l5-4v14l-5-4H4zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12',
+    pin: 'M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11zM14.5 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z',
+    link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
+    maximize: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
+    refresh: 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',
+    clipboard: 'M8 4h8a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 4V3h6v1M9 10h6M9 14h6',
+    dice: 'M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zM8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01',
+    flag: 'M5 21V4M5 4h11l-2 4 2 4H5',
+    // paths of the quest map
+    sprout: 'M12 21v-8M12 13c0-4-3-6-7-6 0 4 3 6 7 6zM12 11c0-3.5 2.5-6 7-6 0 4-2.5 6-7 6z',
+    gamepad: 'M7 7h10a5 5 0 0 1 0 10H7A5 5 0 0 1 7 7zM7 10.5v4M5 12.5h4M15.5 11.5h.01M18 14h.01',
+    phone: 'M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18h2',
+    bug: 'M12 6a4 4 0 0 1 4 4v4a4 4 0 0 1-8 0v-4a4 4 0 0 1 4-4zM12 6V4M4 10h4M16 10h4M4 16h4M16 16h4M9 3.5l1.5 2.5M15 3.5L13.5 6'
+  };
+  var BR = { trunk: 'sprout', games: 'gamepad', stories: 'book', apps: 'phone', merge: 'bug', finale: 'flag' };
+  var sprite = '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">' +
+    Object.keys(P).map(function (k) { return '<symbol id="i-' + k + '" viewBox="0 0 24 24"><path d="' + P[k] + '"/></symbol>'; }).join('') + '</svg>';
+  function ic(name, cls) { return '<svg class="i' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
+  function branch(b, cls) { return ic(BR[b] || 'star', cls); }
+  return { sprite: sprite, ic: ic, branch: branch, BR: BR, names: Object.keys(P) };
+})();
