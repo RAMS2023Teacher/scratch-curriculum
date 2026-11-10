@@ -31,11 +31,11 @@
     setTimeout(function () { t.classList.add('out'); }, 3800);
     setTimeout(function () { t.remove(); }, 4400);
   }
-  function floatXP(n, el) {
+  function floatXP(n, el, coins) {
     if (!n) return;
     var f = document.createElement('div');
     f.className = 'xp-float' + (n < 0 ? ' neg' : '');
-    f.textContent = (n > 0 ? '+' : '') + n + ' XP';
+    f.innerHTML = (n > 0 ? '+' : '') + n + ' XP' + (coins > 0 ? ' <span class="xf-coin"><span class="coin"></span>+' + coins + '</span>' : '');
     var r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0 };
     f.style.left = (r.left + r.width / 2) + 'px';
     f.style.top = (r.top + window.scrollY) + 'px';
@@ -100,8 +100,10 @@
   // Celebrate whatever changed between two profiles
   function celebrate(before, after, el) {
     if (!before || !after) return;
-    var gain = after.xp - before.xp;
-    floatXP(gain, el);
+    var gain = after.xp - before.xp, coinGain = (after.coinsEarned || 0) - (before.coinsEarned || 0);
+    floatXP(gain, el, coinGain);
+    var leveled = after.level > before.level, newBadge = after.badges.some(function (b) { return before.badges.indexOf(b) < 0; });
+    if (leveled) SQ_SOUND.play('levelup'); else if (newBadge) SQ_SOUND.play('badge'); else if (coinGain > 0) setTimeout(function () { SQ_SOUND.play('coin'); }, 160);
     after.badges.forEach(function (b) {
       if (before.badges.indexOf(b) < 0) {
         var B = R.BADGE[b];
@@ -133,6 +135,7 @@
     $app.innerHTML = '<div class="loading"><div class="spinner"></div>Loading your quest…</div>';
     API.call('bootstrap').then(function (b) {
       S.boot = b; S.me = b.student; S.cls = b.cls;
+      SQ_SOUND.setClassOff(!!(b.cls && b.cls.sounds === false));
       var started = false;
       var go2 = function (q) {
         if (started) return; started = true;
@@ -178,7 +181,7 @@
       var pct = Math.min(100, Math.round((p.xp - p.levelStart) / (p.levelNext - p.levelStart) * 100));
       html += '<a class="me-card" href="#/badges" title="' + fmtN(p.xp) + ' XP"><span class="me-av">' + A.svg(S.me.state.avatar, 40) + '</span>' +
         '<span class="me-info"><span class="me-lv">Lv ' + p.level + ' · ' + esc(p.rank) + '</span><span class="xpbar"><i style="width:' + pct + '%"></i></span>' +
-        '<span class="me-xp">' + fmtN(p.xp) + ' XP</span></span></a>';
+        '<span class="me-xp">' + fmtN(p.xp) + ' XP' + (shopOn() ? ' · <span class="coin"></span> ' + fmtN(Math.max(0, p.coins)) : '') + '</span></span></a>';
     }
     html += '</div></header>';
     if (API.demo) {
@@ -266,8 +269,9 @@
     var p = prof(), st = S.me.state;
     var next = suggestNext(st);
     var html = '<div class="map-layout"><aside class="map-side">';
-    html += '<div class="card hello"><div class="hello-av">' + A.svg(st.avatar, 84) + '</div><div><h2>Hi, ' + esc(S.me.name) + '!</h2><p class="muted">' + esc(S.cls.name) + '</p>' +
+    html += '<div class="card hello"><div class="hello-av">' + A.svg(st.avatar, 84) + '</div><div><h2>Hi, ' + esc(S.me.name) + '!</h2>' + (A.titleText(st.avatar) ? '<div class="np-title sm">' + esc(A.titleText(st.avatar)) + '</div>' : '') + '<p class="muted">' + esc(S.cls.name) + '</p>' +
       '<p><b>' + p.doneCount + '</b> quests done · <b>' + p.badges.length + '</b> badges</p></div></div>';
+    html += goalCard(p, true);
     if (next) {
       var ns = st.nodes[next.id] || {};
       html += '<div class="card next" style="--c:' + br(next.id).color + '"><div class="eyebrow">' + (next.label) + '</div><h3>' + esc(title(next.id)) + '</h3><p class="muted">' + esc(L[next.id].skill) + ' · ' + esc(L[next.id].minutes) + ' min</p>' +
@@ -775,42 +779,102 @@
   }
 
   // ------------------------------------------------------------ avatar editor
-  var AV_TABS = [['hair', 'Hair'], ['eyes', 'Eyes'], ['mouth', 'Mouth'], ['outfit', 'Outfit'], ['hat', 'Hats'], ['extra', 'Extras'], ['pet', 'Pets'], ['bg', 'Background'], ['frame', 'Frame']];
+  // ------------------------------------------------------------ Character Studio (avatar builder + shop)
+  var AV_TABS = [['Looks', [['hair', 'Hair'], ['eyes', 'Eyes'], ['mouth', 'Mouth'], ['outfit', 'Outfit'], ['hat', 'Hats'], ['extra', 'Glasses & more']]],
+    ['Bling', [['aura', 'Auras'], ['effect', 'Sparkles'], ['pet', 'Pets'], ['bg', 'Backgrounds'], ['frame', 'Frames'], ['title', 'Titles']]]];
   var AV_COLOR_FOR = { hair: 'hairColor', outfit: 'outfitColor', bg: 'bgColor' };
+  function coinTag(n, cls) { return '<span class="coin-tag ' + (cls || '') + '"><span class="coin" aria-hidden="true"></span>' + fmtN(n) + '</span>'; }
+  function shopOn() { return !(S.cls && S.cls.shop === false); }
+  function itemState(cat, item, p, d) {
+    var ok = A.isUnlocked(item.unlock, p);
+    var forSale = item.unlock && item.unlock.price;
+    return { ok: ok, forSale: forSale && !ok, equipped: d[cat] === item.id, price: forSale ? item.unlock.price : 0, key: forSale ? item.unlock.key : null };
+  }
+  // items in the draft that the student hasn't bought yet
+  function unpaid(d, p) {
+    var out = [];
+    Object.keys(A.CATALOG).forEach(function (cat) {
+      var it = A.itemOf(cat, d[cat]);
+      if (it && it.unlock && it.unlock.price && !A.isUnlocked(it.unlock, p)) out.push({ cat: cat, item: it });
+    });
+    return out;
+  }
+  function collectionCount(p) {
+    var have = 0, total = 0;
+    Object.keys(A.CATALOG).forEach(function (cat) { A.CATALOG[cat].forEach(function (i) { if (i.id === 'none') return; total++; if (A.isUnlocked(i.unlock, p)) have++; }); });
+    return { have: have, total: total };
+  }
+  function goalCard(p, compact) {
+    if (!p.goal || !shopOn()) return '';
+    var parts = p.goal.split(':'), it = A.itemOf(parts[0], parts[1]);
+    if (!it) return '';
+    var price = it.unlock.price, pct = Math.min(100, Math.round(Math.max(0, p.coins) / price * 100));
+    var prev = Object.assign({}, S.me.state.avatar); prev[parts[0]] = parts[1];
+    return '<div class="card goal-card r-' + it.rarity + '">' + (compact ? '' : '') +
+      '<div class="goal-row"><div class="goal-av">' + (parts[0] === 'title' ? '<span class="title-prev sm">' + esc(it.name) + '</span>' : A.svg(prev, 56)) + '</div>' +
+      '<div class="grow"><div class="eyebrow">Saving up for</div><b>' + esc(it.name) + '</b> <span class="rar-chip r-' + it.rarity + '">' + A.RARITY[it.rarity].name + '</span>' +
+      '<div class="xpbar coinbar"><i style="width:' + pct + '%"></i></div><div class="small">' + coinTag(Math.max(0, p.coins)) + ' of ' + fmtN(price) + (p.coins >= price ? ' · <b>You can buy it!</b>' : ' · ' + fmtN(price - p.coins) + ' to go') + '</div></div></div>' +
+      (compact ? '<a class="btn small" href="#/avatar">Open the studio</a>' : '') + '</div>';
+  }
   function viewAvatar() {
     var p = prof();
-    if (!S.avatarDraft) S.avatarDraft = JSON.parse(JSON.stringify(S.me.state.avatar || A.DEFAULT));
-    var d = S.avatarDraft, tab = S.avatarTab;
-    var h = '<div class="avatar-page"><div class="card av-preview"><h1>' + (S.me.state.avatarSet ? 'My Avatar' : 'Create your hero!') + '</h1><div class="av-big">' + A.svg(d, 240, { title: 'Your avatar' }) + '</div>' +
-      '<div class="row center"><button class="btn" data-act="av-random"><svg class="i"><use href="#i-dice"/></svg> Surprise me</button><button class="btn primary" data-act="av-save"><svg class="i"><use href="#i-save"/></svg> Save avatar</button></div>' +
-      '<p class="muted small center">Level up and earn badges to unlock more items. <svg class="i"><use href="#i-lock"/></svg> items show how to get them.</p></div>';
-    h += '<div class="card av-editor"><div class="av-tabs">' + AV_TABS.map(function (t) { return '<button class="' + (t[0] === tab ? 'on' : '') + '" data-act="av-tab" data-tab="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    if (!S.avatarDraft) S.avatarDraft = JSON.parse(JSON.stringify(Object.assign({}, A.DEFAULT, S.me.state.avatar || {})));
+    var d = S.avatarDraft, tab = S.avatarTab || 'hair';
+    var col = collectionCount(p), owe = unpaid(d, p), title = A.titleText(d);
+    var h = '<div class="studio"><section class="card studio-stage">' +
+      '<div class="stage-top"><h1>' + (S.me.state.avatarSet ? 'Character Studio' : 'Create your hero!') + '</h1>' + (shopOn() ? '<div class="coin-pill" title="Coins: earn 1 for every 5 XP">' + coinTag(Math.max(0, p.coins), 'big') + '<small>coins</small></div>' : '') + '</div>' +
+      '<div class="pedestal' + (S.studioBurst ? ' burst' : '') + '"><div class="spot"></div>' +
+      '<i class="tw t1"></i><i class="tw t2"></i><i class="tw t3"></i><i class="tw t4"></i><i class="tw t5"></i>' +
+      '<div class="stage-av">' + A.svg(d, 230, { title: 'Your character' }) + '</div><div class="plinth"></div></div>' +
+      '<div class="nameplate"><b>' + esc(S.me.name) + '</b>' + (title ? '<span class="np-title">' + esc(title) + '</span>' : '') + '<span class="np-lv">Level ' + p.level + ' · ' + esc(p.rank) + '</span></div>';
+    if (owe.length) {
+      var cost = owe.reduce(function (a, x) { return a + x.item.unlock.price; }, 0);
+      h += '<div class="tryon"><b>Trying on:</b> ' + owe.map(function (x) { return esc(x.item.name); }).join(', ') + ' (' + coinTag(cost) + ')' +
+        '<div class="row center">' + (owe.length === 1 ? (p.coins >= cost ? '<button class="btn primary" data-act="av-buy" data-cat="' + owe[0].cat + '" data-id="' + owe[0].item.id + '">Buy for ' + coinTag(cost) + '</button>' : '<button class="btn" data-act="av-goal" data-key="' + owe[0].item.unlock.key + '">Save up for it</button>') : '') +
+        '<button class="btn ghost" data-act="av-undo-try">Take ' + (owe.length > 1 ? 'them' : 'it') + ' off</button></div></div>';
+    }
+    h += '<div class="row center"><button class="btn" data-act="av-random"><svg class="i"><use href="#i-dice"/></svg> Surprise me</button><button class="btn primary big" data-act="av-save"><svg class="i"><use href="#i-save"/></svg> Save my look</button></div>' +
+      '<div class="collect"><div class="row between small"><b>Collection</b><span>' + col.have + ' / ' + col.total + ' items</span></div><div class="xpbar"><i style="width:' + Math.round(col.have / col.total * 100) + '%"></i></div></div>' +
+      '<div class="row center small muted"><button class="linklike" data-act="sound-toggle">' + (SQ_SOUND.muted() ? 'Sound is off: turn it on' : 'Sound is on: turn it off') + '</button></div>' +
+      goalCard(p) + '</section>';
+    // ---- the shop / wardrobe
+    h += '<section class="card studio-shop"><div class="studio-tabs">' + AV_TABS.map(function (g) {
+      return '<div class="tab-group"><span class="tg-label">' + g[0] + '</span>' + g[1].map(function (t) {
+        var items = A.CATALOG[t[0]].filter(function (i) { return i.id !== 'none' && (shopOn() || !(i.unlock && i.unlock.price)); });
+        var have = items.filter(function (i) { return A.isUnlocked(i.unlock, p); }).length;
+        return '<button class="' + (t[0] === tab ? 'on' : '') + '" data-act="av-tab" data-tab="' + t[0] + '">' + t[1] + ' <small>' + have + '/' + items.length + '</small></button>';
+      }).join('') + '</div>';
+    }).join('') + '</div>';
     if (tab === 'hair' || tab === 'eyes' || tab === 'mouth') {
-      // skin lives on the first tab group
       h += '<div class="av-sub">Skin</div><div class="swatches">' + A.COLORS.skin.slice(0, 8).map(function (c) { return swatch('skin', c, d.skin === c, true); }).join('') + '</div>';
-      h += '<div class="av-sub">Fantasy skin </div><div class="swatches">' + A.COLORS.skin.slice(8).map(function (c) { return swatch('skin', c, d.skin === c, true); }).join('') + '</div>';
+      h += '<div class="av-sub">Fantasy skin</div><div class="swatches">' + A.COLORS.skin.slice(8).map(function (c) { return swatch('skin', c, d.skin === c, true); }).join('') + '</div>';
     }
     var colorKey = AV_COLOR_FOR[tab];
-    if (colorKey) {
-      h += '<div class="av-sub">' + ({ hairColor: 'Hair color', outfitColor: 'Outfit color', bgColor: 'Background color' })[colorKey] + '</div><div class="swatches">' + A.COLORS[colorKey].map(function (c) {
-        return swatch(colorKey, c, d[colorKey] === c, A.isUnlocked(A.COLOR_UNLOCK[c], p));
-      }).join('') + '</div>';
-    }
-    h += '<div class="av-sub">Style</div><div class="av-grid">';
+    if (colorKey) h += '<div class="av-sub">' + ({ hairColor: 'Hair color', outfitColor: 'Outfit color', bgColor: 'Background color' })[colorKey] + '</div><div class="swatches">' + A.COLORS[colorKey].map(function (c) {
+      return swatch(colorKey, c, d[colorKey] === c, A.isUnlocked(A.COLOR_UNLOCK[c], p));
+    }).join('') + '</div>';
+    h += '<div class="av-sub">' + (tab === 'title' ? 'Titles show under your name' : 'Style') + '</div><div class="item-grid">';
     A.CATALOG[tab].forEach(function (item) {
-      var ok = A.isUnlocked(item.unlock, p);
-      var test = JSON.parse(JSON.stringify(d)); test[tab] = item.id;
-      h += '<button class="av-opt' + (d[tab] === item.id ? ' on' : '') + (ok ? '' : ' locked') + '" data-act="av-pick" data-cat="' + tab + '" data-id="' + item.id + '"' + (ok ? '' : ' aria-disabled="true"') + ' title="' + esc(ok ? item.name : A.unlockText(item.unlock)) + '">' +
-        A.svg(test, 84) + '<span>' + esc(item.name) + '</span>' + (ok ? '' : '<em><svg class="i"><use href="#i-lock"/></svg> ' + esc(A.unlockText(item.unlock)) + '</em>') + '</button>';
+      if (!shopOn() && item.unlock && item.unlock.price) return;
+      var st = itemState(tab, item, p, d), test = Object.assign({}, d); test[tab] = item.id;
+      var status = st.equipped ? (st.forSale ? '<span class="st-try">Trying on</span>' : '<span class="st-on"><svg class="i"><use href="#i-check"/></svg> Wearing</span>')
+        : st.ok ? (item.unlock && item.unlock.price ? '<span class="st-own">Owned</span>' : '<span class="st-free">Free</span>')
+        : st.forSale ? coinTag(st.price, p.coins >= st.price ? 'can' : 'cant')
+        : '<span class="st-lock"><svg class="i"><use href="#i-lock"/></svg> ' + esc(A.unlockText(item.unlock)) + '</span>';
+      var goal = st.forSale && p.goal === st.key;
+      h += '<button class="item r-' + item.rarity + (st.equipped ? ' on' : '') + (!st.ok && !st.forSale ? ' locked' : '') + (st.forSale ? ' sale' : '') + '" data-act="av-pick" data-cat="' + tab + '" data-id="' + item.id + '"' +
+        ' title="' + esc(item.name + (st.ok ? '' : ' (' + A.unlockText(item.unlock) + ')')) + '">' +
+        (item.rarity !== 'common' ? '<span class="rar-chip r-' + item.rarity + '">' + A.RARITY[item.rarity].name + '</span>' : '') +
+        (goal ? '<span class="goal-flag">Goal</span>' : '') +
+        (tab === 'title' ? '<span class="title-prev">' + esc(item.id === 'none' ? 'No title' : item.name) + '</span>' : A.svg(test, 86)) +
+        '<span class="item-name">' + esc(item.name) + '</span>' + status + '</button>';
     });
-    h += '</div></div></div>';
-    return h;
+    return h + '</div></section></div>';
   }
   function swatch(key, c, on, ok) {
     var bg = c === 'neon' ? 'linear-gradient(135deg,#ff3cac,#784ba0,#2b86c5)' : c;
     return '<button class="sw' + (on ? ' on' : '') + (ok ? '' : ' locked') + '" style="background:' + bg + '" data-act="av-color" data-key="' + key + '" data-c="' + c + '" title="' + (ok ? c : esc(A.unlockText(A.COLOR_UNLOCK[c]))) + '" aria-label="color ' + c + '">' + (ok ? '' : '<svg class="i"><use href="#i-lock"/></svg>') + '</button>';
   }
-
   // ------------------------------------------------------------ badges
   function viewBadges() {
     var p = prof();
@@ -851,7 +915,7 @@
     var h = '<p class="muted">' + ms.length + ' adventurers' + (lb ? ' · sorted by XP' : '') + '</p><div class="hall">';
     ms.forEach(function (m, i) {
       h += '<div class="hall-card' + (S.me && m.name === S.me.name ? ' me' : '') + '">' + (lb && i < 3 ? '<span class="medal">' + ['🥇', '🥈', '🥉'][i] + '</span>' : '') + A.svg(m.avatar, 88) +
-        '<b>' + esc(m.name) + '</b><span>Lv ' + m.level + ' · ' + esc(m.rank) + '</span><span class="muted small"><svg class="i"><use href="#i-pin"/></svg> ' + esc(title(m.current)) + '</span><span class="muted small"><svg class="i"><use href="#i-award"/></svg> ' + m.badges + ' · <svg class="i"><use href="#i-check"/></svg> ' + m.done.length + ' quests</span></div>';
+        '<b>' + esc(m.name) + '</b>' + (A.titleText(m.avatar) ? '<span class="np-title sm">' + esc(A.titleText(m.avatar)) + '</span>' : '') + '<span>Lv ' + m.level + ' · ' + esc(m.rank) + '</span><span class="muted small"><svg class="i"><use href="#i-pin"/></svg> ' + esc(title(m.current)) + '</span><span class="muted small"><svg class="i"><use href="#i-award"/></svg> ' + m.badges + ' · <svg class="i"><use href="#i-check"/></svg> ' + m.done.length + ' quests</span></div>';
     });
     return h + '</div>';
   }
@@ -1364,6 +1428,8 @@
         '<input type="range" name="openThrough" min="1" max="' + R.MAX_TIER + '" value="' + c.openThrough + '" data-act="gate"></label>' +
         '<label class="switch"><input type="checkbox" name="requireApproval"' + (c.requireApproval ? ' checked' : '') + '> Teacher approves each quest before it counts (recommended)</label>' +
         '<label class="switch"><input type="checkbox" name="requireLink"' + (c.requireLink ? ' checked' : '') + '> Require a Scratch project link to turn in</label>' +
+        '<label class="switch"><input type="checkbox" name="sounds"' + (c.sounds !== false ? ' checked' : '') + '> Sound effects for students (they can still mute themselves)</label>' +
+        '<label class="switch"><input type="checkbox" name="shop"' + (c.shop !== false ? ' checked' : '') + '> Coin shop in the Character Studio</label>' +
         '<label class="switch"><input type="checkbox" name="showLeaderboard"' + (c.showLeaderboard ? ' checked' : '') + '> Show an XP leaderboard to students (off = alphabetical hall)</label>' +
         '<label>Class XP goal (shared team goal; 0 = hide) <input type="number" name="classGoal" min="0" step="500" value="' + c.classGoal + '"></label>' +
         '<label class="switch"><input type="checkbox" name="archived"' + (c.archived ? ' checked' : '') + '> Archived (hidden, code stops working)</label>' +
@@ -1419,9 +1485,9 @@
     if (act === 'quiz') {
       var node = t.getAttribute('data-node'), q = +t.getAttribute('data-q'), c = +t.getAttribute('data-c');
       call('answerQuiz', { node: node, q: q, choice: c }).then(function (res) {
-        if (res.correct) { updateMe(res, t); S.keepScroll = true; render(); }
+        if (res.correct) { SQ_SOUND.play('correct'); updateMe(res, t); S.keepScroll = true; render(); }
         else {
-          t.classList.add('wrong'); t.disabled = true;
+          SQ_SOUND.play('wrong'); t.classList.add('wrong'); t.disabled = true;
           var box = t.closest('.quiz').querySelector('.explain');
           box.hidden = false; box.textContent = '<svg class="i"><use href="#i-x"/></svg> Not quite — reread the steps above and try again!';
           S.me = res.student;
@@ -1446,6 +1512,7 @@
       var a2 = { node: nd, value: did };
       if (isStep) a2.idx = +t.getAttribute('data-idx');
       t.disabled = true;
+      if (did) SQ_SOUND.play(isStep ? 'step' : 'badge');
       call(isStep ? 'toggleStep' : 'setChallenge', a2).then(function (res) {
         updateMe(res, t);
         if (did) { S.card = S.card || {}; S.card[nd] = (S.card[nd] || 0) + 1; }
@@ -1455,25 +1522,51 @@
     }
     if (act === 'av-tab') { S.avatarTab = t.getAttribute('data-tab'); S.keepScroll = true; render(); return; }
     if (act === 'av-pick' || act === 'av-color') {
-      if (t.classList.contains('locked')) { toast('<svg class="i"><use href="#i-lock"/></svg> ' + esc(t.getAttribute('title'))); return; }
+      if (t.classList.contains('locked')) { SQ_SOUND.play('locked'); toast('<svg class="i"><use href="#i-lock"/></svg> ' + esc(t.getAttribute('title'))); return; }
+      SQ_SOUND.play(t.classList.contains('sale') ? 'tap' : 'pop');
       if (act === 'av-pick') S.avatarDraft[t.getAttribute('data-cat')] = t.getAttribute('data-id');
       else S.avatarDraft[t.getAttribute('data-key')] = t.getAttribute('data-c');
       var y = window.scrollY; render(); window.scrollTo(0, y); return;
     }
+    if (act === 'av-buy') {
+      var bc = t.getAttribute('data-cat'), bid = t.getAttribute('data-id');
+      t.disabled = true;
+      call('buyItem', { cat: bc, id: bid }).then(function (res) {
+        S.me = res.student; SQ_SOUND.play('buy'); confetti();
+        S.avatarDraft[bc] = bid; S.studioBurst = true;
+        toast('<span class="coin" aria-hidden="true"></span> <b>You got ' + esc(A.itemOf(bc, bid).name) + '!</b> Tap Save my look to wear it.', 't-badge');
+        var y3 = window.scrollY; render(); window.scrollTo(0, y3);
+        setTimeout(function () { S.studioBurst = false; var pd = document.querySelector('.pedestal'); if (pd) pd.classList.remove('burst'); }, 1200);
+      }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'av-goal') {
+      call('setGoal', { key: t.getAttribute('data-key') }).then(function (res) { S.me = res.student; SQ_SOUND.play('equip'); toast('<svg class="i"><use href="#i-target"/></svg> Saving up! Your goal shows on the map.'); var y4 = window.scrollY; render(); window.scrollTo(0, y4); }).catch(function () { });
+      return;
+    }
+    if (act === 'av-undo-try') {
+      var pp = prof();
+      unpaid(S.avatarDraft, pp).forEach(function (x) { S.avatarDraft[x.cat] = (S.me.state.avatar || A.DEFAULT)[x.cat] || A.DEFAULT[x.cat]; });
+      var y5 = window.scrollY; render(); window.scrollTo(0, y5); return;
+    }
+    if (act === 'sound-toggle') { var on = SQ_SOUND.toggle(); if (on) SQ_SOUND.play('pop'); toast(on ? 'Sound on' : 'Sound off'); var y6 = window.scrollY; render(); window.scrollTo(0, y6); return; }
     if (act === 'av-random') {
       var p = prof(), rnd = A.randomAvatar();
       // random from unlocked items only
       Object.keys(A.CATALOG).forEach(function (cat) {
         var ok = A.CATALOG[cat].filter(function (i) { return A.isUnlocked(i.unlock, p); });
+        if (!ok.length) return;
         rnd[cat] = ok[Math.floor(Math.random() * ok.length)].id;
       });
       rnd.skin = A.COLORS.skin[Math.floor(Math.random() * A.COLORS.skin.length)];
       S.avatarDraft = rnd; var y2 = window.scrollY; render(); window.scrollTo(0, y2); return;
     }
     if (act === 'av-save') {
+      var owe2 = unpaid(S.avatarDraft, prof());
+      if (owe2.length) { SQ_SOUND.play('locked'); toast('You are trying on ' + owe2.map(function (x) { return esc(x.item.name); }).join(', ') + '. Buy ' + (owe2.length > 1 ? 'them' : 'it') + ' first, or take ' + (owe2.length > 1 ? 'them' : 'it') + ' off.'); return; }
       var first = !S.me.state.avatarSet;
       call('saveAvatar', { avatar: S.avatarDraft }).then(function (res) {
-        updateMe(res, t); S.avatarDraft = null;
+        updateMe(res, t); S.avatarDraft = null; SQ_SOUND.play('equip');
         toast('<svg class="i"><use href="#i-save"/></svg> Avatar saved!');
         if (first) { var pq = S.pendingQuest; S.pendingQuest = null; go(pq && L[pq] ? '#/quest/' + pq : '#/map'); } else render();
       }).catch(function () { });
@@ -1601,7 +1694,7 @@
     });
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
     else if (kind === 'class-set') {
-      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived };
+      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });
     } else if (kind === 'review') {
       var approve = btn && btn.value === '1';

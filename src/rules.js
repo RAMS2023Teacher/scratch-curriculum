@@ -168,7 +168,10 @@ var SQ_RULES = (function () {
     (state.awards || []).forEach(function (a) { if (badges.indexOf(a.id) < 0) badges.push(a.id); });
 
     var level = levelFor(xp);
+    var owned = (state.owned || []).slice();
+    var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned) : { earned: 0, spent: 0, balance: 0 };
     return {
+      owned: owned, coins: coins.balance, coinsEarned: coins.earned, goal: state.goal || null,
       xp: xp, level: level, rank: rankFor(level),
       levelStart: xpForLevel(level), levelNext: xpForLevel(level + 1),
       done: done, doneCount: Object.keys(done).length,

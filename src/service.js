@@ -18,7 +18,7 @@ function SQ_SERVICE(store) {
 
   function findClass(id) { return store.getClasses().filter(function (c) { return c.id === id; })[0] || null; }
   function classDefaults(c) {
-    var d = { openThrough: R.MAX_TIER, requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false };
+    var d = { openThrough: R.MAX_TIER, requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false, sounds: true, shop: true };
     for (var k in d) if (c[k] === undefined) c[k] = d[k];
     return c;
   }
@@ -26,7 +26,7 @@ function SQ_SERVICE(store) {
     if (!c) return null;
     classDefaults(c);
     return { id: c.id, name: c.name, code: c.code, openThrough: c.openThrough, requireApproval: c.requireApproval,
-      requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived };
+      requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false };
   }
   // Teachers also see the Google Classroom link details
   function teacherClass(c) {
@@ -144,6 +144,26 @@ function SQ_SERVICE(store) {
       return { student: persist(st) };
     },
 
+    // Shop: buy a cosmetic item with coins (prices and balances are checked here, not in the browser)
+    buyItem: function (user, args) {
+      var st = requireStudent(user);
+      var item = A.itemOf(String(args.cat || ''), String(args.id || ''));
+      if (!item || !item.unlock || !item.unlock.price) err('That item is not for sale.');
+      var key = item.unlock.key, p = R.profile(st.state);
+      st.state.owned = st.state.owned || [];
+      if (st.state.owned.indexOf(key) >= 0) err('You already own ' + item.name + '.');
+      if (p.coins < item.unlock.price) err('You need ' + (item.unlock.price - p.coins) + ' more coins for ' + item.name + '.');
+      st.state.owned.push(key);
+      if (st.state.goal === key) st.state.goal = null;
+      return { student: persist(st), bought: key };
+    },
+    setGoal: function (user, args) {
+      var st = requireStudent(user);
+      var key = args.key ? String(args.key) : null;
+      if (key && !A.priceOf(key)) err('That item is not in the shop.');
+      st.state.goal = key;
+      return { student: persist(st) };
+    },
     toggleStep: function (user, args) {
       var st = requireStudent(user), id = args.node, L = lesson(id);
       var w = workable(st, id);
@@ -226,7 +246,7 @@ function SQ_SERVICE(store) {
       var p = args.patch || {};
       if (p.name !== undefined) c.name = clean(p.name, 40) || c.name;
       if (p.openThrough !== undefined) c.openThrough = Math.max(1, Math.min(R.MAX_TIER, Number(p.openThrough) || 1));
-      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
+      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
       if (p.classGoal !== undefined) c.classGoal = Math.max(0, Number(p.classGoal) || 0);
       if (p.newCode) c.code = makeCode();
       store.saveClass(c);

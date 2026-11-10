@@ -101,6 +101,23 @@ test('Class Screen: teacher only, shows wins, and never shows negative informati
   assert.strictEqual(saved.cls.screen.question, 'What did you learn?');
   assert.strictEqual(saved.members.find(m => m.name === 'Maya L.').team, 'tm0');
 });
+test('coin shop: prices and balances are enforced on the server', () => {
+  const M = 'maya.lopez@school.org';
+  let me = as(M, 'bootstrap').student;
+  const start = me.profile.coins;
+  assert.ok(start > 0, 'Maya earned some coins from quest 1');
+  assert.throws(() => as(M, 'buyItem', { cat: 'aura', id: 'galaxy' }), /more coins/);
+  assert.throws(() => as(M, 'buyItem', { cat: 'hat', id: 'crown' }), /not for sale/);
+  const r = as(M, 'buyItem', { cat: 'aura', id: 'glow' });
+  assert.strictEqual(r.student.profile.coins, start - 40);
+  assert.throws(() => as(M, 'buyItem', { cat: 'aura', id: 'glow' }), /already own/);
+  const saved = as(M, 'saveAvatar', { avatar: { aura: 'glow', frame: 'diamond', title: 'wizard' } }).student.state.avatar;
+  assert.strictEqual(saved.aura, 'glow'); assert.strictEqual(saved.frame, 'none'); assert.strictEqual(saved.title, 'none');
+  assert.strictEqual(as(M, 'setGoal', { key: 'aura:galaxy' }).student.profile.goal, 'aura:galaxy');
+  assert.throws(() => as(M, 'setGoal', { key: 'hat:crown' }), /not in the shop/);
+  const xpBefore = as(M, 'bootstrap').student.profile.xp;
+  assert.strictEqual(xpBefore, me.profile.xp, 'spending coins never lowers XP');
+});
 test('teacher-only settings: accommodations note is not sent to the student', () => {
   as(T, 'updateStudent', { email: 'liam.chen@school.org', accom: { coreOnly: true, note: 'IEP: chunk tasks' } });
   const self = JSON.stringify(as('liam.chen@school.org', 'bootstrap'));
