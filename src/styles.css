@@ -719,3 +719,17 @@ body.cs-on.cs-dark { background: #12112a; }
 
 .cs .cs-q.long { font-size: 1.05em; }
 .cs-track.tight .cs-st-kids { grid-template-columns: repeat(auto-fill, minmax(1.8em, 1fr)); }
+
+/* ---- illustrated quest map ---- */
+.map-box { background: #d7ecc3; padding: 0; overflow: hidden; border-radius: 12px; }
+.road-edge { fill: none; stroke: #b48f58; stroke-width: 26; stroke-linecap: round; }
+.road { fill: none; stroke: #ecd6a6; stroke-width: 18; stroke-linecap: round; }
+.road.done { stroke: #f2c45a; }
+.road-line { fill: none; stroke: #fff8e6; stroke-width: 3; stroke-dasharray: 10 12; stroke-linecap: round; }
+.road-edge.far, .road.far { opacity: .45; }
+.sign-text { font: 600 17px "Lexend", sans-serif; fill: #fff8e8; }
+.sign-ico { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.banner-text { font: 600 16px "Lexend", sans-serif; fill: #7a5410; }
+.node-title { fill: #2b2235; stroke: #fdfbf3; stroke-width: 7px; }
+.node.s-locked .node-title { fill: #6b6475; }
+.node-ring { fill: #fffdf5; }

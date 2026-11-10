@@ -310,33 +310,30 @@
   function mapSVG(state, members, openThrough) {
     var W = R.MAP.width, H = R.MAP.height;
     var o = ['<svg class="map" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Quest map">'];
-    // regions
-    var labels = [];
-    function region(x, y, w, h, b, label) {
-      var B = R.BRANCHES[b];
-      o.push('<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="18" fill="' + B.color + '" class="region"/>');
-      labels.push('<use href="#i-' + SQ_ICONS.BR[b] + '" x="' + (x + 22) + '" y="' + (y + 20) + '" width="26" height="26" class="region-ico" style="color:' + B.color + '"/>' +
-        '<text x="' + (x + 56) + '" y="' + (y + 40) + '" class="region-label" fill="' + B.color + '">' + esc(label || B.name) + '</text>');
-    }
-    region(250, 30, 500, 600, 'trunk');
-    region(40, 640, 290, 300, 'games'); region(355, 640, 290, 300, 'stories'); region(670, 640, 290, 300, 'apps');
-    region(250, 955, 500, 270, 'merge');
-    region(40, 1275, 290, 300, 'games', 'Arcade Peaks II'); region(355, 1275, 290, 300, 'stories', 'Story Woods II'); region(670, 1275, 290, 300, 'apps', 'Gadget Bay II');
-    region(250, 1590, 500, 370, 'finale');
-    deco(o);
-    // edges
+    // illustrated scenery (drawn once and cached)
+    o.push(SQ_MAPART.scene());
+    // roads: a darker edge underneath, then the road surface; finished stretches turn golden
+    var roads = [];
     R.NODES.forEach(function (n) {
       (n.requires || []).concat(n.requiresAny || []).forEach(function (pid) {
         var p = R.NODE[pid];
         var done = state && R.isDone(state, pid) && (R.isDone(state, n.id) || R.prereqsMet(state, n.id));
+        var reached = !state || R.isDone(state, pid);
         var my = (n.y - p.y) / 2;
-        o.push('<path d="M' + p.x + ',' + p.y + ' C' + p.x + ',' + (p.y + my) + ' ' + n.x + ',' + (n.y - my) + ' ' + n.x + ',' + n.y + '" class="edge' + (done ? ' lit' : '') + '" stroke="' + (done ? R.BRANCHES[n.branch].color : '') + '"/>');
+        roads.push({ d: 'M' + p.x + ',' + p.y + ' C' + p.x + ',' + (p.y + my) + ' ' + n.x + ',' + (n.y - my) + ' ' + n.x + ',' + n.y, done: done, reached: reached });
       });
     });
-    o.push(labels.join(''));
-    // forks
-    o.push('<text x="500" y="626" class="fork-label" text-anchor="middle">Choose your path</text>');
-    o.push('<text x="500" y="1258" class="fork-label" text-anchor="middle">Choose again: same path or a new one</text>');
+    roads.forEach(function (r) { o.push('<path d="' + r.d + '" class="road-edge' + (r.reached ? '' : ' far') + '"/>'); });
+    roads.forEach(function (r) { o.push('<path d="' + r.d + '" class="road' + (r.done ? ' done' : '') + (r.reached ? '' : ' far') + '"/>'); });
+    roads.forEach(function (r) { if (r.done) o.push('<path d="' + r.d + '" class="road-line"/>'); });
+    // area signs and fork banners
+    [[250, 30, 'trunk'], [40, 640, 'games'], [355, 640, 'stories'], [670, 640, 'apps'], [250, 955, 'merge'],
+      [40, 1275, 'games', 'Arcade Peaks II'], [355, 1275, 'stories', 'Story Woods II'], [670, 1275, 'apps', 'Gadget Bay II'], [250, 1590, 'finale']].forEach(function (r) {
+      var B = R.BRANCHES[r[2]];
+      o.push(SQ_MAPART.sign(r[0] + 16, r[1] + 14, esc(r[3] || B.name), SQ_ICONS.BR[r[2]], B.color));
+    });
+    o.push(SQ_MAPART.banner(500, 611, 'Choose your path'));
+    o.push(SQ_MAPART.banner(500, 1236, 'Choose again: same path or a new one'));
     var meId = state ? R.currentNode(state) : null;
     // nodes
     R.NODES.forEach(function (n) {
@@ -404,20 +401,6 @@
       out.push([side * Math.cos(a) * 66, Math.sin(a) * 50 - 8]);
     }
     return out;
-  }
-  function deco(o) {
-    // a few friendly landmarks (purely decorative)
-    function tree(x, y, s) { o.push('<g class="deco" transform="translate(' + x + ',' + y + ') scale(' + s + ')"><rect x="-4" y="0" width="8" height="18" fill="#8b5a2b"/><circle cy="-8" r="18" fill="#3fae5a"/><circle cx="-10" cy="2" r="12" fill="#56c271"/></g>'); }
-    function mountain(x, y, s) { o.push('<g class="deco" transform="translate(' + x + ',' + y + ') scale(' + s + ')"><path d="M-40,20 L0,-35 L40,20 Z" fill="#f2a07b"/><path d="M-12,-18 L0,-35 L12,-18 L4,-14 L0,-20 L-5,-14 Z" fill="#fff"/></g>'); }
-    function gear(x, y, s) { o.push('<g class="deco" transform="translate(' + x + ',' + y + ') scale(' + s + ')"><circle r="16" fill="none" stroke="#7fb8ef" stroke-width="9" stroke-dasharray="7 5"/><circle r="6" fill="#7fb8ef"/></g>'); }
-    function book(x, y, s) { o.push('<g class="deco" transform="translate(' + x + ',' + y + ') scale(' + s + ')"><path d="M-22,-12 Q-11,-18 0,-12 Q11,-18 22,-12 V14 Q11,8 0,14 Q-11,8 -22,14 Z" fill="#c9a6ef"/><path d="M0,-12 V14" stroke="#9a5cd6" stroke-width="2"/></g>'); }
-    function crystal(x, y, s) { o.push('<g class="deco" transform="translate(' + x + ',' + y + ') scale(' + s + ')"><path d="M0,-24 L12,0 L0,20 L-12,0 Z" fill="#f4d67a"/><path d="M0,-24 L12,0 L0,4 Z" fill="#fbe9a8"/></g>'); }
-    tree(300, 160, 1.1); tree(700, 250, 1); tree(310, 470, .9); tree(690, 520, 1.2);
-    mountain(90, 800, .9); mountain(280, 920, .7); mountain(90, 1435, .8); mountain(280, 1550, .7);
-    book(410, 800, .9); book(600, 920, .8); book(410, 1435, .8); book(600, 1550, .8);
-    gear(730, 800, .9); gear(910, 920, .8); gear(730, 1435, .9); gear(910, 1550, .8);
-    crystal(320, 1090, 1); crystal(680, 1180, .9); crystal(660, 1020, .7);
-    o.push('<g class="deco" transform="translate(660,1850)"><rect x="-40" y="-30" width="80" height="60" fill="#f4a9c4"/><rect x="-52" y="-52" width="24" height="82" fill="#ec7fa9"/><rect x="28" y="-52" width="24" height="82" fill="#ec7fa9"/><path d="M-56,-52 L-40,-74 L-24,-52 Z M24,-52 L40,-74 L56,-52 Z" fill="#e0457b"/><rect x="-10" y="4" width="20" height="26" rx="10" fill="#9b2c5a"/><path d="M40,-74 V-92 L56,-86 L40,-80" fill="#facc15"/></g>');
   }
   function statusWord(s) {
     return { locked: 'Locked', gated: 'Not open yet', available: 'Ready', started: 'In progress', submitted: 'Turned in', returned: 'Needs changes', done: 'Finished' }[s] || s;
