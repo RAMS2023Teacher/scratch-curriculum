@@ -193,7 +193,7 @@
   function render() {
     closeModal();
     stopSpeaking();
-    csStop(); document.body.classList.remove('cs-on');
+    csStop(); document.body.classList.remove('cs-on', 'cs-dark');
     var r = route();
     if (!S.boot) return;
     if (r[0] === 't') {
@@ -1114,92 +1114,134 @@
   function csPaint(first) {
     var root = document.getElementById('cs');
     if (!root || !S.cs) return;
-    if (first || !document.getElementById('cs-teams')) {
+    if (first || !document.getElementById('cs-race')) {
       root.innerHTML =
-        '<header class="cs-head"><div class="cs-brand"><span class="cs-logo"><svg class="i"><use href="#i-compass"/></svg></span><div><div class="cs-class" id="cs-class"></div><div class="cs-join" id="cs-join"></div></div></div>' +
-        '<div class="cs-time"><div class="cs-clock"><span id="cs-clock"></span><small id="cs-ampm"></small></div><div class="cs-date" id="cs-date"></div></div>' +
-        '<div class="cs-left" id="cs-left"></div>' +
-        '<div class="cs-ctrl"><button class="cs-btn" data-act="cs-setup" title="Set up the screen"><svg class="i"><use href="#i-sliders"/></svg></button><button class="cs-btn" data-act="cs-full" title="Full screen"><svg class="i"><use href="#i-maximize"/></svg></button><a class="cs-btn" href="#/t/dash" title="Exit"><svg class="i"><use href="#i-x"/></svg></a></div></header>' +
-        '<div class="cs-cols"><section class="cs-col"><div class="cs-card cs-mission"><h2><svg class="i"><use href="#i-target"/></svg> What to work on</h2><div id="cs-mission"></div></div>' +
-        '<div class="cs-card cs-think"><h2><svg class="i"><use href="#i-message"/></svg> Think about it</h2><div id="cs-question"></div></div></section>' +
-        '<section class="cs-col cs-mid"><div class="cs-card cs-teamsbox"><h2 id="cs-teams-h"><svg class="i"><use href="#i-map"/></svg> Where every team is</h2><div id="cs-teams"></div></div></section>' +
-        '<section class="cs-col"><div class="cs-card cs-winsbox" id="cs-winsbox"><h2><svg class="i"><use href="#i-sparkles"/></svg> Recent wins</h2><div id="cs-wins"></div></div>' +
-        '<div class="cs-card cs-helpbox" id="cs-helpbox"><h2><svg class="i"><use href="#i-help"/></svg> Who to ask for help</h2><div id="cs-help"></div></div>' +
-        '<div class="cs-goal" id="cs-goal"></div></section></div>';
+        '<header class="cs-head"><div class="cs-brand"><span class="cs-logo"><svg class="i"><use href="#i-compass"/></svg></span><div class="cs-brand-t"><div class="cs-class" id="cs-class"></div><div class="cs-today" id="cs-today"></div></div></div>' +
+        '<div class="cs-xp" id="cs-xp"></div>' +
+        '<div class="cs-ctrl"><button class="cs-btn" data-act="cs-setup" title="Set up the screen"><svg class="i"><use href="#i-sliders"/></svg> <span>Set up</span></button><button class="cs-btn" data-act="cs-full" title="Full screen"><svg class="i"><use href="#i-maximize"/></svg> <span>Full screen</span></button><a class="cs-btn" href="#/t/dash" title="Exit"><svg class="i"><use href="#i-x"/></svg> <span>Exit</span></a></div></header>' +
+        '<div class="cs-grid"><section class="cs-main">' +
+        '<div class="cs-card cs-racebox"><div class="cs-race-h"><h2 id="cs-race-h"></h2><div class="cs-race-meta" id="cs-race-meta"></div><div class="cs-views" id="cs-views"></div></div>' +
+        '<div id="cs-race" class="cs-race"></div><div id="cs-others" class="cs-others"></div></div>' +
+        '<div class="cs-row2"><div class="cs-card cs-mission"><h2><svg class="i"><use href="#i-target"/></svg> What to work on</h2><div id="cs-mission"></div></div>' +
+        '<div class="cs-card cs-helpbox" id="cs-helpbox"><h2><svg class="i"><use href="#i-help"/></svg> Who to ask for help</h2><div id="cs-help"></div></div></div>' +
+        '</section><section class="cs-side">' +
+        '<div class="cs-card cs-timecard"><div class="cs-clock"><span id="cs-clock"></span><small id="cs-ampm"></small></div><div class="cs-date" id="cs-date"></div><div class="cs-left" id="cs-left"></div></div>' +
+        '<div class="cs-card cs-think"><h2><svg class="i"><use href="#i-message"/></svg> Question of the day</h2><div id="cs-question"></div></div>' +
+        '<div class="cs-card cs-winsbox" id="cs-winsbox"><h2><svg class="i"><use href="#i-sparkles"/></svg> Recent wins</h2><div id="cs-wins"></div></div>' +
+        '</section></div>';
     }
-    var d = S.cs.data, sc = d.cls.screen || {};
+    var d = S.cs.data, sc = d.cls.screen || {}, race = d.race;
+    root.classList.toggle('dark', !!sc.dark); document.body.classList.toggle('cs-dark', !!sc.dark);
+    var teams = d.cls.teams || [];
+    var view = sc.view === 'map' ? 'map' : (sc.view === 'teams' && teams.length ? 'teams' : 'quest');
     csSet('cs-class', esc(d.cls.name));
-    csSet('cs-join', 'Scratch Quest');
-    // mission
-    var agenda = (sc.agenda || CS_AGENDA).split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
-    var focus = (sc.focus || []).filter(function (id) { return L[id]; });
-    csSet('cs-mission', '<ol class="cs-agenda">' + agenda.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' +
-      (focus.length ? '<div class="cs-focus">' + focus.map(function (id) { return '<span class="cs-quest" style="--c:' + br(id).color + '">' + SQ_ICONS.branch(R.NODE[id].branch) + ' ' + esc(title(id)) + '</span>'; }).join('') + '</div>' : ''));
-    var q = sc.question || (focus[0] && L[focus[0]].warmup) || CS_QUESTIONS[new Date().getDate() % CS_QUESTIONS.length];
-    csSet('cs-question', '<p class="cs-q">' + esc(q) + '</p>');
-    // teams (or regions if no teams are set)
-    var teams = d.cls.teams || [], groups;
-    if (teams.length) {
-      groups = teams.map(function (t) { return { icon: teamDot(t.color), name: t.name, members: d.members.filter(function (m) { return m.team === t.id; }) }; });
-      var loose = d.members.filter(function (m) { return !teams.some(function (t) { return t.id === m.team; }); });
-      if (loose.length) groups.push({ icon: teamDot('#94a3b8'), name: 'Free agents', members: loose });
-      csSet('cs-teams-h', '<svg class="i"><use href="#i-map"/></svg> Where every team is');
-    } else {
-      var byRegion = {};
-      d.members.forEach(function (m) { var b = R.NODE[m.current] ? R.NODE[m.current].branch : 'trunk'; (byRegion[b] = byRegion[b] || []).push(m); });
-      groups = Object.keys(R.BRANCHES).filter(function (b) { return byRegion[b]; }).map(function (b) { return { icon: '<span style="color:' + R.BRANCHES[b].color + '">' + SQ_ICONS.branch(b) + '</span>', name: R.BRANCHES[b].name, members: byRegion[b] }; });
-      csSet('cs-teams-h', '<svg class="i"><use href="#i-map"/></svg> Where everyone is');
+    csSet('cs-today', race ? 'Today: Quest ' + race.tier + ' · ' + esc(race.title) : 'Scratch Quest');
+    csSet('cs-xp', '<svg class="i"><use href="#i-zap"/></svg> <b>' + fmtN(d.classXP) + '</b> class XP' + (d.cls.classGoal ? '<div class="cs-bar sm"><i style="width:' + Math.min(100, Math.round(d.classXP / d.cls.classGoal * 100)) + '%"></i></div>' : ''));
+    csSet('cs-views', [['quest', 'Today\'s quest'], ['map', 'Whole map']].concat(teams.length ? [['teams', 'Teams']] : []).map(function (v) {
+      return '<button class="cs-chip' + (v[0] === view ? ' on' : '') + '" data-act="cs-view" data-v="' + v[0] + '">' + v[1] + '</button>';
+    }).join(''));
+    // ---- the track ("race to the finish") ----
+    var stations, groups = {};
+    if (view === 'quest' && race) {
+      stations = race.stations.map(function (st, i) {
+        var icon = st.key === 'start' ? SQ_ICONS.ic('pin') : st.key === 'check' ? SQ_ICONS.ic('help') : st.key === 'turnin' ? SQ_ICONS.ic('send') : st.key === 'finish' ? SQ_ICONS.ic('flag') : '<b>' + i + '</b>';
+        return { key: st.key, label: st.label, icon: icon, color: br(race.quest).color, finish: st.key === 'finish' };
+      });
+      d.members.forEach(function (m) { if (m.stage) (groups[m.stage] = groups[m.stage] || []).push(m); });
+      var fin = (groups.finish || []).length, working = d.members.filter(function (m) { return m.stage && m.stage !== 'finish'; }).length;
+      csSet('cs-race-h', '<svg class="i"><use href="#i-flag"/></svg> Race to the finish: ' + esc(race.title));
+      csSet('cs-race-meta', working + ' on their way · ' + fin + ' finished');
+      csSet('cs-others', race.others.length ? '<b>On other quests:</b> ' + race.others.sort(function (a, b) { return a.tier - b.tier || a.name.localeCompare(b.name); }).map(function (o) {
+        return '<span class="cs-other">' + avatarImgTag(o.avatar, 'cs-av sm') + esc(o.name) + ' · ' + o.tier + '</span>';
+      }).join('') : '');
+    } else if (view === 'map') {
+      stations = [];
+      for (var t = 1; t <= R.MAX_TIER; t++) {
+        var ns = R.NODES.filter(function (n) { return n.tier === t; });
+        stations.push({ key: 'tier' + t, label: ns.length > 1 ? 'Pick a path' : title(ns[0].id), icon: '<b>' + t + '</b>', color: ns.length > 1 ? '#64748b' : R.BRANCHES[ns[0].branch].color, finish: t === R.MAX_TIER });
+      }
+      d.members.forEach(function (m) { var n = R.NODE[m.current]; if (n) (groups['tier' + n.tier] = groups['tier' + n.tier] || []).push(m); });
+      csSet('cs-race-h', '<svg class="i"><use href="#i-map"/></svg> The whole quest map');
+      csSet('cs-race-meta', d.members.length + ' adventurers');
+      csSet('cs-others', '');
     }
-    csSet('cs-teams', groups.length ? '<div class="cs-teams">' + groups.map(function (g) {
-      var together = g.members.reduce(function (a, m) { return a + m.doneCount; }, 0);
-      return '<div class="cs-team"><div class="cs-team-h"><span class="cs-team-ico">' + g.icon + '</span><b>' + esc(g.name) + '</b>' +
-        (together ? '<span class="cs-together">' + together + ' quests done together</span>' : '') + '</div>' +
-        '<ul class="cs-members">' + g.members.sort(function (a, b) { return a.name.localeCompare(b.name); }).map(function (m) {
-          var cur = R.NODE[m.current];
-          return '<li>' + avatarImgTag(m.avatar) + '<span class="cs-mname">' + esc(m.name) + '</span>' +
-            (cur ? '<span class="cs-mq" style="--c:' + br(m.current).color + '">' + SQ_ICONS.branch(R.NODE[m.current].branch) + ' ' + esc(title(m.current)) + '</span>' : '') + '</li>';
-        }).join('') + '</ul></div>';
-    }).join('') + '</div>' : '<p class="cs-empty">Students will appear here once they join.</p>');
-    // wins
+    if (stations) {
+      var max = 0; stations.forEach(function (s) { max = Math.max(max, (groups[s.key] || []).length); });
+      // busy stations get wider columns so more characters (with names) fit side by side
+      var wts = stations.map(function (s) { var n = (groups[s.key] || []).length; return n > 6 ? Math.min(3, 1 + Math.ceil((n - 6) / 6)) : 1; });
+      var tot = wts.reduce(function (a, b) { return a + b; }, 0);
+      var cols = wts.map(function (w) { return 'minmax(0,' + w + 'fr)'; }).join(' ');
+      var edgeL = (wts[0] / tot * 50).toFixed(2) + '%', edgeR = (wts[wts.length - 1] / tot * 50).toFixed(2) + '%';
+      csSet('cs-race', '<div class="cs-track" style="--n:' + stations.length + ';grid-template-columns:' + cols + ';--edge-l:' + edgeL + ';--edge-r:' + edgeR + '">' + stations.map(function (s) {
+        var kids = (groups[s.key] || []).sort(function (a, b) { return a.name.localeCompare(b.name); });
+        return '<div class="cs-st' + (s.finish ? ' finish' : '') + '"><div class="cs-st-dot" style="--c:' + s.color + '">' + s.icon + '</div><div class="cs-st-l">' + esc(s.label) + '</div>' +
+          '<div class="cs-st-kids' + (kids.length ? ' has' : '') + '">' + kids.map(function (m) {
+            return '<div class="cs-kid">' + avatarImgTag(m.avatar, 'cs-kid-av') + '<span>' + esc(m.name.split(' ')[0]) + '</span></div>';
+          }).join('') + '</div></div>';
+      }).join('') + '</div>');
+    } else {
+      // teams view
+      var tg = teams.map(function (t) { return { icon: teamDot(t.color), name: t.name, members: d.members.filter(function (m) { return m.team === t.id; }) }; });
+      var loose = d.members.filter(function (m) { return !teams.some(function (t) { return t.id === m.team; }); });
+      if (loose.length) tg.push({ icon: teamDot('#94a3b8'), name: 'Free agents', members: loose });
+      csSet('cs-race-h', '<svg class="i"><use href="#i-users"/></svg> Where every team is');
+      csSet('cs-race-meta', teams.length + ' teams');
+      csSet('cs-others', '');
+      csSet('cs-race', '<div class="cs-teams">' + tg.map(function (g) {
+        var together = g.members.reduce(function (a, m) { return a + m.doneCount; }, 0);
+        return '<div class="cs-team"><div class="cs-team-h"><span class="cs-team-ico">' + g.icon + '</span><b>' + esc(g.name) + '</b>' +
+          (together ? '<span class="cs-together">' + together + ' quests done together</span>' : '') + '</div>' +
+          '<ul class="cs-members">' + g.members.sort(function (a, b) { return a.name.localeCompare(b.name); }).map(function (m) {
+            var cur = R.NODE[m.current];
+            return '<li>' + avatarImgTag(m.avatar) + '<span class="cs-mname">' + esc(m.name) + '</span>' +
+              (cur ? '<span class="cs-mq" style="--c:' + br(m.current).color + '">' + SQ_ICONS.branch(cur.branch) + ' ' + esc(title(m.current)) + '</span>' : '') + '</li>';
+          }).join('') + '</ul></div>';
+      }).join('') + '</div>');
+    }
+    // ---- what to work on (+ standards for today's quest) ----
+    var agenda = (sc.agenda || CS_AGENDA).split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+    var std = race ? stdOf(race.quest).s : [];
+    csSet('cs-mission', '<ol class="cs-agenda">' + agenda.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' +
+      (std.length ? '<div class="cs-std"><span class="cs-std-l">Standards:</span>' + std.map(function (x) { return '<span class="cs-stdc" title="' + esc(SQ_DLCS.standards[x[0]]) + '">6-8.' + esc(x[0]) + '</span>'; }).join('') + '</div>' : ''));
+    var q = sc.question || (race && L[race.quest] && L[race.quest].warmup) || CS_QUESTIONS[new Date().getDate() % CS_QUESTIONS.length];
+    csSet('cs-question', '<p class="cs-q' + (q.length > 130 ? ' long' : '') + '">' + esc(q) + '</p>');
+    // ---- wins ----
     var wb = document.getElementById('cs-winsbox'); if (wb) wb.hidden = sc.showWins === false;
     csSet('cs-wins', d.wins.length ? '<ul class="cs-wins">' + d.wins.slice(0, 6).map(function (w) {
-      return '<li>' + avatarImgTag(w.avatar) + '<span><span class="cs-wico">' + (w.kind === 'badge' ? w.icon : SQ_ICONS.ic(w.kind === 'level' ? 'star' : 'check-circle')) + '</span> <b>' + esc(w.name) + '</b> ' + esc(w.text) + '<small>' + ago(w.t) + '</small></span></li>';
-    }).join('') + '</ul>' : '<p class="cs-empty">Wins will show up here as quests get finished. <svg class="i"><use href="#i-sparkles"/></svg></p>');
-    // helpers
+      return '<li><span class="cs-wico">' + (w.kind === 'badge' ? w.icon : SQ_ICONS.ic(w.kind === 'level' ? 'star' : 'check-circle')) + '</span><span class="cs-wtext"><b>' + esc(w.name) + '</b> ' + esc(w.text) + '</span><small>' + ago(w.t) + '</small></li>';
+    }).join('') + '</ul>' : '<p class="cs-empty">Wins will show up here as quests get finished.</p>');
+    // ---- helpers ----
     var hb = document.getElementById('cs-helpbox'); if (hb) hb.hidden = sc.showHelpers === false;
     csSet('cs-help', d.helpers.length ? '<ul class="cs-help">' + d.helpers.map(function (h) {
-      return '<li><div class="cs-hq" style="--c:' + br(h.quest).color + '">' + SQ_ICONS.branch(R.NODE[h.quest].branch) + ' Stuck on <b>' + esc(h.title) + '</b>?</div><div class="cs-hwho">Ask ' +
+      return '<li><div class="cs-hq" style="--c:' + br(h.quest).color + '">Stuck on <b>' + esc(h.title) + '</b>? Ask</div><div class="cs-hwho">' +
         h.helpers.map(function (p) { return '<span class="cs-hp">' + avatarImgTag(p.avatar, 'cs-av sm') + esc(p.name) + '</span>'; }).join(' ') + '</div></li>';
-    }).join('') + '</ul><p class="cs-tip">Try 3 before me: the hint, a classmate, then the teacher.</p>' : '<p class="cs-empty">Try 3 before me: the <svg class="i"><use href="#i-bulb"/></svg> hint, a classmate, then the teacher.</p>');
-    // class goal
-    var goal = d.cls.classGoal;
-    csSet('cs-goal', goal ? '<div class="cs-goal-l"><svg class="i"><use href="#i-target"/></svg> Class goal: <b>' + fmtN(d.classXP) + '</b> / ' + fmtN(goal) + ' XP</div><div class="cs-bar"><i style="width:' + Math.min(100, Math.round(d.classXP / goal * 100)) + '%"></i></div>' : '');
+    }).join('') + '</ul><p class="cs-tip">Try 3 before me: the hint, a classmate, then the teacher.</p>' : '<p class="cs-empty">Try 3 before me: the hint, a classmate, then the teacher.</p>');
     csFit();
     csTick();
   }
-  // Projector screens can't scroll: drop whole items that don't fit instead of cutting them in half.
+  // Projector screens can't scroll: shrink the characters, and drop whole list items that don't fit.
   function csFit() {
     if (window.innerWidth <= 1100) return;
+    var rc = document.getElementById('cs-race');
+    if (rc) {
+      var tr = rc.firstElementChild;
+      if (tr) {
+        tr.classList.remove('tight', 'tiny', 'compact');
+        var cls = tr.classList.contains('cs-teams') ? ['compact', 'tiny'] : ['tight', 'tiny'];
+        for (var k = 0; k < cls.length && rc.scrollHeight > rc.clientHeight + 2; k++) tr.classList.add(cls[k]);
+      }
+    }
     [['cs-winsbox', '#cs-wins li'], ['cs-helpbox', '.cs-tip, #cs-help li']].forEach(function (x) {
       var card = document.getElementById(x[0]);
       if (!card || card.hidden) return;
       var items = card.querySelectorAll(x[1]);
       for (var i = items.length - 1; i >= 1 && card.scrollHeight > card.clientHeight + 2; i--) items[i].remove();
     });
-    var tb = document.getElementById('cs-teams');
-    if (tb) {
-      var box = tb.querySelector('.cs-teams');
-      if (box) {
-        box.classList.remove('compact', 'tiny');
-        if (tb.scrollHeight > tb.clientHeight + 2) box.classList.add('compact');
-        if (tb.scrollHeight > tb.clientHeight + 2) box.classList.add('tiny');
-      }
-    }
   }
   window.addEventListener('resize', function () {
     if (!document.body.classList.contains('cs-on')) return;
     clearTimeout(S.csResize); S.csResize = setTimeout(function () {
-      ['cs-wins', 'cs-help', 'cs-teams'].forEach(function (id) { var el = document.getElementById(id); if (el) el.__src = null; });
+      ['cs-wins', 'cs-help', 'cs-race'].forEach(function (id) { var el = document.getElementById(id); if (el) el.__src = null; });
       csPaint(false);
     }, 200);
   });
@@ -1241,7 +1283,8 @@
       '<div class="row"><button type="button" class="btn small" data-act="cs-q-random"><svg class="i"><use href="#i-dice"/></svg> Another question</button><button type="button" class="btn small ghost" data-act="cs-q-clear">Use the quest warm-up</button></div>' +
       '<h3>Show</h3><label class="switch"><input type="checkbox" name="showWins"' + (sc.showWins !== false ? ' checked' : '') + '> <svg class="i"><use href="#i-sparkles"/></svg> Recent wins</label>' +
       '<label class="switch"><input type="checkbox" name="showHelpers"' + (sc.showHelpers !== false ? ' checked' : '') + '> <svg class="i"><use href="#i-help"/></svg> Who to ask for help</label>' +
-      '<h3><svg class="i"><use href="#i-users"/></svg> Teams</h3><div class="row"><select id="cs-nteams">' + [0, 2, 3, 4, 5, 6, 7, 8].map(function (n) { return '<option value="' + n + '"' + (n === teams.length ? ' selected' : '') + '>' + (n ? n + ' teams' : 'No teams (group by map area)') + '</option>'; }).join('') + '</select>' +
+      '<label class="switch"><input type="checkbox" name="dark"' + (sc.dark ? ' checked' : '') + '> Dark screen (try it if the room is bright or the projector is dim)</label>' +
+      '<h3><svg class="i"><use href="#i-users"/></svg> Teams</h3><div class="row"><select id="cs-nteams">' + [0, 2, 3, 4, 5, 6, 7, 8].map(function (n) { return '<option value="' + n + '"' + (n === teams.length ? ' selected' : '') + '>' + (n ? n + ' teams' : 'No teams') + '</option>'; }).join('') + '</select>' +
       '<button type="button" class="btn small" data-act="cs-shuffle"><svg class="i"><use href="#i-split"/></svg> Shuffle students into teams</button></div><div id="cs-teamedit"></div>' +
       '<div class="row" style="margin-top:12px"><button class="btn primary">Save</button></div></form>';
     modal(h, 'wide');
@@ -1452,6 +1495,13 @@
       return;
     }
     if (act === 'cs-setup') { if (S.cs) csSetup(); return; }
+    if (act === 'cs-view') {
+      var vv = t.getAttribute('data-v');
+      S.cs.data.cls.screen = Object.assign({}, S.cs.data.cls.screen || {}, { view: vv });
+      var rc = document.getElementById('cs-race'); if (rc) rc.__src = null;
+      csPaint(false); csSave({ view: vv }).catch(function () { });
+      return;
+    }
     if (act === 'cs-full') {
       var el = document.documentElement;
       try { (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen()).catch(function () { toast('Press F11 (or the full-screen key on a Chromebook) to fill the screen.'); }); }
@@ -1576,7 +1626,7 @@
       var T2 = S.csDraft.teams.map(function (t, i) { var inp = f.querySelector('[data-tname="' + i + '"]'); return { name: inp ? inp.value : t.name, color: t.color }; });
       var tOf = {};
       Array.prototype.forEach.call(f.querySelectorAll('[data-temail]'), function (sel) { if (sel.value !== '') tOf[sel.getAttribute('data-temail')] = 'tm' + sel.value; });
-      p = csSave({ agenda: v.agenda, question: v.question, focus: fsel, showWins: !!v.showWins, showHelpers: !!v.showHelpers }, { teams: T2, teamOf: tOf }).then(function () { closeModal(); toast('<svg class="i"><use href="#i-monitor"/></svg> Screen updated'); });
+      p = csSave({ agenda: v.agenda, question: v.question, focus: fsel, showWins: !!v.showWins, showHelpers: !!v.showHelpers, dark: !!v.dark }, { teams: T2, teamOf: tOf }).then(function () { closeModal(); toast('<svg class="i"><use href="#i-monitor"/></svg> Screen updated'); });
     } else if (kind === 'gc-import') p = gcImport(f.getAttribute('data-course'), v.classId, v.nameStyle);
     else if (kind === 'gc-post') {
       var tiers = []; for (var tt = 1; tt <= R.MAX_TIER; tt++) if (v['t' + tt]) tiers.push(tt);

@@ -320,10 +320,36 @@ function SQ_SERVICE(store) {
           .sort(function (a, b) { return (b.helper - a.helper) || (b.xp - a.xp); }).slice(0, 3).map(function (m) { return { name: m.name, avatar: m.avatar }; });
         return { quest: q, title: SQ_LESSONS[q] ? SQ_LESSONS[q].title : q, working: counts[q], helpers: who };
       }).filter(function (h) { return h.helpers.length; });
+      // "Race to the finish": where each student is inside today's quest (positive-only stages).
+      var sc0 = c.screen || {};
+      var raceQ = (args.quest && SQ_LESSONS[args.quest]) ? args.quest
+        : ((sc0.focus || []).filter(function (id) { return SQ_LESSONS[id]; })[0] || Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0] || 't1');
+      var RL = SQ_LESSONS[raceQ], core = R.coreSteps(RL);
+      var stations = [{ key: 'start', label: 'Start' }].concat(core.map(function (i, j) { return { key: 's' + j, label: RL.steps[i].title }; }))
+        .concat([{ key: 'check', label: 'Quick check' }, { key: 'turnin', label: 'Turn in' }, { key: 'finish', label: 'Finish!' }]);
+      var others = [];
+      studs.forEach(function (s, k) {
+        var m = members[k], ns = s.state.nodes[raceQ];
+        var stage = null;
+        if (ns && ns.status === 'done') stage = 'finish';
+        else if (ns && (ns.status === 'submitted' || ns.status === 'returned')) stage = 'turnin';
+        else if (m.current === raceQ || (ns && ns.touched)) {
+          stage = 'start';
+          if (ns && ns.touched) {
+            var next = core.filter(function (i) { return !ns.steps[i]; })[0];
+            if (next !== undefined) stage = core.indexOf(next) === 0 && !core.some(function (i) { return ns.steps[i]; }) && !Object.keys(ns.quiz || {}).length ? 'start' : 's' + core.indexOf(next);
+            else if (RL.quiz.some(function (q, qi) { return !(ns.quiz[qi] && ns.quiz[qi].correct); })) stage = 'check';
+            else stage = 'turnin';
+          }
+        }
+        if (stage) m.stage = stage;
+        else if (R.NODE[m.current]) others.push({ name: m.name, avatar: m.avatar, quest: m.current, tier: R.NODE[m.current].tier });
+      });
+      var race = { quest: raceQ, tier: R.NODE[raceQ].tier, title: RL.title, stations: stations, others: others };
       members.forEach(function (m) { delete m.xp; });
       var classXP = studs.reduce(function (a, s) { return a + R.profile(s.state).xp; }, 0);
       return { cls: { id: c.id, name: c.name, code: c.code, classGoal: c.classGoal, screen: c.screen || {}, teams: c.teams || [] },
-        members: members, wins: wins.slice(0, 10), helpers: helpers, classXP: classXP, serverNow: now() };
+        members: members, wins: wins.slice(0, 10), helpers: helpers, classXP: classXP, race: race, serverNow: now() };
     },
     saveScreen: function (user, args) {
       requireTeacher(user);
@@ -338,7 +364,9 @@ function SQ_SERVICE(store) {
         agenda: sc.agenda === undefined ? cur.agenda || '' : String(sc.agenda || '').replace(/[<>]/g, '').slice(0, 300),
         question: sc.question === undefined ? cur.question || '' : clean(sc.question, 220),
         showHelpers: sc.showHelpers === undefined ? cur.showHelpers !== false : !!sc.showHelpers,
-        showWins: sc.showWins === undefined ? cur.showWins !== false : !!sc.showWins
+        showWins: sc.showWins === undefined ? cur.showWins !== false : !!sc.showWins,
+        dark: sc.dark === undefined ? !!cur.dark : !!sc.dark,
+        view: sc.view === undefined ? (cur.view || 'quest') : (['map', 'teams'].indexOf(sc.view) >= 0 ? sc.view : 'quest')
       };
       if (args.teams) {
         c.teams = (args.teams || []).slice(0, 8).map(function (t, i) { return { id: 'tm' + i, name: clean(t.name, 24) || ('Team ' + (i + 1)), color: /^#[0-9a-f]{6}$/i.test(t.color || '') ? t.color : '#94a3b8' }; });
