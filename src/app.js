@@ -343,9 +343,11 @@
       var clickable = state ? (s !== 'locked') : true;
       var href = state ? '#/quest/' + n.id : '#/t/lesson/' + n.id;
       o.push('<a ' + (clickable ? 'href="' + href + '"' : 'data-act="locked" data-node="' + n.id + '"') + ' class="' + cls + '" tabindex="0"><title>' + esc(title(n.id)) + ' — ' + statusWord(s) + '</title>');
-      o.push('<circle cx="' + n.x + '" cy="' + n.y + '" r="40" class="node-ring" stroke="' + B.color + '"/>');
-      o.push('<circle cx="' + n.x + '" cy="' + (n.y + 4) + '" r="32" class="node-shadow"/>');
-      o.push('<circle cx="' + n.x + '" cy="' + n.y + '" r="32" class="node-core"' + (s === 'locked' || s === 'gated' ? '' : ' style="fill:' + B.color + '"') + '/>');
+      var dim = s === 'locked' || s === 'gated';
+      o.push('<circle cx="' + n.x + '" cy="' + (n.y + 8) + '" r="41" class="node-base" style="fill:' + (dim ? '#8f84b3' : SQ_MAPART.edgeColor(n.branch)) + '"/>');
+      o.push('<circle cx="' + n.x + '" cy="' + n.y + '" r="41" class="node-ring"/>');
+      o.push('<circle cx="' + n.x + '" cy="' + n.y + '" r="33" class="node-core"' + (dim ? '' : ' style="fill:' + B.color + '"') + '/>');
+      o.push('<ellipse cx="' + (n.x - 10) + '" cy="' + (n.y - 16) + '" rx="13" ry="7" class="node-shine"/>');
       var icoName = { done: 'check', locked: 'lock', gated: 'clock', submitted: 'send', returned: 'undo' }[s];
       if (icoName) o.push('<use href="#i-' + icoName + '" x="' + (n.x - 14) + '" y="' + (n.y - 14) + '" width="28" height="28" class="node-icon"/>');
       else o.push('<text x="' + n.x + '" y="' + (n.y + 9) + '" text-anchor="middle" class="node-ico">' + n.tier + '</text>');

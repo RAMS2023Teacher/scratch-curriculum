@@ -1,6 +1,6 @@
 <title>Scratch Quest</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;700;800;900&display=swap">
 <style>
 :root {
   --bg: #f4f1ea; --bg2: #fffdf8; --card: #ffffff; --ink: #2b2235; --muted: #6b6475; --line: #e7e1d6;
@@ -28,8 +28,8 @@
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 300 17px/1.55 "Lexend", system-ui, -apple-system, "Segoe UI", sans-serif; }
-h1, h2, h3, .logo, .btn, .eyebrow, .node-title, .region-label, .fork-label, .lv-circle, .stat b { font-family: "Lexend", system-ui, sans-serif; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 300 17px/1.55 "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif; }
+h1, h2, h3, .logo, .btn, .eyebrow, .node-title, .region-label, .fork-label, .lv-circle, .stat b { font-family: "Nunito", system-ui, sans-serif; }
 h1 { font-size: 1.9rem; margin: .1em 0 .3em; line-height: 1.15; }
 h2 { font-size: 1.3rem; margin: 0 0 .6em; }
 h3 { font-size: 1.1rem; margin: 0 0 .4em; }
@@ -110,7 +110,7 @@ form.row input { flex: 1; min-width: 160px; }
 .toast.warn { background: #b4232c; color: #fff; }
 .t-ico { font-size: 1.8rem; }
 @keyframes pop { from { transform: scale(.7); opacity: 0; } }
-.xp-float { position: absolute; z-index: 70; pointer-events: none; font: 800 1.3rem "Lexend", sans-serif; color: var(--xp2); text-shadow: 0 2px 0 #fff, 0 0 8px #fff; transform: translate(-50%, -50%); animation: floatup 1.3s ease-out forwards; }
+.xp-float { position: absolute; z-index: 70; pointer-events: none; font: 800 1.3rem "Nunito", sans-serif; color: var(--xp2); text-shadow: 0 2px 0 #fff, 0 0 8px #fff; transform: translate(-50%, -50%); animation: floatup 1.3s ease-out forwards; }
 .xp-float.neg { color: var(--bad); }
 @keyframes floatup { to { transform: translate(-50%, -90px); opacity: 0; } }
 .modal-wrap { position: fixed; inset: 0; background: rgba(20, 14, 30, .55); z-index: 50; display: grid; place-items: center; padding: 16px; animation: fade .2s; }
@@ -118,7 +118,7 @@ form.row input { flex: 1; min-width: 160px; }
 .modal { background: var(--card); border-radius: 12px; padding: 28px; max-width: 480px; width: 100%; position: relative; box-shadow: 0 30px 80px rgba(0, 0, 0, .35); animation: pop .4s cubic-bezier(.2, .9, .3, 1.4); }
 .modal.center { text-align: center; }
 .modal-x { position: absolute; right: 12px; top: 10px; border: 0; background: transparent; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
-.lv-burst { display: inline-block; font: 700 1.1rem "Lexend", sans-serif; background: linear-gradient(135deg, var(--xp1), var(--xp2)); color: #fff; padding: 10px 22px; border-radius: 6px; box-shadow: 0 4px 0 #c45f07; }
+.lv-burst { display: inline-block; font: 700 1.1rem "Nunito", sans-serif; background: linear-gradient(135deg, var(--xp1), var(--xp2)); color: #fff; padding: 10px 22px; border-radius: 6px; box-shadow: 0 4px 0 #c45f07; }
 .unlock-row { margin-bottom: 14px; }
 .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 80; overflow: hidden; }
 .confetti i { position: absolute; top: -20px; width: 10px; height: 16px; border-radius: 3px; animation: fall linear forwards; }
@@ -152,14 +152,14 @@ form.row input { flex: 1; min-width: 160px; }
 .node.s-submitted .node-ring { stroke-dasharray: 8 6; }
 .node.s-done .node-core { opacity: 1; }
 .node:hover .node-ring, .node:focus .node-ring { stroke-width: 11; }
-.node-ico { font: 700 26px "Lexend", sans-serif; fill: #fff; pointer-events: none; }
+.node-ico { font: 700 26px "Nunito", sans-serif; fill: #fff; pointer-events: none; }
 .node.s-locked .node-ico, .node.s-gated .node-ico { font-size: 22px; }
 .node-title { font-size: 19px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--map-bg); stroke-width: 6px; stroke-linejoin: round; pointer-events: none; }
 .node.s-locked .node-title { fill: var(--muted); }
 .token.more circle { fill: var(--ink); }
 .token.more text { fill: var(--card); font: 700 14px sans-serif; }
 .token svg { border-radius: 50%; }
-.you-label { font: 800 15px "Lexend", sans-serif; fill: #b45309; paint-order: stroke; stroke: #fff; stroke-width: 5px; }
+.you-label { font: 800 15px "Nunito", sans-serif; fill: #b45309; paint-order: stroke; stroke: #fff; stroke-width: 5px; }
 .hello { display: flex; gap: 14px; align-items: center; }
 .hello h2 { margin: 0; }
 .hello p { margin: 2px 0; }
@@ -176,7 +176,7 @@ form.row input { flex: 1; min-width: 160px; }
 .back { display: inline-block; margin-bottom: 10px; text-decoration: none; font-weight: 700; }
 .quest-head { display: flex; gap: 18px; align-items: center; background: var(--card); border-radius: 12px; padding: 20px; border: 3px solid var(--c); box-shadow: var(--shadow); margin-bottom: 14px; }
 .qh-badge { width: 92px; height: 92px; flex: none; border-radius: 12px; background: var(--c); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 2.4rem; box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .15); }
-.qh-badge small { font: 600 .8rem "Lexend", sans-serif; }
+.qh-badge small { font: 600 .8rem "Nunito", sans-serif; }
 .tagline { font-size: 1.1rem; margin: 0 0 8px; }
 .qprogress { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-weight: 700; font-size: .9rem; }
 .qprogress .xpbar { flex: 1; }
@@ -201,7 +201,7 @@ form.row input { flex: 1; min-width: 160px; }
 .check input:checked + .box::after { content: "✔"; color: #fff; font-size: 18px; }
 .check input:focus-visible + .box { outline: 3px solid var(--accent); outline-offset: 2px; }
 .check input:disabled + .box { opacity: .6; }
-.step-title { font-family: "Lexend", sans-serif; font-size: 1.08rem; }
+.step-title { font-family: "Nunito", sans-serif; font-size: 1.08rem; }
 .tip { background: #fff8db; border-radius: 10px; padding: 8px 12px; font-size: .95rem; color: #5b4500; margin-top: 6px; }
 pre.blocks { white-space: pre-wrap; background: var(--bg2); border-radius: 8px; padding: 10px; overflow-x: auto; font-size: .9rem; margin: 8px 0; }
 .scratchblocks { margin: 8px 0; overflow-x: auto; max-width: 100%; }
@@ -229,15 +229,15 @@ pre.blocks { white-space: pre-wrap; background: var(--bg2); border-radius: 8px; 
 .av-preview { position: sticky; top: 76px; text-align: center; }
 .av-big svg { width: 100%; max-width: 260px; height: auto; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .15)); }
 .av-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-.av-tabs button { border: 2px solid var(--line); background: var(--bg2); color: var(--ink); padding: 6px 12px; border-radius: 6px; font: 700 .92rem "Lexend", sans-serif; cursor: pointer; }
+.av-tabs button { border: 2px solid var(--line); background: var(--bg2); color: var(--ink); padding: 6px 12px; border-radius: 6px; font: 700 .92rem "Nunito", sans-serif; cursor: pointer; }
 .av-tabs button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-.av-sub { font: 600 .82rem "Lexend", sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 12px 0 6px; }
+.av-sub { font: 600 .82rem "Nunito", sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 12px 0 6px; }
 .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .sw { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--card); box-shadow: 0 0 0 2px var(--line); cursor: pointer; font-size: .8rem; }
 .sw.on { box-shadow: 0 0 0 3px var(--accent); }
 .sw.locked { opacity: .45; cursor: not-allowed; }
 .av-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
-.av-opt { border: 3px solid var(--line); background: var(--bg2); border-radius: 10px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font: 700 .85rem "Lexend", sans-serif; color: var(--ink); position: relative; }
+.av-opt { border: 3px solid var(--line); background: var(--bg2); border-radius: 10px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font: 700 .85rem "Nunito", sans-serif; color: var(--ink); position: relative; }
 .av-opt.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
 .av-opt.locked svg { filter: grayscale(1) brightness(.85); opacity: .45; }
 .av-opt.locked { cursor: not-allowed; }
@@ -303,14 +303,14 @@ pre.blocks { white-space: pre-wrap; background: var(--bg2); border-radius: 8px; 
 blockquote { margin: 6px 0; padding: 8px 12px; background: var(--bg); border-radius: 10px; font-style: italic; }
 .rv-act textarea { margin-bottom: 8px; }
 .tier-row { display: flex; gap: 14px; align-items: flex-start; }
-.tier-num { width: 42px; height: 42px; flex: none; border-radius: 50%; background: var(--ink); color: var(--card); display: grid; place-items: center; font: 700 1.1rem "Lexend", sans-serif; margin-top: 8px; }
+.tier-num { width: 42px; height: 42px; flex: none; border-radius: 50%; background: var(--ink); color: var(--card); display: grid; place-items: center; font: 700 1.1rem "Nunito", sans-serif; margin-top: 8px; }
 .tier-items { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
 .lesson-item { border-top: 6px solid var(--c); margin-bottom: 4px; }
 .lesson-item form { margin: 8px 0; }
 .lesson-item input { padding: 5px 10px; font-size: .9rem; }
 .lesson-list { display: flex; flex-direction: column; gap: 12px; }
 .class-set.archived { opacity: .6; }
-.h-input { font: 600 1.3rem "Lexend", sans-serif; max-width: 420px; }
+.h-input { font: 600 1.3rem "Nunito", sans-serif; max-width: 420px; }
 .stu-head { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .award-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
@@ -359,16 +359,16 @@ main.projector { max-width: none; padding: 16px; }
 .player { max-width: 680px; margin: 0 auto; }
 .p-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .p-back { font-weight: 800; text-decoration: none; }
-.p-title { flex: 1; min-width: 0; font: 600 1.1rem "Lexend", sans-serif; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-title { flex: 1; min-width: 0; font: 600 1.1rem "Nunito", sans-serif; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-tools { display: flex; gap: 6px; }
 .dots { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-.dot { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); background: var(--card); color: var(--muted); font: 700 .85rem "Lexend", sans-serif; cursor: pointer; padding: 0; display: grid; place-items: center; transition: transform .15s; }
+.dot { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); background: var(--card); color: var(--muted); font: 700 .85rem "Nunito", sans-serif; cursor: pointer; padding: 0; display: grid; place-items: center; transition: transform .15s; }
 .dot.done { background: var(--good); border-color: var(--good); color: #fff; }
 .dot.now { border-color: var(--c); transform: scale(1.18); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent); color: var(--ink); }
 .dot.done.now { color: #fff; }
 .pcard { background: var(--card); border-radius: 12px; border: 3px solid var(--c); box-shadow: var(--shadow); padding: 24px 26px; animation: cardin .25s ease-out; }
 @keyframes cardin { from { opacity: 0; transform: translateX(14px); } }
-.p-kicker { font: 600 .9rem "Lexend", sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--c); margin-bottom: 4px; }
+.p-kicker { font: 600 .9rem "Nunito", sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--c); margin-bottom: 4px; }
 .p-h { font-size: 1.75rem; line-height: 1.2; margin: 0 0 12px; text-wrap: balance; }
 .p-big, .p-text { font-size: 1.2rem; line-height: 1.55; }
 .p-text { margin-bottom: 8px; }
@@ -392,7 +392,7 @@ main.projector { max-width: none; padding: 16px; }
 .pcard form label { font-size: 1.05rem; }
 .banner.small { padding: 8px 12px; font-size: .95rem; }
 .split-pic { display: grid; grid-template-columns: 1.5fr 1fr; gap: 6px; height: 110px; margin: 10px 0 14px; }
-.split-pic div { border-radius: 8px; display: grid; place-items: center; font: 600 1.1rem "Lexend", sans-serif; }
+.split-pic div { border-radius: 8px; display: grid; place-items: center; font: 600 1.1rem "Nunito", sans-serif; }
 .sp-l { background: #ffe2b8; color: #7a4a00; }
 .sp-r { background: #dcd3ff; color: #3e2a9e; }
 .split-steps { font-size: 1.05rem; padding-left: 22px; }
@@ -417,7 +417,7 @@ kbd { background: var(--bg); border: 1px solid var(--line); border-bottom-width:
 .p-extras { display: flex; flex-direction: column; gap: 0; }
 .p-extras .p-more { margin: 6px 0; }
 .p-extras .p-text { font-size: 1.05rem; margin-top: 6px; }
-.say-btn { position: absolute; top: 14px; right: 14px; display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--line); background: var(--bg2); color: var(--ink); border-radius: 6px; padding: 6px 12px; font: 700 .9rem "Lexend", sans-serif; cursor: pointer; }
+.say-btn { position: absolute; top: 14px; right: 14px; display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--line); background: var(--bg2); color: var(--ink); border-radius: 6px; padding: 6px 12px; font: 700 .9rem "Nunito", sans-serif; cursor: pointer; }
 .say-btn:hover { border-color: var(--accent); }
 .say-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; animation: talk 1s ease-in-out infinite; }
 @keyframes talk { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 25%, transparent); } }
@@ -465,19 +465,19 @@ kbd { background: var(--bg); border: 1px solid var(--line); border-bottom-width:
 .w-chg.replace { background: #fff0d9; color: #7a4a00; }
 .w-note { font-size: .95rem; font-weight: 700; color: var(--muted); margin: 2px 0 8px; }
 .scaf { margin: 12px 0; }
-.scaf-label { font: 600 1rem "Lexend", sans-serif; margin: 6px 0; }
+.scaf-label { font: 600 1rem "Nunito", sans-serif; margin: 6px 0; }
 .scaf-goal { background: color-mix(in srgb, var(--c) 10%, var(--card)); border: 2px dashed var(--c); border-radius: 10px; padding: 12px 14px; }
 .parsons { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; background: var(--bg2); border-radius: 10px; padding: 10px; }
 .parsons pre.blocks, .parsons .scratchblocks { margin: 0 !important; padding: 4px !important; background: transparent !important; }
 .p-more.answer summary { color: var(--c); }
 .opts { margin: 10px 0; }
 .opt-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.opt-tab { border: 2px solid var(--line); background: var(--bg2); color: var(--ink); border-radius: 6px; padding: 6px 14px; font: 700 .95rem "Lexend", sans-serif; cursor: pointer; }
+.opt-tab { border: 2px solid var(--line); background: var(--bg2); color: var(--ink); border-radius: 6px; padding: 6px 14px; font: 700 .95rem "Nunito", sans-serif; cursor: pointer; }
 .opt-tab.on { background: var(--c); border-color: var(--c); color: #fff; }
 .opt-body p { margin: 4px 0; font-weight: 600; }
 .frame { border: 2px solid var(--line); border-radius: 8px; margin: 12px 0; overflow: hidden; }
 .frame-head { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 6px 12px; font-weight: 800; }
-.frame-text { margin: 0; padding: 10px 14px; white-space: pre-wrap; font: 1rem/1.6 "Lexend", sans-serif; background: var(--card); }
+.frame-text { margin: 0; padding: 10px 14px; white-space: pre-wrap; font: 1rem/1.6 "Nunito", sans-serif; background: var(--card); }
 .stretch-tag { display: inline-block; background: #fff3c4; color: #7a5600; border-radius: 6px; padding: 0 8px; font-size: .78rem; letter-spacing: 0; text-transform: none; }
 .dot.stretch { border-style: dashed; }
 .p-more.solo { background: #e8f4ff; }
@@ -503,7 +503,7 @@ kbd { background: var(--bg); border: 1px solid var(--line); border-bottom-width:
 .gc-tier { display: flex; align-items: center; gap: 8px; border: 2px solid var(--line); border-radius: 8px; padding: 6px 10px; font-weight: 600; margin: 0; }
 .gc-tier.posted { background: var(--bg); }
 .gc-tier .gc-t { flex: 1; min-width: 0; font-size: .92rem; }
-.gc-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: var(--card); display: grid; place-items: center; font: 700 .8rem "Lexend", sans-serif; flex: none; }
+.gc-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: var(--card); display: grid; place-items: center; font: 700 .8rem "Nunito", sans-serif; flex: none; }
 .gc-opts { margin: 8px 0 12px; }
 .gc-opts label { margin: 0; display: flex; align-items: center; gap: 6px; }
 .tiny-input { width: auto !important; max-width: 170px; padding: 5px 8px !important; }
@@ -521,22 +521,22 @@ body.cs-on { background: #12112a; overflow: hidden; }
   padding-block: .8em; padding-left: max(1em, env(safe-area-inset-left, 0px)); padding-right: max(1em, env(safe-area-inset-right, 0px));
 }
 @media (max-height: 820px) { .cs { font-size: clamp(14px, 1.02vw, 19px); gap: .6em; } }
-.cs h2 { font: 600 1.1em "Lexend", sans-serif; margin: 0 0 .5em; color: var(--cs-gold); letter-spacing: .01em; }
+.cs h2 { font: 600 1.1em "Nunito", sans-serif; margin: 0 0 .5em; color: var(--cs-gold); letter-spacing: .01em; }
 .cs-loading { margin: auto; font-size: 1.5em; color: var(--cs-muted); }
 .cs-head { display: grid; grid-template-columns: 1fr auto 1.2fr auto; align-items: center; gap: 1.2em; background: var(--cs-card); border: 1px solid var(--cs-line); border-radius: .5em; padding: .6em 1em; }
 .cs-brand { display: flex; align-items: center; gap: .6em; min-width: 0; }
 .cs-logo { font-size: 2em; }
-.cs-class { font: 600 1.35em "Lexend", sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs-class { font: 600 1.35em "Nunito", sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cs-join { color: var(--cs-muted); font-size: .85em; }
 .cs-time { text-align: center; }
-.cs-clock { font: 700 2.6em/1 "Lexend", sans-serif; font-variant-numeric: tabular-nums; }
+.cs-clock { font: 700 2.6em/1 "Nunito", sans-serif; font-variant-numeric: tabular-nums; }
 .cs-clock small { font-size: .4em; margin-left: .2em; color: var(--cs-muted); }
 .cs-date { color: var(--cs-muted); font-size: .85em; }
 .cs-left { display: flex; flex-direction: column; align-items: center; gap: .25em; min-width: 0; }
 .cs-left-l { color: var(--cs-muted); font-size: .85em; text-transform: uppercase; letter-spacing: .08em; }
-.cs-count { font: 700 2.6em/1 "Lexend", sans-serif; font-variant-numeric: tabular-nums; color: var(--cs-good); }
+.cs-count { font: 700 2.6em/1 "Nunito", sans-serif; font-variant-numeric: tabular-nums; color: var(--cs-good); }
 .cs-count.soon { color: var(--cs-gold); }
-.cs-done { font: 700 1.5em "Lexend", sans-serif; color: var(--cs-gold); }
+.cs-done { font: 700 1.5em "Nunito", sans-serif; color: var(--cs-gold); }
 .cs-quick { display: flex; gap: .35em; flex-wrap: wrap; justify-content: center; font-size: .8em; color: var(--cs-muted); align-items: center; }
 .cs-quick.sm { font-size: .7em; }
 .cs-chip { background: transparent; color: var(--cs-ink); border: 1px solid var(--cs-line); border-radius: 6px; padding: .15em .7em; font: inherit; cursor: pointer; }
@@ -557,13 +557,13 @@ body.cs-on { background: #12112a; overflow: hidden; }
 .cs-agenda li::marker { color: var(--cs-gold); font-weight: 700; }
 .cs-focus { display: flex; flex-wrap: wrap; gap: .4em; margin-top: .8em; }
 .cs-quest { border-left: .3em solid var(--c); background: rgba(255,255,255,.07); border-radius: .5em; padding: .25em .6em; font-weight: 700; }
-.cs-q { font: 600 1.45em/1.3 "Lexend", sans-serif; margin: 0; text-wrap: balance; }
+.cs-q { font: 600 1.45em/1.3 "Nunito", sans-serif; margin: 0; text-wrap: balance; }
 .cs-mid .cs-card { flex: 1; display: flex; flex-direction: column; }
 #cs-teams { flex: 1; min-height: 0; overflow: hidden; }
 .cs-teams { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5em, 1fr)); gap: .6em; align-content: start; }
 .cs-team { background: rgba(255,255,255,.05); border: 1px solid var(--cs-line); border-radius: .45em; padding: .5em .6em; min-width: 0; }
 .cs-team-h { display: flex; align-items: center; gap: .4em; flex-wrap: wrap; margin-bottom: .3em; }
-.cs-team-h b { font: 600 1.05em "Lexend", sans-serif; }
+.cs-team-h b { font: 600 1.05em "Nunito", sans-serif; }
 .cs-team-ico { font-size: 1.2em; }
 .cs-together { margin-left: auto; font-size: .75em; color: var(--cs-good); font-weight: 700; }
 .cs-members { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .2em; }
@@ -656,7 +656,7 @@ body.cs-on.cs-dark { background: #12112a; }
 .cs-xp { display: flex; align-items: center; gap: .35em; font-size: 1.15em; flex-wrap: wrap; justify-content: flex-end; }
 .cs-xp .i { color: #f59e0b; }
 .cs-xp .cs-bar { flex-basis: 100%; max-width: 10em; margin-left: auto; }
-.cs .cs-btn { width: auto; height: auto; padding: .3em .7em; gap: .3em; display: inline-flex; align-items: center; border-radius: 999px; background: var(--cs-card); color: var(--cs-ink); border-color: var(--cs-line); font: 600 .8em "Lexend", sans-serif; }
+.cs .cs-btn { width: auto; height: auto; padding: .3em .7em; gap: .3em; display: inline-flex; align-items: center; border-radius: 999px; background: var(--cs-card); color: var(--cs-ink); border-color: var(--cs-line); font: 600 .8em "Nunito", sans-serif; }
 .cs .cs-btn:hover { background: var(--cs-soft); }
 .cs-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 2fr 1fr; gap: .8em; }
 .cs-main, .cs-side { display: flex; flex-direction: column; gap: .8em; min-height: 0; min-width: 0; }
@@ -731,12 +731,157 @@ body.cs-on.cs-dark { background: #12112a; }
 .road.done { stroke: #f2c45a; }
 .road-line { fill: none; stroke: #fff8e6; stroke-width: 3; stroke-dasharray: 10 12; stroke-linecap: round; }
 .road-edge.far, .road.far { opacity: .45; }
-.sign-text { font: 600 17px "Lexend", sans-serif; fill: #fff8e8; }
+.sign-text { font: 600 17px "Nunito", sans-serif; fill: #fff8e8; }
 .sign-ico { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.banner-text { font: 600 16px "Lexend", sans-serif; fill: #7a5410; }
+.banner-text { font: 600 16px "Nunito", sans-serif; fill: #7a5410; }
 .node-title { fill: #2b2235; stroke: #fdfbf3; stroke-width: 7px; }
 .node.s-locked .node-title { fill: #6b6475; }
 .node-ring { fill: #fffdf5; }
+
+
+/* =====================================================================
+   BOLD GAME THEME: bright, chunky, playful (original design)
+   Titan One for headings, Nunito for text, solid "3D" bottom edges.
+   ===================================================================== */
+:root {
+  --bg: #f1edfb; --bg2: #faf8ff; --card: #ffffff; --ink: #2a1650; --muted: #6e6290; --line: #e4dcf5;
+  --brand: #6a35e0; --brand2: #8a5cff; --accent: #6a35e0; --good: #22b86a; --warn: #f59e0b; --bad: #ef476f;
+  --xp1: #ffd23f; --xp2: #ff9f1c; --press: #d9d0ef;
+  --shadow: 0 5px 0 rgba(42, 22, 80, .12);
+  --radius: 16px;
+  --display: "Titan One", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #1b1330; --bg2: #241a40; --card: #2a1f4a; --ink: #f4efff; --muted: #b7a9dc; --line: #3d2f66; --press: #160f2b; --shadow: 0 5px 0 rgba(0,0,0,.35); color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #1b1330; --bg2: #241a40; --card: #2a1f4a; --ink: #f4efff; --muted: #b7a9dc; --line: #3d2f66; --press: #160f2b; --shadow: 0 5px 0 rgba(0,0,0,.35); color-scheme: dark; }
+body { font: 700 17px/1.5 "Nunito", system-ui, sans-serif; background: var(--bg); }
+h1, h2, h3, .logo, .stat b, .lv-circle b, .p-h, .cs-class, .cs-clock, .cs-count, .gc-num, .tier-num { font-family: var(--display); font-weight: 400; letter-spacing: .01em; }
+h1 { font-size: 2.1rem; } h2 { font-size: 1.4rem; } h3 { font-size: 1.15rem; }
+b, strong { font-weight: 900; }
+.eyebrow, .p-kicker { font-family: "Nunito", sans-serif; font-weight: 900; }
+
+/* top bar */
+.top { background: linear-gradient(180deg, #7b45f0, #6a35e0); border-bottom: 0; box-shadow: 0 4px 0 #4d22b0; color: #fff; }
+.logo, .logo b { color: #fff; font-family: var(--display); font-weight: 400; font-size: 1.55rem; }
+.logo b { color: #ffd23f; }
+.logo .i { color: #ffd23f; }
+.tabs a { color: #efe8ff; font-weight: 900; border-radius: 12px; }
+.tabs a:hover { background: rgba(255,255,255,.14); }
+.tabs a.on { background: #fff; color: #5b2bd6; box-shadow: 0 3px 0 #3f1b95; }
+.me-card { background: rgba(255,255,255,.16); color: #fff; border-radius: 14px; }
+.me-xp { color: #e6dcff; }
+.top .btn.ghost { color: #fff; border-color: rgba(255,255,255,.5); }
+.demo-bar { background: #2a1650; }
+
+/* cards */
+.card, .stat, .hall-card, .badge, .unl, .gc-course, .gc-tier, .lesson-item { border: 0; border-radius: var(--radius); box-shadow: var(--shadow); }
+.card.next { border: 0; box-shadow: 0 0 0 4px var(--c) inset, var(--shadow); }
+.stat.link { box-shadow: 0 0 0 3px var(--brand) inset, var(--shadow); }
+
+/* chunky buttons with a bottom edge that presses down */
+.btn { border: 0; border-radius: 12px; font-weight: 900; background: var(--card); color: var(--ink); box-shadow: 0 4px 0 var(--press); transition: transform .06s, box-shadow .06s; }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 5px 0 var(--press); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--press); }
+.btn.primary { background: #26c06b; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.15); box-shadow: 0 5px 0 #188a4b; border: 0; }
+.btn.primary:hover { box-shadow: 0 6px 0 #188a4b; }
+.btn.primary:active { box-shadow: 0 1px 0 #188a4b; }
+.btn.ghost { background: transparent; box-shadow: inset 0 0 0 2px var(--line); }
+.btn.danger { color: #fff; background: var(--bad); box-shadow: 0 4px 0 #b8304f; }
+.btn.big { font-size: 1.2rem; padding: 13px 24px; border-radius: 14px; }
+.cs-launch { background: #ffb703 !important; box-shadow: 0 5px 0 #c78a00 !important; color: #3b2400 !important; text-shadow: none !important; }
+input, textarea, select { border-radius: 12px; border: 2px solid var(--line); font-weight: 700; }
+
+/* xp bars: bright and thick */
+.xpbar { height: 10px; background: rgba(42,22,80,.12); }
+.top .xpbar { background: rgba(255,255,255,.25); }
+.xpbar.big { height: 18px; }
+
+/* quest player */
+.pcard { border: 0; border-top: 8px solid var(--c); border-radius: 18px; box-shadow: 0 6px 0 rgba(42,22,80,.14); }
+.dot { border: 0; box-shadow: 0 3px 0 var(--press); background: var(--card); font-family: var(--display); font-weight: 400; }
+.dot.done { background: var(--good); box-shadow: 0 3px 0 #188a4b; }
+.dot.now { box-shadow: 0 0 0 3px var(--c), 0 3px 0 var(--press); transform: scale(1.15); }
+.p-say { font-weight: 800; }
+.where .w-on, .where .w-chg { border: 0; border-radius: 10px; }
+.say-btn { border: 0; border-radius: 12px; box-shadow: 0 3px 0 var(--press); background: var(--bg2); }
+
+/* quick checks: four colored answer tiles */
+.choices.big { gap: 12px; }
+.choices.big .choice { border: 0; color: #fff; font-weight: 900; font-size: 1.15rem; border-radius: 14px; min-height: 72px; text-shadow: 0 2px 0 rgba(0,0,0,.18); transition: transform .06s; }
+.choices.big .choice:nth-child(4n+1) { background: #ffb703; box-shadow: 0 5px 0 #c78a00; }
+.choices.big .choice:nth-child(4n+2) { background: #3a86ff; box-shadow: 0 5px 0 #2563c4; }
+.choices.big .choice:nth-child(4n+3) { background: #26c06b; box-shadow: 0 5px 0 #188a4b; }
+.choices.big .choice:nth-child(4n+4) { background: #ef476f; box-shadow: 0 5px 0 #b8304f; }
+.choices.big .choice:hover:not(:disabled) { transform: translateY(-2px); }
+.choices.big .choice:active:not(:disabled) { transform: translateY(3px); }
+.choices.big .choice.wrong { background: #b9b0cf; box-shadow: 0 5px 0 #8f86a8; animation: shake .35s; }
+.choices.big .choice:disabled:not(.correct) { opacity: .35; }
+.choices.big .choice.correct { opacity: 1; box-shadow: 0 0 0 4px #fff, 0 0 0 8px var(--good), 0 5px 0 8px #188a4b; }
+
+/* badges, level, avatar editor */
+.badge { border: 0; opacity: .55; }
+.badge.got { opacity: 1; border: 0; background: linear-gradient(180deg, #fff6d6, #fff); box-shadow: 0 0 0 3px #ffd23f inset, var(--shadow); }
+.b-ico { font-size: 2.8rem; }
+.lv-circle { background: radial-gradient(circle at 30% 30%, #ffe066, #ff9f1c); box-shadow: 0 6px 0 #c76a00; }
+.av-opt, .av-tabs button, .opt-tab { border: 0; box-shadow: 0 3px 0 var(--press); border-radius: 12px; }
+.av-opt.on, .av-tabs button.on, .opt-tab.on { box-shadow: 0 0 0 3px var(--accent), 0 3px 0 var(--press); }
+
+/* toasts and modals */
+.toast { border-radius: 14px; font-weight: 800; box-shadow: 0 5px 0 rgba(0,0,0,.25); }
+.modal { border-radius: 20px; box-shadow: 0 8px 0 rgba(0,0,0,.2), 0 30px 80px rgba(0,0,0,.35); }
+.lv-burst { font-family: var(--display); font-weight: 400; border-radius: 14px; }
+
+/* ---- quest map: bold game board ---- */
+.map-box { background: #5b2bd6; padding: 0; border-radius: 20px; box-shadow: 0 6px 0 #3f1b95; }
+.road-edge { stroke: #2a1650; stroke-width: 30; opacity: .55; }
+.road { stroke: #ffffff; stroke-width: 18; }
+.road.done { stroke: #ffd23f; }
+.road-line { stroke: #fff; stroke-width: 4; stroke-dasharray: 12 12; opacity: .9; }
+.road-edge.far { opacity: .25; }
+.road.far { opacity: .45; }
+.node-ring { fill: #fff; stroke: none; stroke-width: 0; }
+.node.s-available .node-ring { stroke: #ffd23f; stroke-width: 6; }
+.node:hover .node-ring, .node:focus .node-ring { stroke: #ffd23f; stroke-width: 7; }
+.node-core { fill: #cfc8e6; }
+.node-shine { fill: #fff; opacity: .3; pointer-events: none; }
+.node-ico { font: 400 30px "Titan One", sans-serif; fill: #fff; paint-order: stroke; stroke: rgba(42, 22, 80, .35); stroke-width: 4px; }
+.node.s-locked .node-icon, .node.s-gated .node-icon { stroke: #7a6fa0; }
+.node-title { font: 400 20px "Titan One", sans-serif; fill: #fff; stroke: #2a1650; stroke-width: 7px; paint-order: stroke; stroke-linejoin: round; }
+.node.s-locked .node-title { fill: #e4dcf5; }
+.sign-text { font: 400 18px "Titan One", sans-serif; }
+.sign-ico { stroke: #fff; }
+.banner-text { font: 400 17px "Titan One", sans-serif; fill: #4a2e00; }
+.you-label { font: 400 17px "Titan One", sans-serif; fill: #ffd23f; stroke: #2a1650; stroke-width: 5px; paint-order: stroke; }
+
+/* ---- Class Screen in the bold game style ---- */
+body.cs-on { background: #5b2bd6; }
+.cs {
+  --cs-bg: linear-gradient(180deg, #7b45f0, #4b1fb0); --cs-card: #ffffff; --cs-line: #e4dcf5; --cs-ink: #2a1650; --cs-muted: #6e6290;
+  --cs-gold: #6a35e0; --cs-good: #22b86a; --cs-track: #c9bdf0; --cs-soft: #f3effc;
+  font-family: "Nunito", sans-serif; font-weight: 700;
+}
+.cs .cs-card { border: 0; border-radius: 18px; box-shadow: 0 6px 0 rgba(42, 22, 80, .35); }
+.cs h2 { font-family: var(--display); font-weight: 400; }
+.cs .cs-head, .cs .cs-head .cs-class { color: #fff; }
+.cs .cs-class { font-family: var(--display); font-weight: 400; text-shadow: 0 3px 0 rgba(0,0,0,.2); }
+.cs .cs-today { color: #ffd23f; font-weight: 900; }
+.cs .cs-xp { color: #fff; font-weight: 900; }
+.cs .cs-xp .i { color: #ffd23f; }
+.cs .cs-btn { border: 0; box-shadow: 0 4px 0 #3f1b95; font-family: "Nunito", sans-serif; font-weight: 900; }
+.cs .cs-logo .i { color: #ffd23f; }
+.cs-st-dot { border: 0; background: var(--c); color: #fff; box-shadow: 0 4px 0 rgba(42, 22, 80, .3), inset 0 0 0 3px rgba(255,255,255,.55); font-family: var(--display); font-weight: 400; }
+.cs-st.finish .cs-st-dot { background: #ffd23f; color: #4a2e00; box-shadow: 0 4px 0 #c78a00; }
+.cs-st.finish .cs-st-kids { background: #fff6d6; }
+.cs-track::before { border-top-color: var(--cs-track); }
+.cs .cs-chip { border: 0; box-shadow: 0 3px 0 var(--cs-line); background: var(--cs-soft); font-weight: 900; }
+.cs .cs-chip.on { background: #6a35e0; color: #fff; box-shadow: 0 3px 0 #3f1b95; }
+.cs .cs-clock { font-family: var(--display); font-weight: 400; color: #2a1650; }
+.cs .cs-count { font-family: var(--display); font-weight: 400; }
+.cs .cs-q { font-family: "Nunito", sans-serif; font-weight: 900; }
+.cs-stdc { border: 0; }
+.cs.dark { --cs-bg: #160f2b; --cs-card: #2a1f4a; --cs-line: #3d2f66; --cs-ink: #f4efff; --cs-muted: #b7a9dc; --cs-gold: #ffd23f; --cs-soft: rgba(255,255,255,.07); }
+.cs.dark .cs-clock { color: #fff; }
 
 </style>
 
@@ -11972,183 +12117,122 @@ var SQ_ICONS = (function () {
 })();
 
 
-/* Scratch Quest — illustrated quest map scenery (flat storybook vector art).
- * Everything here is static: no animations, no filters (those made the map flicker on Chromebooks).
- * The scenery string is built once and cached. Coordinates match SQ_RULES.NODES on a 1000 × 1990 map.
+/* Scratch Quest — quest map scenery in a bold game-board style (original design).
+ * Bright raised tiles for each area, big simple shapes, a thick white road. Static and cached:
+ * no animations or filters (those made the map flicker on Chromebooks).
+ * Coordinates match SQ_RULES.NODES on a 1000 × 1990 map.
  */
 var SQ_MAPART = (function () {
   var o;
   function P(s) { o.push(s); }
   function f(n) { return Math.round(n * 10) / 10; }
-
-  // ---------- little drawings ----------
-  function tree(x, y, s, c1, c2) { // round storybook tree
-    s = s || 1; c1 = c1 || '#4caf50'; c2 = c2 || '#6fcf72';
-    P('<g transform="translate(' + x + ',' + y + ') scale(' + s + ')"><ellipse cx="0" cy="20" rx="16" ry="5" fill="#000" opacity=".1"/><rect x="-4" y="2" width="8" height="18" rx="2" fill="#8d6238"/>' +
-      '<circle cy="-10" r="20" fill="' + c1 + '"/><circle cx="-9" cy="-4" r="12" fill="' + c1 + '"/><circle cx="-6" cy="-16" r="9" fill="' + c2 + '"/></g>');
+  // area colors: [tile, edge (3D side), pattern tint, deco]
+  var C = {
+    trunk: ['#5fe08f', '#22a35a', '#7ff0a8', '#1f8a4c'],
+    games: ['#ffb45c', '#e07b1f', '#ffc985', '#c4610d'],
+    stories: ['#c79bff', '#8f4fe6', '#d9b8ff', '#7a3bd1'],
+    apps: ['#5fd6f5', '#1a9ccc', '#8de4fa', '#0f7fab'],
+    merge: ['#ffd84f', '#d4a20b', '#ffe68a', '#b98a00'],
+    finale: ['#ff94bd', '#e0457b', '#ffb6d2', '#c2346a']
+  };
+  function tile(x, y, w, h, k) {
+    var c = C[k];
+    P('<rect x="' + x + '" y="' + (y + 12) + '" width="' + w + '" height="' + h + '" rx="30" fill="' + c[1] + '"/>' +
+      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="30" fill="' + c[0] + '"/>' +
+      '<rect x="' + (x + 14) + '" y="' + (y + 8) + '" width="' + (w - 28) + '" height="10" rx="5" fill="#fff" opacity=".25"/>');
   }
-  function pine(x, y, s, c1, c2) {
-    s = s || 1; c1 = c1 || '#2f7d4f'; c2 = c2 || '#3f9a62';
-    P('<g transform="translate(' + x + ',' + y + ') scale(' + s + ')"><ellipse cx="0" cy="22" rx="14" ry="4" fill="#000" opacity=".1"/><rect x="-3" y="12" width="6" height="10" fill="#7a5230"/>' +
-      '<path d="M0,-34 L16,-6 L8,-6 L20,14 L-20,14 L-8,-6 L-16,-6 Z" fill="' + c1 + '"/><path d="M0,-34 L16,-6 L8,-6 L20,14 L2,14 Z" fill="' + c2 + '" opacity=".55"/></g>');
-  }
-  function flowers(x, y, c) {
-    c = c || ['#ff8fab', '#ffd166', '#ffffff'];
-    [[0, 0], [12, 5], [-10, 7], [5, 13]].forEach(function (p, i) {
-      P('<circle cx="' + (x + p[0]) + '" cy="' + (y + p[1]) + '" r="3.2" fill="' + c[i % c.length] + '"/><circle cx="' + (x + p[0]) + '" cy="' + (y + p[1]) + '" r="1.2" fill="#f4a300"/>');
-    });
-  }
-  function tuft(x, y, c) { P('<path d="M' + x + ',' + y + ' l3,-9 l2,9 l3,-7 l2,7" fill="none" stroke="' + (c || '#8fc274') + '" stroke-width="2" stroke-linecap="round"/>'); }
-  function mountain(x, y, s, body, shade, snow) {
-    s = s || 1;
-    P('<g transform="translate(' + x + ',' + y + ') scale(' + s + ')"><path d="M-46,26 L0,-38 L46,26 Z" fill="' + body + '"/><path d="M0,-38 L46,26 L10,26 Z" fill="' + shade + '"/>' +
-      (snow ? '<path d="M-14,-18 L0,-38 L14,-18 L7,-13 L0,-20 L-7,-13 Z" fill="' + snow + '"/>' : '') + '</g>');
-  }
-  function cube(x, y, c, d) { // pixel block
-    P('<rect x="' + x + '" y="' + y + '" width="18" height="18" fill="' + c + '"/><rect x="' + x + '" y="' + (y + 14) + '" width="18" height="4" fill="' + d + '"/><rect x="' + (x + 3) + '" y="' + (y + 3) + '" width="5" height="5" fill="#fff" opacity=".45"/>');
-  }
-  function coin(x, y) { P('<circle cx="' + x + '" cy="' + y + '" r="8" fill="#f6c343" stroke="#d99a1e" stroke-width="2"/><rect x="' + (x - 1.5) + '" y="' + (y - 4) + '" width="3" height="8" rx="1" fill="#d99a1e"/>'); }
-  function mushroom(x, y, cap) {
-    P('<rect x="' + (x - 4) + '" y="' + y + '" width="8" height="11" rx="3" fill="#f6ead7"/><path d="M' + (x - 13) + ',' + (y + 2) + ' Q' + x + ',' + (y - 18) + ' ' + (x + 13) + ',' + (y + 2) + ' Z" fill="' + (cap || '#e5484d') + '"/>' +
-      '<circle cx="' + (x - 4) + '" cy="' + (y - 4) + '" r="2.2" fill="#fff"/><circle cx="' + (x + 5) + '" cy="' + (y - 2) + '" r="1.6" fill="#fff"/>');
-  }
-  function book(x, y, s) {
-    s = s || 1;
-    P('<g transform="translate(' + x + ',' + y + ') scale(' + s + ')"><path d="M-30,6 L0,12 L30,6 L30,-14 L0,-8 L-30,-14 Z" fill="#8a5a3c"/><path d="M-27,2 Q-14,-2 0,4 L0,-12 Q-14,-18 -27,-14 Z" fill="#fffaf0"/>' +
-      '<path d="M27,2 Q14,-2 0,4 L0,-12 Q14,-18 27,-14 Z" fill="#fff4e0"/><path d="M-20,-9 h12 M-20,-4 h12 M8,-9 h12 M8,-4 h12" stroke="#c9b79c" stroke-width="1.5"/></g>');
-  }
-  function gear(x, y, r, c) {
-    var pts = [];
-    for (var i = 0; i < 16; i++) { var a = Math.PI * 2 * i / 16, rr = i % 2 ? r : r * 1.28; pts.push(f(x + rr * Math.cos(a)) + ',' + f(y + rr * Math.sin(a))); }
-    P('<polygon points="' + pts.join(' ') + '" fill="' + c + '"/><circle cx="' + x + '" cy="' + y + '" r="' + f(r * .42) + '" fill="#f5e7c4"/>');
-  }
-  function lighthouse(x, y, light) {
-    P('<g transform="translate(' + x + ',' + y + ')"><path d="M-10,40 L-6,-10 L6,-10 L10,40 Z" fill="#fff"/><path d="M-9,28 L-8,18 L8,18 L9,28 Z M-7,6 L-7,-2 L7,-2 L7,6 Z" fill="#e5484d"/>' +
-      '<rect x="-8" y="-20" width="16" height="10" fill="' + (light ? '#ffe28a' : '#9ad1f0') + '" stroke="#37474f" stroke-width="2"/><path d="M-10,-20 L0,-30 L10,-20 Z" fill="#37474f"/>' +
-      (light ? '<path d="M8,-17 L40,-26 L40,-6 Z" fill="#ffe28a" opacity=".55"/>' : '') + '</g>');
-  }
-  function wave(x, y, c) { P('<path d="M' + x + ',' + y + ' q6,-6 12,0 t12,0" fill="none" stroke="' + (c || '#ffffff') + '" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>'); }
-  function crystal(x, y, s, c, d) {
-    s = s || 1;
-    P('<g transform="translate(' + x + ',' + y + ') scale(' + s + ')"><path d="M0,-26 L10,-4 L0,16 L-10,-4 Z" fill="' + c + '"/><path d="M0,-26 L10,-4 L0,0 Z" fill="#fff" opacity=".45"/>' +
-      '<path d="M-14,16 L-18,0 L-10,-10 L-6,8 Z" fill="' + d + '"/><path d="M12,16 L16,2 L22,10 L18,18 Z" fill="' + d + '"/></g>');
-  }
-  function rock(x, y, s, c) { s = s || 1; P('<path transform="translate(' + x + ',' + y + ') scale(' + s + ')" d="M-26,12 Q-28,-6 -12,-14 Q4,-24 18,-10 Q30,0 24,12 Z" fill="' + (c || '#8e86a3') + '"/>'); }
-  function castle(x, y) {
-    P('<g transform="translate(' + x + ',' + y + ')"><ellipse cx="0" cy="44" rx="78" ry="10" fill="#000" opacity=".08"/>' +
-      '<rect x="-50" y="-20" width="100" height="64" fill="#efe3f2"/><rect x="-50" y="-20" width="100" height="10" fill="#d9c6e2"/>' +
-      [-50, -30, -10, 10, 30].map(function (cx) { return '<rect x="' + cx + '" y="-30" width="12" height="10" fill="#efe3f2"/>'; }).join('') +
-      '<rect x="-72" y="-46" width="30" height="90" fill="#e6d4ec"/><rect x="42" y="-46" width="30" height="90" fill="#e6d4ec"/>' +
-      '<path d="M-78,-46 L-57,-82 L-36,-46 Z M36,-46 L57,-82 L78,-46 Z" fill="#c2457a"/><path d="M-57,-82 v-16 l14,5 l-14,5" fill="#f6c343"/><path d="M57,-82 v-16 l14,5 l-14,5" fill="#4aa3df"/>' +
-      '<rect x="-14" y="10" width="28" height="34" rx="14" fill="#7a3b5c"/><rect x="-64" y="-26" width="12" height="16" rx="6" fill="#7a3b5c"/><rect x="52" y="-26" width="12" height="16" rx="6" fill="#7a3b5c"/>' +
-      '<rect x="-30" y="-4" width="10" height="12" rx="5" fill="#7a3b5c"/><rect x="20" y="-4" width="10" height="12" rx="5" fill="#7a3b5c"/></g>');
-  }
-  function bunting(x1, x2, y, colors) {
-    P('<path d="M' + x1 + ',' + y + ' Q' + ((x1 + x2) / 2) + ',' + (y + 22) + ' ' + x2 + ',' + y + '" fill="none" stroke="#9b7a8c" stroke-width="2"/>');
-    var n = 9;
-    for (var i = 1; i < n; i++) {
-      var t = i / n, bx = x1 + (x2 - x1) * t, by = y + 22 * 4 * t * (1 - t) * .5 + 1;
-      P('<path d="M' + f(bx - 7) + ',' + f(by) + ' L' + f(bx + 7) + ',' + f(by) + ' L' + f(bx) + ',' + f(by + 14) + ' Z" fill="' + colors[i % colors.length] + '"/>');
+  function dots(x, y, w, h, color, step) { // soft polka-dot pattern inside a tile
+    step = step || 70;
+    for (var yy = y + 40; yy < y + h - 20; yy += step) for (var xx = x + 30 + ((yy / step) % 2 ? step / 2 : 0); xx < x + w - 20; xx += step) {
+      P('<circle cx="' + f(xx) + '" cy="' + f(yy) + '" r="9" fill="' + color + '" opacity=".55"/>');
     }
   }
+  // chunky decorations (2 tones, no outlines)
+  function tree(x, y, s, c) { s = s || 1; P('<g transform="translate(' + x + ',' + y + ') scale(' + s + ')"><rect x="-6" y="4" width="12" height="20" rx="4" fill="#8a4f2a"/><circle cy="-8" r="22" fill="' + (c || '#1f8a4c') + '"/><circle cx="-7" cy="-15" r="8" fill="#fff" opacity=".25"/></g>'); }
+  function cube(x, y, c, d, s) { s = s || 26; P('<rect x="' + x + '" y="' + (y + 5) + '" width="' + s + '" height="' + s + '" rx="5" fill="' + d + '"/><rect x="' + x + '" y="' + y + '" width="' + s + '" height="' + s + '" rx="5" fill="' + c + '"/><rect x="' + (x + 5) + '" y="' + (y + 5) + '" width="7" height="7" rx="2" fill="#fff" opacity=".5"/>'); }
+  function coin(x, y) { P('<circle cx="' + x + '" cy="' + (y + 3) + '" r="11" fill="#c78a00"/><circle cx="' + x + '" cy="' + y + '" r="11" fill="#ffd23f"/><rect x="' + (x - 2) + '" y="' + (y - 6) + '" width="4" height="12" rx="2" fill="#c78a00"/>'); }
   function star(x, y, r, c) {
     var pts = [];
-    for (var i = 0; i < 10; i++) { var a = Math.PI / 5 * i - Math.PI / 2, rr = i % 2 ? r * .45 : r; pts.push(f(x + rr * Math.cos(a)) + ',' + f(y + rr * Math.sin(a))); }
+    for (var i = 0; i < 10; i++) { var a = Math.PI / 5 * i - Math.PI / 2, rr = i % 2 ? r * .48 : r; pts.push(f(x + rr * Math.cos(a)) + ',' + f(y + rr * Math.sin(a))); }
     P('<polygon points="' + pts.join(' ') + '" fill="' + c + '"/>');
   }
-  function biome(x, y, w, h, fill, edge) {
-    P('<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="30" fill="' + fill + '" stroke="' + edge + '" stroke-width="4"/>');
+  function book(x, y, c) { P('<g transform="translate(' + x + ',' + y + ')"><rect x="-26" y="-12" width="52" height="30" rx="5" fill="' + c + '"/><rect x="-22" y="-16" width="21" height="28" rx="3" fill="#fff"/><rect x="1" y="-16" width="21" height="28" rx="3" fill="#fff"/><path d="M-18,-8 h13 M-18,-2 h13 M5,-8 h13 M5,-2 h13" stroke="#d9c8f5" stroke-width="3" stroke-linecap="round"/></g>'); }
+  function gear(x, y, r, c) {
+    var pts = [];
+    for (var i = 0; i < 16; i++) { var a = Math.PI * 2 * i / 16, rr = i % 2 ? r : r * 1.3; pts.push(f(x + rr * Math.cos(a)) + ',' + f(y + rr * Math.sin(a))); }
+    P('<polygon points="' + pts.join(' ') + '" fill="' + c + '"/><circle cx="' + x + '" cy="' + y + '" r="' + f(r * .45) + '" fill="#fff" opacity=".85"/>');
   }
+  function crystal(x, y, s, c) { s = s || 1; P('<g transform="translate(' + x + ',' + y + ') scale(' + s + ')"><path d="M0,-30 L13,-6 L0,18 L-13,-6 Z" fill="' + c + '"/><path d="M0,-30 L13,-6 L0,-2 Z" fill="#fff" opacity=".5"/></g>'); }
+  function mountain(x, y, s, c, snow) { s = s || 1; P('<g transform="translate(' + x + ',' + y + ') scale(' + s + ')"><path d="M-46,28 L0,-36 L46,28 Z" fill="' + c + '"/><path d="M-15,-15 L0,-36 L15,-15 L6,-10 L0,-17 L-6,-10 Z" fill="' + (snow || '#fff') + '"/></g>'); }
+  function castle(x, y) {
+    P('<g transform="translate(' + x + ',' + y + ')"><rect x="-56" y="-14" width="112" height="62" rx="6" fill="#c2346a"/><rect x="-56" y="-20" width="112" height="62" rx="6" fill="#fff"/>' +
+      '<rect x="-76" y="-50" width="32" height="92" rx="6" fill="#fff"/><rect x="44" y="-50" width="32" height="92" rx="6" fill="#fff"/>' +
+      '<path d="M-82,-50 L-60,-86 L-38,-50 Z M38,-50 L60,-86 L82,-50 Z" fill="#ffd23f"/><rect x="-15" y="6" width="30" height="36" rx="15" fill="#c2346a"/>' +
+      '<rect x="-66" y="-30" width="12" height="16" rx="6" fill="#ff94bd"/><rect x="54" y="-30" width="12" height="16" rx="6" fill="#ff94bd"/></g>');
+  }
+  function trophy(x, y) { P('<g transform="translate(' + x + ',' + y + ')"><rect x="-14" y="16" width="28" height="8" rx="3" fill="#c78a00"/><rect x="-5" y="4" width="10" height="14" fill="#ffd23f"/><path d="M-18,-20 h36 v10 a18,18 0 0 1 -36,0 Z" fill="#ffd23f"/><path d="M-18,-14 h-8 a8,8 0 0 0 8,10 M18,-14 h8 a8,8 0 0 1 -8,10" fill="none" stroke="#ffd23f" stroke-width="4"/></g>'); }
+  function sparkle(x, y, r, c) { P('<path d="M' + x + ',' + (y - r) + ' Q' + x + ',' + y + ' ' + (x + r) + ',' + y + ' Q' + x + ',' + y + ' ' + x + ',' + (y + r) + ' Q' + x + ',' + y + ' ' + (x - r) + ',' + y + ' Q' + x + ',' + y + ' ' + x + ',' + (y - r) + ' Z" fill="' + (c || '#fff') + '"/>'); }
 
-  // ---------- the whole scene ----------
   var cache = null;
   function scene() {
     if (cache) return cache;
     o = [];
-    // ground
-    P('<rect width="1000" height="1990" fill="#d7ecc3"/>');
-    [[60, 80], [150, 300], [90, 520], [880, 140], [940, 420], [830, 560], [60, 1010], [930, 1000], [120, 1240], [880, 1250], [80, 1650], [920, 1700], [160, 1900], [860, 1930]].forEach(function (p) { tuft(p[0], p[1]); tuft(p[0] + 14, p[1] + 6); });
-    // forest edges beside Sprite Meadow
-    [[70, 120, 1.1], [170, 200, .9], [100, 330, 1.2], [195, 430, .8], [80, 560, 1], [190, 590, .9],
-      [840, 90, 1], [930, 210, 1.2], [820, 300, .9], [920, 470, 1.1], [835, 560, .85]].forEach(function (t, i) { tree(t[0], t[1], t[2], i % 2 ? '#3f9a4f' : '#4caf50', '#7bd17e'); });
-    // fork 1 and 2 surroundings (outside the boxes) + caves and castle edges
-    [[150, 1010, 1], [120, 1150, .9], [870, 1060, 1], [890, 1180, .85], [140, 1700, 1], [100, 1850, .9], [880, 1640, 1], [900, 1800, .9]].forEach(function (t) { tree(t[0], t[1], t[2], '#43a047', '#79c97c'); });
+    // purple world with soft bubbles and sparkles
+    P('<defs><linearGradient id="mapsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b45f0"/><stop offset="1" stop-color="#4b1fb0"/></linearGradient></defs>');
+    P('<rect width="1000" height="1990" fill="url(#mapsky)"/>');
+    [[110, 160, 90], [900, 330, 120], [80, 1080, 110], [930, 1140, 90], [120, 1760, 120], [890, 1820, 100], [500, 1990, 160]].forEach(function (b) {
+      P('<circle cx="' + b[0] + '" cy="' + b[1] + '" r="' + b[2] + '" fill="#fff" opacity=".06"/>');
+    });
+    [[60, 60, 9], [190, 330, 7], [140, 500, 10], [850, 120, 8], [940, 520, 10], [830, 600, 6], [60, 980, 7], [180, 1220, 9], [940, 990, 8], [820, 1230, 7], [70, 1620, 9], [180, 1940, 7], [930, 1640, 8], [810, 1950, 9]].forEach(function (s) { sparkle(s[0], s[1], s[2], '#ffe68a'); });
 
     // Sprite Meadow
-    biome(250, 30, 500, 600, '#c4e6a5', '#9ccf80');
-    P('<path d="M254,250 Q300,190 340,250 Q300,300 254,300 Z" fill="#b2dc8f"/><path d="M746,170 Q690,120 650,190 Q700,230 746,220 Z" fill="#b2dc8f"/>');
-    P('<path d="M254,560 Q330,500 380,600 L380,626 L254,626 Z" fill="#b2dc8f"/>');
-    P('<ellipse cx="705" cy="420" rx="38" ry="20" fill="#8fcbe8" stroke="#6fb3d6" stroke-width="3"/><path d="M688,416 q6,-4 12,0 M706,424 q6,-4 12,0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>');
-    tree(295, 145, 1.05); tree(300, 455, .95); tree(705, 265, 1); tree(330, 575, .7); tree(700, 560, .9);
-    flowers(290, 330); flowers(690, 140); flowers(640, 600); flowers(300, 70, ['#b39ddb', '#ffffff', '#ffd166']);
-    tuft(330, 300); tuft(660, 470); tuft(320, 510);
-
-    // Arcade Peaks (fork 1) and Arcade Peaks II (fork 2, snowy)
-    biome(40, 640, 290, 300, '#f8dcbf', '#e9b98c');
-    mountain(275, 712, .8, '#e39a6b', '#cf8456', '#fff3e6'); mountain(305, 735, .55, '#eaa77b', '#d48b5c');
-    cube(60, 780, '#ff7a59', '#d4573a'); cube(78, 780, '#ffb347', '#d98a2b'); cube(69, 762, '#7c6cf0', '#5a4bc9');
-    cube(282, 860, '#43c6ac', '#2c9b84'); cube(282, 878, '#ff7a59', '#d4573a');
-    coin(75, 900); coin(290, 815); coin(98, 915);
-    biome(40, 1275, 290, 300, '#e6eef8', '#bccde2');
-    mountain(270, 1350, .85, '#9fb4cf', '#8299b8', '#ffffff'); mountain(305, 1368, .55, '#b1c3da', '#94a9c4', '#ffffff');
-    cube(60, 1420, '#5aa9e6', '#3b84c0'); cube(78, 1420, '#7c6cf0', '#5a4bc9'); cube(69, 1402, '#43c6ac', '#2c9b84');
-    coin(80, 1540); coin(290, 1460); pine(285, 1540, .75, '#4e8f7a', '#6aae97');
-
-    // Story Woods (fork 1) and Story Woods II (fork 2, autumn)
-    biome(355, 640, 290, 300, '#acd59c', '#84b872');
-    pine(388, 705, 1); pine(615, 702, 1.1); pine(392, 905, .9); pine(618, 895, 1); pine(410, 790, .7);
-    mushroom(395, 840); mushroom(605, 805, '#f07a3a'); book(600, 930, .7);
-    biome(355, 1275, 290, 300, '#f4dcae', '#dcb675');
-    tree(390, 1340, .95, '#e8833a', '#f2a65a'); tree(615, 1335, 1, '#d9534f', '#ee8a6a'); tree(388, 1535, .85, '#f0b23a', '#f6cf6a'); tree(617, 1530, .9, '#e8833a', '#f2a65a');
-    mushroom(400, 1440, '#a0522d'); book(610, 1440, .65);
-
-    // Gadget Bay (fork 1) and Gadget Bay II (fork 2, dusk)
-    biome(670, 640, 290, 300, '#f6e8c6', '#e3cc94');
-    P('<path d="M905,644 Q890,720 912,790 Q930,860 905,936 L930,936 Q956,936 956,906 L956,674 Q956,644 930,644 Z" fill="#9fd3ec"/>');
-    wave(915, 760); wave(920, 850); wave(915, 905);
-    lighthouse(932, 700); gear(705, 790, 11, '#9aa7b4'); gear(722, 806, 7, '#c0c9d2'); gear(706, 905, 9, '#9aa7b4');
-    P('<path d="M880,870 h28 M880,880 h28" stroke="#a97a4a" stroke-width="4"/>');
-    biome(670, 1275, 290, 300, '#e9ddf3', '#c8b5de');
-    P('<path d="M905,1279 Q890,1355 912,1425 Q930,1495 905,1571 L930,1571 Q956,1571 956,1541 L956,1309 Q956,1279 930,1279 Z" fill="#8ab0e3"/>');
-    wave(915, 1400); wave(918, 1500);
-    lighthouse(932, 1335, true); gear(705, 1425, 11, '#8e88a8'); gear(706, 1535, 9, '#8e88a8');
-    star(720, 1300, 4, '#fff6c2'); star(880, 1310, 3, '#fff6c2');
-
+    tile(250, 30, 500, 600, 'trunk'); dots(250, 30, 500, 600, C.trunk[2], 90);
+    tree(300, 150, 1.1, C.trunk[3]); tree(305, 460, 1, C.trunk[3]); tree(705, 260, 1.05, C.trunk[3]); tree(700, 530, .9, C.trunk[3]); tree(320, 580, .7, C.trunk[3]);
+    star(690, 120, 16, '#fff'); star(300, 300, 11, '#fff');
+    // Arcade Peaks + II
+    tile(40, 640, 290, 300, 'games'); dots(40, 640, 290, 300, C.games[2]);
+    mountain(282, 714, .75, C.games[3]); cube(58, 770, '#7c4dff', '#5a2fd6'); cube(84, 770, '#ff4d6d', '#c92a4a'); cube(71, 744, '#3a86ff', '#2563c4'); coin(285, 830); coin(80, 905); coin(108, 915);
+    tile(40, 1275, 290, 300, 'games'); dots(40, 1275, 290, 300, C.games[2]);
+    mountain(275, 1352, .85, '#c4610d', '#ffffff'); cube(58, 1420, '#26c06b', '#188a4b'); cube(84, 1420, '#ffd23f', '#c78a00'); coin(80, 1540); coin(288, 1470);
+    // Story Woods + II
+    tile(355, 640, 290, 300, 'stories'); dots(355, 640, 290, 300, C.stories[2]);
+    book(605, 725, '#7a3bd1'); star(390, 900, 15, '#fff'); star(612, 905, 10, '#ffe68a'); tree(392, 790, .8, C.stories[3]);
+    tile(355, 1275, 290, 300, 'stories'); dots(355, 1275, 290, 300, C.stories[2]);
+    book(395, 1340, '#7a3bd1'); star(612, 1335, 14, '#ffe68a'); tree(612, 1530, .85, C.stories[3]); star(392, 1535, 10, '#fff');
+    // Gadget Bay + II
+    tile(670, 640, 290, 300, 'apps'); dots(670, 640, 290, 300, C.apps[2]);
+    gear(925, 725, 18, C.apps[3]); gear(902, 752, 10, '#fff'); gear(705, 905, 14, C.apps[3]); cube(905, 880, '#ffd23f', '#c78a00');
+    tile(670, 1275, 290, 300, 'apps'); dots(670, 1275, 290, 300, C.apps[2]);
+    gear(925, 1360, 18, C.apps[3]); gear(705, 1540, 13, C.apps[3]); cube(905, 1515, '#ff4d6d', '#c92a4a');
     // Debug Caves
-    biome(250, 955, 500, 270, '#cfc8dc', '#a79ebd');
-    P('<path d="M262,1215 L262,1120 Q262,1070 310,1070 Q358,1070 358,1120 L358,1215 Z" fill="#8e86a3"/><path d="M280,1215 L280,1128 Q280,1094 310,1094 Q340,1094 340,1128 L340,1215 Z" fill="#3f3852"/>');
-    rock(712, 1000, 1, '#a39bb8'); rock(690, 1195, 1.2, '#958daa'); rock(300, 1000, .8, '#a39bb8');
-    crystal(330, 1035, .9, '#8f7cf7', '#b8a9ff'); crystal(700, 1100, 1, '#4cc3e0', '#8adff2'); crystal(660, 1190, .7, '#e46fd3', '#f3a6e8'); crystal(380, 1185, .6, '#4cc3e0', '#8adff2');
-
+    tile(250, 955, 500, 270, 'merge'); dots(250, 955, 500, 270, C.merge[2], 80);
+    P('<path d="M266,1213 L266,1125 Q266,1072 314,1072 Q362,1072 362,1125 L362,1213 Z" fill="#b98a00"/><path d="M284,1213 L284,1130 Q284,1095 314,1095 Q344,1095 344,1130 L344,1213 Z" fill="#4a2e00" opacity=".75"/>');
+    crystal(690, 1020, 1.1, '#7c4dff'); crystal(720, 1048, .7, '#3a86ff'); crystal(680, 1180, .9, '#ff4d6d'); crystal(330, 1010, .8, '#26c06b');
     // Showcase Castle
-    biome(250, 1590, 500, 370, '#f6dbe7', '#e3abc4');
-    bunting(270, 730, 1612, ['#e5484d', '#f6c343', '#43a047', '#4aa3df', '#a464e0']);
-    castle(650, 1820);
-    star(300, 1700, 6, '#f6c343'); star(330, 1880, 5, '#f6c343'); star(720, 1690, 5, '#f6c343');
-    flowers(300, 1930, ['#ff8fab', '#ffffff', '#b39ddb']); flowers(720, 1935);
+    tile(250, 1590, 500, 370, 'finale'); dots(250, 1590, 500, 370, C.finale[2], 80);
+    castle(655, 1835); trophy(310, 1890); star(300, 1700, 14, '#fff'); star(720, 1690, 11, '#ffe68a'); sparkle(340, 1770, 10, '#fff');
 
     cache = o.join('');
     return cache;
   }
-
-  // Wooden sign with the area name (drawn above the roads)
+  // White pill label with the area name
   function sign(x, y, label, icon, color) {
-    var w = Math.round(label.length * 10.5 + 56);
-    return '<g class="sign"><rect x="' + (x + 18) + '" y="' + (y + 28) + '" width="6" height="20" fill="#7a4f2a"/>' +
-      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="34" rx="6" fill="#a8743f" stroke="#6e4723" stroke-width="3"/>' +
-      '<rect x="' + (x + 4) + '" y="' + (y + 4) + '" width="' + (w - 8) + '" height="4" rx="2" fill="#fff" opacity=".18"/>' +
-      '<circle cx="' + (x + 20) + '" cy="' + (y + 17) + '" r="11" fill="' + color + '"/>' +
-      '<use href="#i-' + icon + '" x="' + (x + 12) + '" y="' + (y + 9) + '" width="16" height="16" class="sign-ico"/>' +
-      '<text x="' + (x + 38) + '" y="' + (y + 23) + '" class="sign-text">' + label + '</text></g>';
+    var w = Math.round(label.length * 11.2 + 58);
+    return '<g class="sign"><rect x="' + x + '" y="' + (y + 5) + '" width="' + w + '" height="36" rx="18" fill="#2a1650" opacity=".25"/>' +
+      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="36" rx="18" fill="#fff"/>' +
+      '<circle cx="' + (x + 19) + '" cy="' + (y + 18) + '" r="13" fill="' + color + '"/>' +
+      '<use href="#i-' + icon + '" x="' + (x + 10) + '" y="' + (y + 9) + '" width="18" height="18" class="sign-ico"/>' +
+      '<text x="' + (x + 40) + '" y="' + (y + 25) + '" class="sign-text" style="fill:' + color + '">' + label + '</text></g>';
   }
   function banner(cx, y, text) {
-    var w = Math.round(text.length * 9.6 + 60), x = cx - w / 2;
-    return '<g class="banner-rib"><path d="M' + (x - 18) + ',' + (y + 4) + ' L' + x + ',' + (y + 4) + ' L' + x + ',' + (y + 32) + ' L' + (x - 18) + ',' + (y + 32) + ' L' + (x - 8) + ',' + (y + 18) + ' Z" fill="#d9a441"/>' +
-      '<path d="M' + (x + w + 18) + ',' + (y + 4) + ' L' + (x + w) + ',' + (y + 4) + ' L' + (x + w) + ',' + (y + 32) + ' L' + (x + w + 18) + ',' + (y + 32) + ' L' + (x + w + 8) + ',' + (y + 18) + ' Z" fill="#d9a441"/>' +
-      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="30" rx="4" fill="#fff4d6" stroke="#d9a441" stroke-width="3"/>' +
-      '<text x="' + cx + '" y="' + (y + 20) + '" text-anchor="middle" class="banner-text">' + text + '</text></g>';
+    var w = Math.round(text.length * 10.4 + 56), x = cx - w / 2;
+    return '<g class="banner-rib"><rect x="' + x + '" y="' + (y + 5) + '" width="' + w + '" height="34" rx="17" fill="#c78a00"/>' +
+      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="34" rx="17" fill="#ffd23f"/>' +
+      '<text x="' + cx + '" y="' + (y + 23) + '" text-anchor="middle" class="banner-text">' + text + '</text></g>';
   }
-  return { scene: scene, sign: sign, banner: banner };
+  // darker "3D side" color for a node of each area
+  function edgeColor(branch) { return (C[branch] || C.trunk)[1]; }
+  return { scene: scene, sign: sign, banner: banner, edgeColor: edgeColor };
 })();
 
 
@@ -12497,9 +12581,11 @@ var SQ_MAPART = (function () {
       var clickable = state ? (s !== 'locked') : true;
       var href = state ? '#/quest/' + n.id : '#/t/lesson/' + n.id;
       o.push('<a ' + (clickable ? 'href="' + href + '"' : 'data-act="locked" data-node="' + n.id + '"') + ' class="' + cls + '" tabindex="0"><title>' + esc(title(n.id)) + ' — ' + statusWord(s) + '</title>');
-      o.push('<circle cx="' + n.x + '" cy="' + n.y + '" r="40" class="node-ring" stroke="' + B.color + '"/>');
-      o.push('<circle cx="' + n.x + '" cy="' + (n.y + 4) + '" r="32" class="node-shadow"/>');
-      o.push('<circle cx="' + n.x + '" cy="' + n.y + '" r="32" class="node-core"' + (s === 'locked' || s === 'gated' ? '' : ' style="fill:' + B.color + '"') + '/>');
+      var dim = s === 'locked' || s === 'gated';
+      o.push('<circle cx="' + n.x + '" cy="' + (n.y + 8) + '" r="41" class="node-base" style="fill:' + (dim ? '#8f84b3' : SQ_MAPART.edgeColor(n.branch)) + '"/>');
+      o.push('<circle cx="' + n.x + '" cy="' + n.y + '" r="41" class="node-ring"/>');
+      o.push('<circle cx="' + n.x + '" cy="' + n.y + '" r="33" class="node-core"' + (dim ? '' : ' style="fill:' + B.color + '"') + '/>');
+      o.push('<ellipse cx="' + (n.x - 10) + '" cy="' + (n.y - 16) + '" rx="13" ry="7" class="node-shine"/>');
       var icoName = { done: 'check', locked: 'lock', gated: 'clock', submitted: 'send', returned: 'undo' }[s];
       if (icoName) o.push('<use href="#i-' + icoName + '" x="' + (n.x - 14) + '" y="' + (n.y - 14) + '" width="28" height="28" class="node-icon"/>');
       else o.push('<text x="' + n.x + '" y="' + (n.y + 9) + '" text-anchor="middle" class="node-ico">' + n.tier + '</text>');
