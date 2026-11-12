@@ -31,6 +31,51 @@ Each student completes 14 of the 22 quests (the trunk, one branch at each fork, 
 | 13 | Capstone Build | Showcase Castle | **6-8.CT.b.3**: Breaks an example game into features and blocks with the class, then decomposes their own idea the same way.<br>**6-8.CT.d.3**: Builds a program toward a stated goal: the MVP.<br>**6-8.CT.d.4**: The challenge combines loops, conditionals, variables, and a custom block. | Creating, Analyzing |
 | 14 | Showcase Day | Showcase Castle | **6-8.CT.d.3**: Mystery Mission exit ticket: builds a new mini-program from a written spec with no help.<br>**6-8.DTC.b.1**: Publishes and presents a finished project in a one-minute pitch.<br>**6-8.DTC.b.3**: Leaves kind, specific Glow comments on classmates' projects.<br>**6-8.CAS.a.4**: Practices netiquette in the class studio (challenge). | Communicating, Collaborating |
 
+## Enduring understandings and essential questions (Understanding by Design)
+
+### Unit level
+
+**Students will understand that:**
+
+- computers follow instructions exactly, so precise and well-ordered code produces predictable results.
+- complex programs are built from a few simple ideas: sequence, events, loops, conditionals, variables, and abstraction.
+- programming is an iterative process of designing, testing, debugging, and improving, often with feedback from others.
+- code is a creative tool: people use it to tell stories, make games, and build apps that matter to them and others.
+
+**Essential questions:**
+
+- How can we use code to bring our ideas to life?
+- How do programmers break big problems into smaller ones they can solve?
+- What do good creators do when something does not work?
+- How does technology shape the way we create, learn, and share?
+
+### By quest
+
+| Tier | Quest | Essential question | Enduring understanding: students will understand that… |
+|---|---|---|---|
+| 1 | Hello, Sprite! | How do we give a computer exact directions? | computers follow instructions exactly, so precise directions, like x and y positions, control exactly what happens. |
+| 2 | Lights, Camera, Events! | How does a program know when to act? | programs react to events like clicks and key presses, and the order of instructions changes the result. |
+| 3 | Loop-de-Loop | Why do programmers avoid repeating themselves? | loops repeat a few instructions to make patterns and animation, so programs stay short and easy to change. |
+| 4 | If This, Then That | How can a program make decisions? | programs use conditions to check what is happening and choose what to do next. |
+| 5 | Power-Up Pack | How does a program remember and share information? | variables store information that can change, and messages let different parts of a program work together. |
+| 6 | Score Keeper | What makes a game feel fair and fun? | a game is rules turned into code: variables track progress, and conditions decide when the score changes. |
+| 6 | Talking Characters | How do stories and programs both depend on timing and sequence? | timing and messages coordinate characters, the same way a script coordinates actors on a stage. |
+| 6 | Ask Me Anything | How do programs listen and respond to people? | programs take input, store it, and use it to respond differently to different people. |
+| 7 | Clone Army | How can one set of instructions control many objects? | clones let one script create and control many copies, so a program can grow without more code. |
+| 7 | Scene Changer | How do we break a big project into parts we can manage? | breaking a project into scenes or parts (decomposition) makes complex work easier to build, test, and fix. |
+| 7 | Quiz Builder | How does an app decide whether something is right? | apps compare what a user does to what they expect, give feedback, and keep track of results with variables. |
+| 8 | Bug Hunters & Code Readers | What do good problem solvers do when something does not work? | bugs are a normal part of creating; testing, tracing code step by step, and reading carefully are how we find and fix them. |
+| 9 | My Blocks Workshop | How can we make complicated programs simpler? | abstraction lets us package steps into our own blocks, hiding detail so ideas can be reused. |
+| 10 | Gravity & Jumping | How can we model the real world with code? | simulations imitate the real world with simplified rules; a good model keeps what matters and leaves out the rest. |
+| 10 | Choose Your Path | How do choices change what a program does? | conditionals create branching paths, so a user’s decisions shape what happens next. |
+| 10 | List Master | How do programs organize lots of information? | lists keep collections of data in order so a program can add to them, search them, and loop through them. |
+| 11 | Level Up! | How do designers keep players challenged? | big games are built from smaller systems (levels, lives, scoring) that work together. |
+| 11 | Sound and Atmosphere | How do sound and visuals change how people experience a story? | combining media like sound, music, and visual effects communicates mood and meaning beyond words. |
+| 11 | Drawing Tools | How do digital tools turn ideas into creations? | the tools we use every day are programs too; their features come from code that responds to the user. |
+| 12 | Playtest & Polish | How does feedback make our work better? | creators improve their work through testing, feedback from others, and revision. |
+| 13 | Capstone Build | How do creators turn a big idea into something real? | planning, breaking an idea into features, and building in small tested steps make big projects possible. |
+| 14 | Showcase Day | Why do we share what we create? | sharing and explaining our work helps others learn and helps us reflect on how we have grown. |
+
 ## By standard
 
 | Standard | Text | Quests |

@@ -955,3 +955,11 @@ body.cs-on { background: #5b2bd6; }
 .xf-coin { font-size: .85em; color: #c78a00; }
 .me-xp .coin { width: .9em; height: .9em; }
 @media (max-width: 900px) { .studio { grid-template-columns: 1fr; } .studio-stage { position: static; } }
+
+/* essential questions / enduring understandings */
+.cs .cs-eu { margin: .7em 0 0; font-size: .9em; color: var(--cs-muted); font-weight: 700; line-height: 1.4; }
+.cs .cs-eu b { color: var(--cs-ink); }
+.ubd-mini { font-size: .85rem; color: var(--muted); margin: 4px 0; }
+.ubd-card { box-shadow: 0 0 0 3px #ffd23f inset, var(--shadow); }
+.p-bigq { background: #fff6d6; border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
+.p-bigq p { margin: 4px 0 0; font-weight: 800; }

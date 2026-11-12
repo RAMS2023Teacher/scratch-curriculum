@@ -452,6 +452,7 @@
     h += '<div class="quest-grid"><div class="quest-main">';
     if (video) h += '<section class="card"><h2><svg class="i"><use href="#i-video"/></svg> Watch first</h2>' + videoEmbed(video) + '</section>';
     h += '<section class="card goal"><h2><svg class="i"><use href="#i-target"/></svg> Your mission</h2><p>' + esc(Ls.goal) + '</p>' + (Ls.warmup ? '<div class="warmup"><b>Warm-up:</b> ' + esc(Ls.warmup) + '</div>' : '') + '</section>';
+    if (teacherPreview && SQ_UBD.lessons[id]) h += '<section class="card ubd-card"><h2><svg class="i"><use href="#i-bulb"/></svg> Big idea</h2><p><b>Enduring understanding:</b> Students will understand that ' + esc(SQ_UBD.lessons[id].eu.charAt(0).toLowerCase() + SQ_UBD.lessons[id].eu.slice(1)) + '</p><p><b>Essential question:</b> ' + esc(SQ_UBD.lessons[id].eq) + '</p></section>';
     if (teacherPreview) {
       var pk = primerKeys(id, true);
       if (pk.length) h += '<section class="card"><h2><svg class="i"><use href="#i-sparkles"/></svg> Primer cards</h2><p class="small">Shown only to students whose path skipped these skills:</p>' + pk.map(function (k) { return '<details class="p-more"><summary>' + esc(SQ_PRIMERS[k].title) + '</summary>' + primerCard(k) + '</details>'; }).join('') + '</section>';
@@ -668,6 +669,7 @@
         '<h1 class="p-h say">' + esc(Ls.title) + '</h1><p class="p-big say">' + esc(Ls.tagline) + '</p>' +
         (video ? videoEmbed(video) : '') +
         '<div class="p-goal"><b><svg class="i"><use href="#i-target"/></svg> Your mission</b><p class="say">' + esc(Ls.mission || Ls.goal) + '</p></div>' +
+        (SQ_UBD.lessons[id] ? '<div class="p-bigq"><b><svg class="i"><use href="#i-help"/></svg> Big question</b><p class="say">' + esc(SQ_UBD.lessons[id].eq) + '</p></div>' : '') +
         '<div class="p-meta"><span><svg class="i"><use href="#i-clock"/></svg> ' + esc(Ls.minutes) + ' min</span><span><svg class="i"><use href="#i-list"/></svg> ' + core + ' steps' + (Ls.steps.length > core && !accom().coreOnly ? ' + ' + (Ls.steps.length - core) + ' stretch' : '') + '</span></div>' +
         (Ls.starter && starter ? '<div class="starter"><svg class="i"><use href="#i-briefcase"/></svg> <b>Missed the last quest, or lost your project?</b> <a href="' + esc(starter) + '" target="_blank" rel="noopener">Open the starter project <svg class="i"><use href="#i-external"/></svg></a>, click <b>Remix</b>, and start from here.</div>' : '') +
         (Ls.warmup ? '<details class="p-more"><summary><svg class="i"><use href="#i-flame"/></svg> Warm-up question</summary><p class="say">' + esc(Ls.warmup) + '</p></details>' : '') +
@@ -1087,7 +1089,7 @@
       groups[t].forEach(function (n) {
         var Ls = L[n.id], B = R.BRANCHES[n.branch];
         h += '<div class="card lesson-item" style="--c:' + B.color + '"><div class="eyebrow">' + SQ_ICONS.branch(n.branch) + ' ' + esc(B.name) + (Ls.project ? ' · ' + esc(Ls.project.name) + ' ' + esc(Ls.project.part) : '') + '</div><h3>' + esc(Ls.title) + '</h3>' +
-          '<p class="small">' + esc(Ls.skill) + ' · ' + esc(Ls.minutes) + ' min</p><p class="muted small">' + esc(Ls.teacherNotes || '') + '</p>' +
+          '<p class="small">' + esc(Ls.skill) + ' · ' + esc(Ls.minutes) + ' min</p>' + (SQ_UBD.lessons[n.id] ? '<p class="ubd-mini"><b>EQ:</b> ' + esc(SQ_UBD.lessons[n.id].eq) + '</p>' : '') + '<p class="muted small">' + esc(Ls.teacherNotes || '') + '</p>' +
           '<form class="row" data-form="video" data-node="' + n.id + '"><input name="url" placeholder="Video link (optional)" value="' + esc(vids[n.id] || '') + '"><button class="btn small">Save</button></form>' +
           (Ls.starter ? '<form class="row" data-form="starter" data-node="' + n.id + '"><input name="url" placeholder="Starter project link (for absent students)" value="' + esc((S.boot.settings.starters || {})[n.id] || '') + '"><button class="btn small">Save</button></form><p class="muted small"><svg class="i"><use href="#i-briefcase"/></svg> Starter should contain: ' + esc(Ls.starter.contains) + '</p>' : '') +
           stdChips(n.id) + '<a class="btn small ghost" href="#/t/lesson/' + n.id + '"><svg class="i"><use href="#i-eye"/></svg> Preview</a></div>';
@@ -1108,20 +1110,7 @@
   }
   // ============================================================ CLASS SCREEN (projector, teacher only)
   // Only positive information: no grades, quiz results, or returned work.
-  var CS_QUESTIONS = [
-    'What is one bug you fixed today? How did you find it?',
-    'If your project could do one more thing, what would it be?',
-    'Which block did you use the most today? Why?',
-    'How could you make your project easier for someone new to use?',
-    'What would happen if you changed one number in your code?',
-    'Where could a loop save you some blocks?',
-    'Who helped you today, and how did they help?',
-    'What is something that was hard last week but feels easier now?',
-    'How would you explain your code to a younger student?',
-    'What is one way to test that your project works?',
-    'What did you try that did not work, and what did you learn?',
-    'Which of your sprites needs to reset when the green flag is clicked?'
-  ];
+  var CS_QUESTIONS = SQ_UBD.unit.eqs;
   var CS_TEAMS = [['#ef4444', 'Pixels'], ['#3b82f6', 'Rockets'], ['#a855f7', 'Octopi'], ['#f59e0b', 'Sparks'], ['#14b8a6', 'Foxes'], ['#ec4899', 'Rainbows'], ['#84cc16', 'Robots'], ['#f97316', 'Dragons']];
   function teamDot(color) { return '<span class="cs-dot" style="background:' + (/^#[0-9a-f]{6}$/i.test(color || '') ? color : '#94a3b8') + '"></span>'; }
   var CS_AGENDA = 'Keep going on your quest\nTurn it in when every core step is done\nTry the bonus challenge or help a classmate';
@@ -1175,7 +1164,7 @@
         '<div class="cs-card cs-helpbox" id="cs-helpbox"><h2><svg class="i"><use href="#i-help"/></svg> Who to ask for help</h2><div id="cs-help"></div></div></div>' +
         '</section><section class="cs-side">' +
         '<div class="cs-card cs-timecard"><div class="cs-clock"><span id="cs-clock"></span><small id="cs-ampm"></small></div><div class="cs-date" id="cs-date"></div><div class="cs-left" id="cs-left"></div></div>' +
-        '<div class="cs-card cs-think"><h2><svg class="i"><use href="#i-message"/></svg> Question of the day</h2><div id="cs-question"></div></div>' +
+        '<div class="cs-card cs-think"><h2><svg class="i"><use href="#i-message"/></svg> Essential question</h2><div id="cs-question"></div></div>' +
         '<div class="cs-card cs-winsbox" id="cs-winsbox"><h2><svg class="i"><use href="#i-sparkles"/></svg> Recent wins</h2><div id="cs-wins"></div></div>' +
         '</section></div>';
     }
@@ -1252,8 +1241,11 @@
     var std = race ? stdOf(race.quest).s : [];
     csSet('cs-mission', '<ol class="cs-agenda">' + agenda.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' +
       (std.length ? '<div class="cs-std"><span class="cs-std-l">Standards:</span>' + std.map(function (x) { return '<span class="cs-stdc" title="' + esc(SQ_DLCS.standards[x[0]]) + '">6-8.' + esc(x[0]) + '</span>'; }).join('') + '</div>' : ''));
-    var q = sc.question || (race && L[race.quest] && L[race.quest].warmup) || CS_QUESTIONS[new Date().getDate() % CS_QUESTIONS.length];
-    csSet('cs-question', '<p class="cs-q' + (q.length > 130 ? ' long' : '') + '">' + esc(q) + '</p>');
+    // Understanding by Design: the quest's essential question, with its enduring understanding ("big idea")
+    var ubd = race && SQ_UBD.lessons[race.quest];
+    var q = sc.question || (ubd && ubd.eq) || CS_QUESTIONS[new Date().getDate() % CS_QUESTIONS.length];
+    var eu = ubd ? ubd.eu : SQ_UBD.unit.eus[new Date().getDate() % SQ_UBD.unit.eus.length];
+    csSet('cs-question', '<p class="cs-q' + (q.length > 130 ? ' long' : '') + '">' + esc(q) + '</p><p class="cs-eu"><b>Big idea:</b> ' + esc(eu) + '</p>');
     // ---- wins ----
     var wb = document.getElementById('cs-winsbox'); if (wb) wb.hidden = sc.showWins === false;
     csSet('cs-wins', d.wins.length ? '<ul class="cs-wins">' + d.wins.slice(0, 6).map(function (w) {
@@ -1328,8 +1320,8 @@
       '<div class="small"><b>Focus quests</b> (up to 4)</div><div class="cs-pick">' + R.NODES.map(function (n) {
         return '<label class="cs-pickq"><input type="checkbox" name="f_' + n.id + '"' + (focus.indexOf(n.id) >= 0 ? ' checked' : '') + '> ' + SQ_ICONS.branch(R.NODE[n.id].branch) + ' ' + esc(title(n.id)) + '</label>';
       }).join('') + '</div>' +
-      '<h3><svg class="i"><use href="#i-message"/></svg> Think about it</h3><textarea name="question" rows="2" id="cs-qbox" placeholder="Leave empty to use the focus quest\'s warm-up">' + esc(sc.question || '') + '</textarea>' +
-      '<div class="row"><button type="button" class="btn small" data-act="cs-q-random"><svg class="i"><use href="#i-dice"/></svg> Another question</button><button type="button" class="btn small ghost" data-act="cs-q-clear">Use the quest warm-up</button></div>' +
+      '<h3><svg class="i"><use href="#i-message"/></svg> Essential question</h3><p class="small muted">Leave this empty to show the quest’s essential question and big idea (recommended). Or type your own.</p><textarea name="question" rows="2" id="cs-qbox" placeholder="Leave empty to use the quest’s essential question">' + esc(sc.question || '') + '</textarea>' +
+      '<div class="row"><button type="button" class="btn small" data-act="cs-q-random"><svg class="i"><use href="#i-dice"/></svg> A unit essential question</button><button type="button" class="btn small ghost" data-act="cs-q-clear">Use the quest’s essential question</button></div>' +
       '<h3>Show</h3><label class="switch"><input type="checkbox" name="showWins"' + (sc.showWins !== false ? ' checked' : '') + '> <svg class="i"><use href="#i-sparkles"/></svg> Recent wins</label>' +
       '<label class="switch"><input type="checkbox" name="showHelpers"' + (sc.showHelpers !== false ? ' checked' : '') + '> <svg class="i"><use href="#i-help"/></svg> Who to ask for help</label>' +
       '<label class="switch"><input type="checkbox" name="dark"' + (sc.dark ? ' checked' : '') + '> Dark screen (try it if the room is bright or the projector is dim)</label>' +

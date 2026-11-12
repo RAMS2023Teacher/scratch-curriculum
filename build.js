@@ -19,7 +19,7 @@ fs.readdirSync(shotDir).filter(f => f.endsWith('.webp')).forEach(f => {
   shots[f.replace('.webp', '')] = 'data:image/webp;base64,' + fs.readFileSync(path.join(shotDir, f)).toString('base64');
 });
 const shotsJs = 'var SQ_SHOTS = ' + JSON.stringify(shots) + ';\n' + rd('src/shotmap.js');
-const client = shared + '\n\n' + rd('src/standards.js') + '\n\n' + rd('src/primers.js') + '\n\n' + shotsJs + '\n\n' + rd('src/api.js') + '\n\n' + rd('src/icons.js') + '\n\n' + rd('src/sounds.js') + '\n\n' + rd('src/mapart.js') + '\n\n' + rd('src/app.js');
+const client = shared + '\n\n' + rd('src/standards.js') + '\n\n' + rd('src/understandings.js') + '\n\n' + rd('src/primers.js') + '\n\n' + shotsJs + '\n\n' + rd('src/api.js') + '\n\n' + rd('src/icons.js') + '\n\n' + rd('src/sounds.js') + '\n\n' + rd('src/mapart.js') + '\n\n' + rd('src/app.js');
 const safe = (s) => s.replace(/<\/script/gi, '<\\/script').replace(/<!--/g, '<\\!--');
 
 const html = rd('src/index.template.html')
@@ -46,7 +46,7 @@ const gasBuild = (async () => {
   const addPart = (name, body) => parts.push({ name, body: body + '\n<script>(window.SQ_PARTS=window.SQ_PARTS||{})[' + JSON.stringify(name) + ']=1;</script>\n' });
   addPart('Styles', '<style>' + minCss(rd('src/styles.css')) + '</style>');
   addPart('Shots', '<script>\nvar SQ_SHOTS = ' + JSON.stringify(shots) + ';\n</script>');
-  const engine = [rd('src/rules.js'), rd('src/avatar.js'), rd('src/standards.js'), rd('src/primers.js'), rd('src/shotmap.js'), rd('src/api.js'), rd('src/icons.js'), rd('src/sounds.js'), rd('src/mapart.js'), rd('src/app.js')].join('\n;\n');
+  const engine = [rd('src/rules.js'), rd('src/avatar.js'), rd('src/standards.js'), rd('src/understandings.js'), rd('src/primers.js'), rd('src/shotmap.js'), rd('src/api.js'), rd('src/icons.js'), rd('src/sounds.js'), rd('src/mapart.js'), rd('src/app.js')].join('\n;\n');
   addPart('Engine', '<script>\n' + safe(await mini(engine)) + '\n</script>');
   const order = parts.map(x => x.name);
   const shell = rd('src/index.template.html')
@@ -90,8 +90,8 @@ const style = html.match(/<style>[\s\S]*?<\/style>/)[0];
 fs.writeFileSync(path.join(out, 'artifact.html'), '<title>Scratch Quest</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n' + fonts + '\n' + style + '\n' + body);
 // Standards alignment document for administrators
 {
-  const ctx = {}; new Function('ctx', lessonsJs + rd('src/rules.js') + rd('src/standards.js') + ';ctx.L=SQ_LESSONS;ctx.R=SQ_RULES;ctx.D=SQ_DLCS;')(ctx);
-  const { L, R, D } = ctx;
+  const ctx = {}; new Function('ctx', lessonsJs + rd('src/rules.js') + rd('src/standards.js') + rd('src/understandings.js') + ';ctx.L=SQ_LESSONS;ctx.R=SQ_RULES;ctx.D=SQ_DLCS;ctx.U=SQ_UBD;')(ctx);
+  const { L, R, D, U } = ctx;
   let md = '# Scratch Quest: MA DLCS Standards Alignment\n\n' + D.source + '. Standard text is quoted from the official framework: ' + D.url + '\n\n';
   md += 'Each student completes 14 of the 22 quests (the trunk, one branch at each fork, the rejoin quests, and the finale). Branch quests are marked with their path.\n\n';
   md += '## By lesson\n\n| Tier | Quest | Path | Standards (grades 6–8) | Practices |\n|---|---|---|---|---|\n';
@@ -99,6 +99,10 @@ fs.writeFileSync(path.join(out, 'artifact.html'), '<title>Scratch Quest</title>\
     const a = D.lessons[n.id] || { s: [], p: [] };
     md += '| ' + n.tier + ' | ' + L[n.id].title + ' | ' + R.BRANCHES[n.branch].name + ' | ' + a.s.map(x => '**6-8.' + x[0] + '**: ' + x[1]).join('<br>') + ' | ' + a.p.map(p => D.practices[p]).join(', ') + ' |\n';
   });
+  md += '\n## Enduring understandings and essential questions (Understanding by Design)\n\n';
+  md += '### Unit level\n\n**Students will understand that:**\n\n' + U.unit.eus.map(e => '- ' + e.charAt(0).toLowerCase() + e.slice(1)).join('\n') + '\n\n**Essential questions:**\n\n' + U.unit.eqs.map(q => '- ' + q).join('\n') + '\n\n';
+  md += '### By quest\n\n| Tier | Quest | Essential question | Enduring understanding: students will understand that… |\n|---|---|---|---|\n';
+  R.NODES.forEach(n => { const u = U.lessons[n.id]; if (u) md += '| ' + n.tier + ' | ' + L[n.id].title + ' | ' + u.eq + ' | ' + u.eu.charAt(0).toLowerCase() + u.eu.slice(1) + ' |\n'; });
   md += '\n## By standard\n\n| Standard | Text | Quests |\n|---|---|---|\n';
   Object.keys(D.standards).forEach(code => {
     const ls = R.NODES.filter(n => (D.lessons[n.id] || { s: [] }).s.some(x => x[0] === code)).map(n => L[n.id].title);
