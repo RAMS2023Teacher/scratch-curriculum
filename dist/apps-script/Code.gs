@@ -65,7 +65,7 @@ function setup() {
 }
 
 var CLASSROOM_ACTIONS_ = { classroomCourses: 1, classroomImport: 1, classroomPost: 1, classroomUnlink: 1 };
-var READ_ONLY_ = { bootstrap: 1, classView: 1, teacherData: 1, classroomCourses: 1, lessons: 1, classScreen: 1 };
+var READ_ONLY_ = { bootstrap: 1, classView: 1, teacherData: 1, classroomCourses: 1, lessons: 1, classScreen: 1, arcade: 1, arcadeBoardFor: 1 };
 
 /** Single entry point used by the web page: google.script.run.api(action, args). */
 function api(action, args) {

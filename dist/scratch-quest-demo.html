@@ -973,6 +973,95 @@ body.cs-on { background: #5b2bd6; }
 .p-bigq { background: #fff6d6; border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
 .p-bigq p { margin: 4px 0 0; font-weight: 800; }
 
+/* ===================== Arcade: Block Rush ===================== */
+.arcade { display: grid; gap: 16px; }
+.arc-hero { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 22px 24px; border-radius: 14px; color: #fff;
+  background: radial-gradient(circle at 85% 20%, rgba(255, 214, 10, .35), transparent 40%), linear-gradient(135deg, #3a0ca3, #7209b7 55%, #f72585); box-shadow: 0 6px 0 #240b6b; }
+.arc-hero h1 { font-family: var(--display); font-size: clamp(2rem, 5vw, 3.2rem); margin: 0; color: #ffd60a; text-shadow: 0 4px 0 #240b6b; letter-spacing: .5px; }
+.arc-hero p { margin: .2em 0 0; max-width: 46ch; font-weight: 700; }
+.arc-hero .eyebrow { color: #ffe9a8; }
+.arc-hero-side { display: grid; gap: 10px; justify-items: end; }
+.arc-wallet { display: flex; gap: 10px; flex-wrap: wrap; }
+.arc-wallet > span { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, .16); padding: 6px 12px; border-radius: 10px; font-weight: 800; }
+.arc-wallet .coin-tag { color: #fff; }
+.arc-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-weight: 800; font-size: .92rem; background: #ede9fe; color: #4c1d95; }
+.arc-chip .i { width: 1em; height: 1em; }
+.arc-chip.off { background: #e5e7eb; color: #374151; }
+.arc-chip.free { background: #dcfce7; color: #14532d; }
+.arc-chip.pass { background: #fff3c4; color: #7c4a03; }
+.arc-chip.open { background: #e0f2fe; color: #0c4a6e; }
+.arc-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .arc-grid { grid-template-columns: 1fr; } }
+.arc-play { min-height: 320px; display: grid; place-items: center; }
+.arc-lock, .arc-ready { text-align: center; max-width: 460px; display: grid; gap: 8px; justify-items: center; }
+.big-ico { width: 64px; height: 64px; color: var(--accent); }
+.arc-lock .big-ico { color: var(--muted); }
+.arc-lock.open .big-ico { color: #7209b7; }
+.btn.huge { font-size: 1.35rem; padding: 16px 30px; }
+.arc-stage { width: 100%; display: grid; justify-items: center; gap: 10px; }
+#arc-canvas { width: min(100%, 420px); aspect-ratio: 420 / 600; border-radius: 14px; box-shadow: 0 6px 0 #240b6b, 0 14px 40px rgba(58, 12, 163, .35); touch-action: none; cursor: none; display: block; max-height: 78vh; object-fit: contain; }
+.arc-powers { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; font-weight: 800; font-size: .9rem; align-items: center; }
+.pu-ico { --pc: #7b2ff7; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--pc); box-shadow: 0 3px 0 rgba(0, 0, 0, .25), inset 0 2px 0 rgba(255, 255, 255, .35); flex: none; }
+.pu-ico svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.arc-powers .pu-ico, .arc-wallet .pu-ico { width: 28px; height: 28px; border-radius: 8px; }
+.arc-powers .pu-ico svg, .arc-wallet .pu-ico svg { width: 17px; height: 17px; }
+.pu-pick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.pu-tog { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); color: var(--ink); font: 800 .95rem Nunito, sans-serif; cursor: pointer; box-shadow: 0 3px 0 var(--line); }
+.pu-tog small { color: var(--muted); }
+.pu-tog.on { border-color: #7209b7; box-shadow: 0 3px 0 #7209b7, 0 0 0 4px rgba(114, 9, 183, .15); }
+.pu-tog .pu-ico { width: 30px; height: 30px; }
+.pu-tog .pu-ico svg { width: 18px; height: 18px; }
+.lb { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+.lb li { display: grid; grid-template-columns: 30px 40px 1fr auto; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: var(--bg2); border: 2px solid var(--line); }
+.lb li.me { border-color: #7209b7; background: #f5edff; }
+.lb-n { font: 900 1.1rem Nunito, system-ui, sans-serif; text-align: center; color: var(--muted); }
+.lb li.top1 .lb-n { color: #e0a800; } .lb li.top2 .lb-n { color: #8d99ae; } .lb li.top3 .lb-n { color: #c06a2b; }
+.lb li.top1 { border-color: #ffd60a; box-shadow: 0 0 0 3px rgba(255, 214, 10, .25); }
+.lb-av { width: 40px; height: 40px; border-radius: 8px; }
+.lb-name { font-weight: 800; line-height: 1.15; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.lb-name small { display: block; font-weight: 700; color: #7209b7; font-size: .75rem; }
+.lb-score { font: 900 1.2rem Nunito, system-ui, sans-serif; }
+.lb.compact li { grid-template-columns: 26px 32px 1fr auto; padding: 4px 8px; }
+.lb.compact .lb-av { width: 32px; height: 32px; }
+.arc-mine { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.arc-mine > div { background: var(--bg2); border-radius: 10px; padding: 8px 10px; border: 2px solid var(--line); }
+.arc-mine span { display: block; font-size: .8rem; color: var(--muted); font-weight: 700; }
+.arc-mine b { font: 900 1.5rem Nunito, system-ui, sans-serif; }
+.arc-troph { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.arc-troph li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; border: 2px dashed var(--line); opacity: .75; }
+.arc-troph li.got { border-style: solid; opacity: 1; }
+.arc-troph li.got.r-rare { border-color: #3a86ff; } .arc-troph li.got.r-epic { border-color: #a855f7; } .arc-troph li.got.r-legendary { border-color: #ffb703; }
+.pu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.pu-card { display: grid; gap: 6px; align-content: start; padding: 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg2); box-shadow: 0 4px 0 var(--line); }
+.pu-card p { margin: 0; font-size: .9rem; color: var(--muted); min-height: 2.6em; }
+.pu-card.ticket { background: linear-gradient(160deg, #f5edff, var(--bg2)); border-color: #c4a5f5; }
+.pu-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
+.arc-result { text-align: center; }
+.arc-big { font: 900 4.4rem Nunito, system-ui, sans-serif; color: #7209b7; line-height: 1; text-shadow: 0 4px 0 #ffd60a; }
+.arc-nb { font-weight: 900; color: #b45309; font-size: 1.15rem; }
+.t-arcade .arc-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+@media (max-width: 700px) { .t-arcade .arc-modes { grid-template-columns: 1fr; } }
+.arc-mode { display: grid; gap: 2px; justify-items: start; text-align: left; padding: 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg2); color: var(--ink); cursor: pointer; font: 700 .9rem Nunito, sans-serif; box-shadow: 0 4px 0 var(--line); }
+.arc-mode b { font-size: 1.05rem; }
+.arc-mode small { color: var(--muted); }
+.arc-mode .i { width: 22px; height: 22px; }
+.arc-mode.on { border-color: #7209b7; background: #f5edff; box-shadow: 0 4px 0 #7209b7; }
+.arc-mode[data-mode="off"].on { border-color: #4b5563; background: #f3f4f6; box-shadow: 0 4px 0 #4b5563; }
+.arc-mode[data-mode="free"].on { border-color: #16a34a; background: #ecfdf5; box-shadow: 0 4px 0 #16a34a; }
+.arc-set { flex-wrap: wrap; gap: 12px; align-items: end; }
+.arc-set label { display: grid; gap: 2px; font-weight: 700; font-size: .9rem; }
+.arc-promo { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 14px; border-radius: 12px; text-decoration: none; color: #fff; background: linear-gradient(135deg, #3a0ca3, #7209b7 60%, #f72585); box-shadow: 0 4px 0 #240b6b; }
+.arc-promo span { flex: 1; display: grid; }
+.arc-promo small { opacity: .85; }
+.arc-promo .i { width: 24px; height: 24px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lb li.me, :root:not([data-theme="light"]) .arc-mode.on, :root:not([data-theme="light"]) .pu-card.ticket { background: #2e2347; }
+}
+:root[data-theme="dark"] .lb li.me, :root[data-theme="dark"] .arc-mode.on, :root[data-theme="dark"] .pu-card.ticket { background: #2e2347; }
+
+.arc-troph .title-prev { flex: 0 1 auto; padding-left: 14px; padding-right: 14px; }
+.arc-wallet .coin-tag.big { font: 900 1.05rem Nunito, system-ui, sans-serif; }
+
 </style>
 </head>
 <body>
@@ -10837,9 +10926,10 @@ var SQ_RULES = (function () {
 
     var level = levelFor(xp);
     var owned = (state.owned || []).slice();
-    var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned) : { earned: 0, spent: 0, balance: 0 };
+    var arc = state.arcade || {};
+    var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned, arc.spent) : { earned: 0, spent: 0, balance: 0 };
     return {
-      owned: owned, coins: coins.balance, coinsEarned: coins.earned, goal: state.goal || null,
+      owned: owned, coins: coins.balance, coinsEarned: coins.earned, goal: state.goal || null, arcadeBest: arc.allBest || 0,
       xp: xp, level: level, rank: rankFor(level),
       levelStart: xpForLevel(level), levelNext: xpForLevel(level + 1),
       done: done, doneCount: Object.keys(done).length,
@@ -10961,7 +11051,7 @@ var SQ_AVATAR = (function () {
   };
   CATALOG.aura = [{ id: 'none', name: 'None' }];
   CATALOG.effect = [{ id: 'none', name: 'None' }];
-  CATALOG.title = [{ id: 'none', name: 'No title' }, { id: 'rookie', name: 'Rookie Coder' }];
+  CATALOG.title = [{ id: 'none', name: 'No title' }, { id: 'rookie', name: 'Rookie Coder' }, { id: 'ace', name: 'Arcade Ace', rarity: 'rare', unlock: { arcade: 600 } }, { id: 'champ', name: 'Block Rush Champion', rarity: 'epic', unlock: { arcade: 2000 } }, { id: 'myth', name: 'Arcade Legend', rarity: 'legendary', unlock: { arcade: 4000 } }];
   Object.keys(SHOP).forEach(function (cat) {
     SHOP[cat].forEach(function (x) {
       CATALOG[cat].push({ id: x[0], name: x[1], rarity: x[3], unlock: { price: x[2], key: cat + ':' + x[0] } });
@@ -10979,7 +11069,7 @@ var SQ_AVATAR = (function () {
   function priceOf(key) { return PRICE[key] || 0; }
   function itemOf(cat, id) { return (CATALOG[cat] || []).filter(function (i) { return i.id === id; })[0] || null; }
   // Coins: earned from XP (1 coin per 5 XP), minus what was spent in the shop
-  function coinsFor(xp, owned) { var spent = 0; (owned || []).forEach(function (k) { spent += priceOf(k); }); return { earned: Math.floor(xp / 5), spent: spent, balance: Math.floor(xp / 5) - spent }; }
+  function coinsFor(xp, owned, extra) { var spent = Number(extra) || 0; (owned || []).forEach(function (k) { spent += priceOf(k); }); return { earned: Math.floor(xp / 5), spent: spent, balance: Math.floor(xp / 5) - spent }; }
 
   var COLORS = {
     skin: SKIN.concat(FUN_SKIN), hairColor: HAIR_COLORS.concat(['neon']), outfitColor: CLOTH_COLORS, bgColor: BG_COLORS
@@ -11005,12 +11095,14 @@ var SQ_AVATAR = (function () {
     if (unlock.price) return (prof.owned || []).indexOf(unlock.key) >= 0;
     if (unlock.level) return prof.level >= unlock.level;
     if (unlock.badge) return prof.badges.indexOf(unlock.badge) >= 0;
+    if (unlock.arcade) return (prof.arcadeBest || 0) >= unlock.arcade;
     return false;
   }
   function unlockText(unlock) {
     if (!unlock) return '';
     if (unlock.price) return unlock.price + ' coins';
     if (unlock.level) return 'Reach level ' + unlock.level;
+    if (unlock.arcade) return 'Score ' + unlock.arcade + ' in Block Rush';
     if (unlock.badge && typeof SQ_RULES !== 'undefined' && SQ_RULES.BADGE[unlock.badge]) return 'Earn the "' + SQ_RULES.BADGE[unlock.badge].name + '" badge';
     return 'Locked';
   }
@@ -11307,6 +11399,56 @@ var SQ_AVATAR = (function () {
 })();
 
 
+/* Scratch Quest — Arcade rules (shared by the server and the page).
+ * The arcade is a reward, not a distraction:
+ *   - The teacher controls it: Locked, Earned (students spend a ticket for a short pass), or Free play.
+ *   - Opening it always sets a closing time, so it can't stay open after class.
+ *   - Tickets come from finished quests (1 each) or can be bought with coins.
+ *   - Power-ups are one-use items bought with coins.
+ */
+var SQ_ARCADE = (function () {
+  var GAME = 'Block Rush';
+  var POWERUPS = [
+    { id: 'shield', name: 'Bug Shield', price: 15, color: '#3a86ff', desc: 'Blocks the first bug that hits you.' },
+    { id: 'slow', name: 'Slow-Mo', price: 15, color: '#06d6a0', desc: 'Everything falls slower for the first 20 seconds.' },
+    { id: 'magnet', name: 'Block Magnet', price: 20, color: '#ef476f', desc: 'Pulls code blocks toward you for 20 seconds.' },
+    { id: 'heart', name: 'Extra Heart', price: 20, color: '#ff4d6d', desc: 'Start with 4 hearts instead of 3.' },
+    { id: 'double', name: 'Double Points', price: 25, color: '#ffb703', desc: 'Every point counts twice for the first 30 seconds.' }
+  ];
+  var POWER = {};
+  POWERUPS.forEach(function (p) { POWER[p.id] = p; });
+  var DEFAULTS = { mode: 'off', closes: 0, passMin: 5, ticketPrice: 40, season: 1 };
+  var MAX_POWER = 2;          // power-ups per run
+  var RUN_MAX_MS = 12 * 60e3; // a run longer than this is not accepted
+  var GRACE_MS = 3 * 60e3;    // a run started before the pass ended may still finish
+
+  function config(c) {
+    var a = (c && c.arcade) || {}, o = {};
+    for (var k in DEFAULTS) o[k] = a[k] === undefined ? DEFAULTS[k] : a[k];
+    return o;
+  }
+  // The mode right now: an open arcade closes itself at its closing time.
+  function liveMode(cfg, now) {
+    if (cfg.mode === 'off') return 'off';
+    if (cfg.closes && now > cfg.closes) return 'off';
+    return cfg.mode;
+  }
+  function blank() { return { spent: 0, inv: {}, bought: 0, used: 0, until: 0, best: 0, season: 0, allBest: 0, plays: 0, run: null }; }
+  function stateOf(state) {
+    var a = state.arcade || (state.arcade = blank()), b = blank();
+    for (var k in b) if (a[k] === undefined) a[k] = b[k];
+    return a;
+  }
+  // One ticket for every finished quest, plus any bought with coins, minus those used.
+  function tickets(a, doneCount) { return Math.max(0, (doneCount || 0) + (a.bought || 0) - (a.used || 0)); }
+  // Most points a fair run could reach in this much time (the game tops out well below this).
+  function scoreCap(ms) { return Math.round(500 + Math.max(0, ms) / 1000 * 250); }
+
+  return { GAME: GAME, POWERUPS: POWERUPS, POWER: POWER, DEFAULTS: DEFAULTS, MAX_POWER: MAX_POWER, RUN_MAX_MS: RUN_MAX_MS, GRACE_MS: GRACE_MS,
+    config: config, liveMode: liveMode, stateOf: stateOf, tickets: tickets, scoreCap: scoreCap };
+})();
+
+
 /* Scratch Quest — server-side game logic.
  * The SAME code runs inside Google Apps Script (with a Google Sheets store) and in the
  * browser demo (with a localStorage store). Every rule that matters (XP, unlocks,
@@ -11319,7 +11461,7 @@ var SQ_AVATAR = (function () {
  *   getSettings() -> obj             saveSettings(obj)
  */
 function SQ_SERVICE(store) {
-  var R = SQ_RULES, A = SQ_AVATAR;
+  var R = SQ_RULES, A = SQ_AVATAR, AR = SQ_ARCADE;
 
   function err(msg) { throw new Error(msg); }
   function now() { return Date.now(); }
@@ -11335,7 +11477,33 @@ function SQ_SERVICE(store) {
     if (!c) return null;
     classDefaults(c);
     return { id: c.id, name: c.name, code: c.code, openThrough: c.openThrough, requireApproval: c.requireApproval,
-      requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false };
+      requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false, arcade: arcadeInfo(c) };
+  }
+  // What students may know about the arcade: its live mode, closing time and pass rules
+  function arcadeInfo(c) {
+    var cfg = AR.config(c), mode = AR.liveMode(cfg, now());
+    return { mode: mode, closes: mode === 'off' ? 0 : cfg.closes, passMin: cfg.passMin, ticketPrice: cfg.ticketPrice, season: cfg.season };
+  }
+  function arcadeStatus(st) {
+    var a = AR.stateOf(st.state), p = R.profile(st.state), info = arcadeInfo(findClass(st.classId) || {});
+    var t = now();
+    return { tickets: AR.tickets(a, p.doneCount), until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
+      best: a.season === info.season ? a.best : 0, allBest: a.allBest, plays: a.plays, running: !!(a.run && t - a.run.t < AR.RUN_MAX_MS) };
+  }
+  // Top scores this season (only students; positive information only)
+  function arcadeBoard(classId, season) {
+    return store.getStudents().filter(function (s) {
+      var a = s.state.arcade;
+      return s.classId === classId && !s.isTeacher && a && a.season === season && a.best > 0;
+    }).sort(function (x, y) { return y.state.arcade.best - x.state.arcade.best; }).slice(0, 10).map(function (s) {
+      return { name: s.name, avatar: s.state.avatar || A.DEFAULT, score: s.state.arcade.best, title: A.titleText(s.state.avatar), key: memberId(s.email) };
+    });
+  }
+  function canPlay(st) {
+    var info = arcadeInfo(findClass(st.classId) || {}), a = AR.stateOf(st.state);
+    if (info.mode === 'off') err('The arcade is locked right now. Your teacher opens it during class.');
+    if (info.mode === 'earned' && !(a.until > now())) err('Start an arcade pass first.');
+    return info;
   }
   // Teachers also see the Google Classroom link details
   function teacherClass(c) {
@@ -11389,12 +11557,16 @@ function SQ_SERVICE(store) {
   function classMembers(classId) {
     return store.getStudents().filter(function (s) { return s.classId === classId; }).map(function (s) {
       var p = R.profile(s.state);
-      var h = 7;
-      for (var i = 0; i < s.email.length; i++) h = (h * 31 + s.email.charCodeAt(i)) % 2147483647;
-      return { id: 'm' + h.toString(36),
+      return { id: memberId(s.email),
         name: s.name, avatar: s.state.avatar || A.DEFAULT, xp: p.xp, level: p.level, rank: p.rank,
         current: p.current, done: Object.keys(p.done), badges: p.badges.length, teacher: !!s.isTeacher };
     });
+  }
+
+  function memberId(email) {
+    var h = 7;
+    for (var i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) % 2147483647;
+    return 'm' + h.toString(36);
   }
 
   function makeCode() {
@@ -11528,7 +11700,102 @@ function SQ_SERVICE(store) {
       return { student: persist(st) };
     },
 
+    // ---------------------------------------------------------- arcade
+    arcade: function (user) {
+      var st = requireStudent(user), c = findClass(st.classId) || {};
+      var info = arcadeInfo(c);
+      return { info: info, me: arcadeStatus(st), board: arcadeBoard(st.classId, info.season), you: memberId(st.email), now: now() };
+    },
+    // Buy a ticket or a power-up with coins
+    arcadeBuy: function (user, args) {
+      var st = requireStudent(user), c = classDefaults(findClass(st.classId) || {});
+      if (c.shop === false) err('The coin shop is turned off for your class.');
+      var a = AR.stateOf(st.state), p = R.profile(st.state), what = String(args.item || ''), price, name;
+      if (what === 'ticket') { price = AR.config(c).ticketPrice; name = 'an arcade ticket'; }
+      else if (AR.POWER[what]) { price = AR.POWER[what].price; name = AR.POWER[what].name; }
+      else err('That is not in the arcade shop.');
+      if ((a.inv[what] || 0) >= 9) err('You can hold up to 9 of those.');
+      if (p.coins < price) err('You need ' + (price - p.coins) + ' more coins for ' + name + '.');
+      a.spent += price;
+      if (what === 'ticket') a.bought += 1; else a.inv[what] = (a.inv[what] || 0) + 1;
+      persist(st);
+      return { me: arcadeStatus(st), student: selfView(st) };
+    },
+    // Spend a ticket to start a short pass (Earned mode)
+    arcadePass: function (user) {
+      var st = requireStudent(user), info = arcadeInfo(findClass(st.classId) || {}), a = AR.stateOf(st.state), p = R.profile(st.state);
+      if (info.mode === 'off') err('The arcade is locked right now.');
+      if (info.mode === 'free') err('It is free play right now. No ticket needed!');
+      if (a.until > now()) err('Your pass is already running.');
+      if (AR.tickets(a, p.doneCount) < 1) err('You need a ticket. Finish a quest to earn one!');
+      a.used += 1;
+      a.until = now() + info.passMin * 60e3;
+      if (info.closes) a.until = Math.min(a.until, info.closes);
+      persist(st);
+      return { me: arcadeStatus(st) };
+    },
+    arcadeStart: function (user, args) {
+      var st = requireStudent(user);
+      canPlay(st);
+      var a = AR.stateOf(st.state), want = (args.power || []).map(String), power = [];
+      want.forEach(function (id) {
+        if (AR.POWER[id] && power.indexOf(id) < 0 && power.length < AR.MAX_POWER && (a.inv[id] || 0) > 0) power.push(id);
+      });
+      power.forEach(function (id) { a.inv[id] -= 1; if (!a.inv[id]) delete a.inv[id]; });
+      a.run = { id: 'r' + now().toString(36) + Math.floor(Math.random() * 1e4), t: now(), power: power };
+      persist(st);
+      return { run: a.run, me: arcadeStatus(st) };
+    },
+    arcadeEnd: function (user, args) {
+      var st = requireStudent(user), a = AR.stateOf(st.state);
+      var c = findClass(st.classId) || {}, cfg = AR.config(c);
+      if (!a.run || a.run.id !== String(args.runId || '')) err('That run was not found. Start a new one!');
+      var ms = now() - a.run.t, score = Math.max(0, Math.floor(Number(args.score) || 0));
+      a.run = null;
+      if (ms > AR.RUN_MAX_MS) err('That run went too long to count.');
+      score = Math.min(score, AR.scoreCap(ms));
+      a.plays += 1;
+      if (a.season !== cfg.season) { a.season = cfg.season; a.best = 0; }
+      var newBest = score > a.best;
+      if (newBest) a.best = score;
+      var allBest = score > a.allBest;
+      if (allBest) a.allBest = score;
+      persist(st);
+      var board = arcadeBoard(st.classId, cfg.season), id = memberId(st.email), place = 0;
+      board.forEach(function (b, i) { if (b.key === id) place = i + 1; });
+      return { score: score, newBest: newBest, allBest: allBest, place: place, board: board, me: arcadeStatus(st), student: selfView(st) };
+    },
+
     // ---------------------------------------------------------- teacher
+    setArcade: function (user, args) {
+      requireTeacher(user);
+      var c = findClass(args.classId);
+      if (!c) err('Class not found.');
+      var cfg = AR.config(c);
+      if (args.mode !== undefined) {
+        if (['off', 'earned', 'free'].indexOf(args.mode) < 0) err('Unknown arcade mode.');
+        cfg.mode = args.mode;
+        var mins = Math.max(5, Math.min(240, Number(args.minutes) || 45));
+        cfg.closes = cfg.mode === 'off' ? 0 : now() + mins * 60e3;
+      }
+      if (args.passMin !== undefined) cfg.passMin = Math.max(1, Math.min(30, Number(args.passMin) || 5));
+      if (args.ticketPrice !== undefined) cfg.ticketPrice = Math.max(0, Math.min(500, Number(args.ticketPrice) || 0));
+      if (args.resetBoard) cfg.season += 1;
+      c.arcade = cfg;
+      store.saveClass(c);
+      // Locking ends everyone's passes right away
+      if (cfg.mode === 'off') store.getStudents().forEach(function (s) {
+        if (s.classId === c.id && s.state.arcade && s.state.arcade.until > now()) { s.state.arcade.until = 0; store.saveStudent(s); }
+      });
+      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season) };
+    },
+    arcadeBoardFor: function (user, args) {
+      requireTeacher(user);
+      var c = findClass(args.classId);
+      if (!c) err('Class not found.');
+      return { board: arcadeBoard(c.id, AR.config(c).season), info: arcadeInfo(c) };
+    },
+
     teacherData: function (user) {
       requireTeacher(user);
       return {
@@ -12180,7 +12447,7 @@ var SQ_API = (function () {
   }
 
   // ------------------------------------------------------------------ demo mode
-  var KEY = 'scratchQuestDemo.v3';
+  var KEY = 'scratchQuestDemo.v4';
   var mem = null;
   function load() {
     if (mem) return mem;
@@ -12206,7 +12473,8 @@ var SQ_API = (function () {
     var R = SQ_RULES;
     var d = { classes: [], students: [], settings: { videos: {} }, role: 'student' };
     var cls = { id: 'demo1', name: 'Period 3 · Demo Class', code: 'DEMO1', teacher: 'teacher@demo', openThrough: 14,
-      requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false };
+      requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false,
+      arcade: { mode: 'free', closes: Date.now() + 8 * 3600e3, passMin: 5, ticketPrice: 40, season: 1 } };
     d.classes.push(cls, { id: 'demo2', name: 'Period 5 · Demo Class', code: 'PIXEL', teacher: 'teacher@demo', openThrough: 7,
       requireApproval: true, requireLink: false, showLeaderboard: true, classGoal: 15000, archived: false });
     var names = ['Ava', 'Liam', 'Maya', 'Noah', 'Zoe', 'Ethan', 'Priya', 'Lucas', 'Chloe', 'Mateo', 'Isla', 'Owen', 'Sofia', 'Jayden'];
@@ -12247,6 +12515,7 @@ var SQ_API = (function () {
         }
         ns.touched = t + (j * 2 + i % 3) * 86400000;
       });
+      if (i % 5 !== 4) { var sc = [1840, 960, 2310, 420, 0, 1290, 680, 3050, 150, 1500, 770, 0, 1120, 530][i]; if (sc) st.arcade = { spent: 0, inv: {}, bought: 0, used: 1, until: 0, best: sc, season: 1, allBest: sc, plays: 3, run: null }; }
       if (i === 2) st.awards.push({ id: 'helper', note: 'Helped Owen fix his loop.', at: t });
       if (i === 7) st.awards.push({ id: 'creative', note: 'Amazing paint app idea!', at: t });
       var email = n.toLowerCase() + '@demo.school';
@@ -12432,6 +12701,223 @@ var SQ_SOUND = (function () {
     toggle: function () { muted = !muted; try { localStorage.setItem('sq-sound', muted ? 'off' : 'on'); } catch (e) { } return !muted; },
     setClassOff: function (off) { classOff = !!off; }
   };
+})();
+
+
+/* Scratch Quest — Block Rush, the arcade mini-game.
+ * Catch falling code blocks, dodge the bugs. Catching blocks in a row builds a combo multiplier.
+ * Draws on a <canvas>; no images or sound files. The server checks every score it is sent.
+ *
+ * SQ_GAME.create(canvas, { avatar: Image|null, power: ['shield', ...], onEnd: function (score, stats) {} })
+ *   -> { stop: function () {} }
+ */
+var SQ_GAME = (function () {
+  var W = 420, H = 600, PY = H - 78, PS = 70;
+  var BLOCK_COLORS = ['#4C97FF', '#9966FF', '#CF63CF', '#FFBF00', '#FFAB19', '#5CB1D6', '#59C059', '#FF8C1A'];
+  var POWER_COLOR = { shield: '#3a86ff', slow: '#06d6a0', magnet: '#ef476f', heart: '#ff4d6d', double: '#ffb703' };
+  var POWER_TIME = { slow: 20, magnet: 20, double: 30 };
+
+  function rr(g, x, y, w, h, r) {
+    g.beginPath(); g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+    g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h); g.lineTo(x + r, y + h);
+    g.quadraticCurveTo(x, y + h, x, y + h - r); g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y); g.closePath();
+  }
+  function shade(hex, f) {
+    var n = parseInt(hex.slice(1), 16), r = n >> 16, gg = (n >> 8) & 255, b = n & 255;
+    return 'rgb(' + Math.round(r * f) + ',' + Math.round(gg * f) + ',' + Math.round(b * f) + ')';
+  }
+  function drawBlock(g, o) {
+    var x = o.x - o.w / 2, y = o.y - o.h / 2;
+    g.fillStyle = shade(o.color, 0.72); rr(g, x, y + 4, o.w, o.h, 7); g.fill();
+    g.fillStyle = o.color; rr(g, x, y, o.w, o.h, 7); g.fill();
+    g.fillRect(x + 12, y - 5, 16, 6); // the little notch tab, like a Scratch block
+    g.fillStyle = 'rgba(255,255,255,.85)'; rr(g, x + 9, y + o.h / 2 - 4, o.w * 0.45, 8, 4); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.55)'; rr(g, x + o.w * 0.62, y + o.h / 2 - 6, o.w * 0.26, 12, 6); g.fill();
+  }
+  function drawBug(g, o, t) {
+    var wig = Math.sin(t * 14 + o.seed) * 4;
+    g.strokeStyle = '#1b1035'; g.lineWidth = 3; g.lineCap = 'round';
+    for (var i = -1; i <= 1; i++) {
+      g.beginPath(); g.moveTo(o.x - 12, o.y + i * 7); g.lineTo(o.x - 24, o.y + i * 9 + wig * i); g.stroke();
+      g.beginPath(); g.moveTo(o.x + 12, o.y + i * 7); g.lineTo(o.x + 24, o.y + i * 9 - wig * i); g.stroke();
+    }
+    g.beginPath(); g.moveTo(o.x - 5, o.y - 16); g.lineTo(o.x - 10, o.y - 26); g.moveTo(o.x + 5, o.y - 16); g.lineTo(o.x + 10, o.y - 26); g.stroke();
+    g.fillStyle = '#e63946'; g.beginPath(); g.ellipse(o.x, o.y, 16, 19, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#9d0208'; g.fillRect(o.x - 1.5, o.y - 12, 3, 30);
+    g.fillStyle = '#1b1035'; g.beginPath(); g.arc(o.x - 6, o.y + 4, 3, 0, 7); g.arc(o.x + 7, o.y + 8, 3, 0, 7); g.fill();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(o.x - 6, o.y - 12, 5, 0, 7); g.arc(o.x + 6, o.y - 12, 5, 0, 7); g.fill();
+    g.fillStyle = '#1b1035'; g.beginPath(); g.arc(o.x - 5, o.y - 11, 2.4, 0, 7); g.arc(o.x + 7, o.y - 11, 2.4, 0, 7); g.fill();
+  }
+  function starPath(g, x, y, r) {
+    g.beginPath();
+    for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r * 0.45 : r; g.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad); }
+    g.closePath();
+  }
+  function drawStar(g, o, t) {
+    g.save(); g.translate(o.x, o.y); g.rotate(Math.sin(t * 3 + o.seed) * 0.3);
+    g.shadowColor = '#ffd60a'; g.shadowBlur = 18; g.fillStyle = '#ffd60a'; starPath(g, 0, 0, 20); g.fill();
+    g.shadowBlur = 0; g.strokeStyle = '#e85d04'; g.lineWidth = 3; g.stroke(); g.restore();
+  }
+  function heartPath(g, x, y, s) {
+    g.beginPath(); g.moveTo(x, y + s * 0.35);
+    g.bezierCurveTo(x, y, x - s * 0.5, y, x - s * 0.5, y + s * 0.35);
+    g.bezierCurveTo(x - s * 0.5, y + s * 0.6, x, y + s * 0.8, x, y + s);
+    g.bezierCurveTo(x, y + s * 0.8, x + s * 0.5, y + s * 0.6, x + s * 0.5, y + s * 0.35);
+    g.bezierCurveTo(x + s * 0.5, y, x, y, x, y + s * 0.35); g.closePath();
+  }
+
+  function create(canvas, opts) {
+    opts = opts || {};
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    var g = canvas.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var power = opts.power || [], has = {};
+    power.forEach(function (p) { has[p] = true; });
+    var maxHearts = 5, hearts = has.heart ? 4 : 3, shield = !!has.shield;
+    var px = W / 2, tx = W / 2, keyL = false, keyR = false;
+    var items = [], pops = [], score = 0, combo = 0, bestCombo = 0, caught = 0;
+    var t = -2.4, spawnIn = 0, inv = 0, over = false, overT = 0, raf = 0, last = 0, stopped = false;
+    var bg = []; for (var i = 0; i < 40; i++) bg.push({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.6 + 0.4, v: Math.random() * 20 + 10 });
+
+    function mult() { return Math.min(5, 1 + Math.floor(combo / 5)); }
+    function active(p) { return has[p] && POWER_TIME[p] && t >= 0 && t < POWER_TIME[p]; }
+    function spawn() {
+      var r = Math.random(), bugP = Math.min(0.42, 0.18 + t * 0.004), kind = 'block';
+      if (r < bugP) kind = 'bug'; else if (r < bugP + 0.05) kind = 'star'; else if (r < bugP + 0.062 && hearts < maxHearts) kind = 'heart';
+      var w = kind === 'block' ? 64 : 44;
+      items.push({ kind: kind, x: w / 2 + 8 + Math.random() * (W - w - 16), y: -30, w: w, h: kind === 'block' ? 34 : 40,
+        v: (0.85 + Math.random() * 0.3) * Math.min(430, 150 + t * 3.2), color: BLOCK_COLORS[Math.floor(Math.random() * BLOCK_COLORS.length)], seed: Math.random() * 9 });
+    }
+    function pop(x, y, text, color) { pops.push({ x: x, y: y, text: text, color: color || '#fff', life: 0.9 }); }
+    function sound(n) { if (typeof SQ_SOUND !== 'undefined') SQ_SOUND.play(n); }
+
+    function update(dt) {
+      for (var b = 0; b < bg.length; b++) { bg[b].y += bg[b].v * dt; if (bg[b].y > H) { bg[b].y = 0; bg[b].x = Math.random() * W; } }
+      if (over) { overT += dt; return; }
+      t += dt;
+      var dir = (keyR ? 1 : 0) - (keyL ? 1 : 0);
+      if (dir) { px += dir * 460 * dt; tx = px; }
+      tx = Math.max(PS / 2, Math.min(W - PS / 2, tx));
+      px += (tx - px) * Math.min(1, dt * 16);
+      px = Math.max(PS / 2, Math.min(W - PS / 2, px));
+      if (t < 0) return; // countdown
+      inv = Math.max(0, inv - dt);
+      spawnIn -= dt;
+      if (spawnIn <= 0) { spawn(); spawnIn = Math.max(0.32, 0.95 - t * 0.008) * (0.8 + Math.random() * 0.4); }
+      var slow = active('slow') ? 0.55 : 1, magnet = active('magnet'), dbl = active('double') ? 2 : 1;
+      for (var i = items.length - 1; i >= 0; i--) {
+        var o = items[i];
+        o.y += o.v * slow * dt;
+        if (magnet && (o.kind === 'block' || o.kind === 'star') && o.y > H * 0.35) o.x += (px - o.x) * Math.min(1, dt * 2.6);
+        var hit = Math.abs(o.x - px) < (o.w / 2 + PS / 2 - 12) && o.y + o.h / 2 > PY - PS / 2 + 8 && o.y - o.h / 2 < PY + PS / 2 - 8;
+        if (hit) {
+          items.splice(i, 1);
+          if (o.kind === 'bug') {
+            if (inv > 0) continue;
+            if (shield) { shield = false; pop(px, PY - 50, 'Shield!', '#8ecae6'); sound('locked'); inv = 0.8; continue; }
+            hearts -= 1; combo = 0; inv = 1.1; sound('wrong'); pop(px, PY - 50, 'Ouch!', '#ff8fa3');
+            if (hearts <= 0) { over = true; sound('levelup'); setTimeout(finish, 1300); }
+          } else if (o.kind === 'heart') { hearts = Math.min(maxHearts, hearts + 1); pop(o.x, o.y, '+1 heart', '#ff8fa3'); sound('equip'); }
+          else {
+            combo += 1; caught += 1; bestCombo = Math.max(bestCombo, combo);
+            var pts = (o.kind === 'star' ? 50 : 10) * mult() * dbl;
+            score += pts; pop(o.x, o.y, '+' + pts, o.kind === 'star' ? '#ffd60a' : '#fff');
+            sound(o.kind === 'star' ? 'step' : 'coin');
+            if (combo % 5 === 0 && mult() > 1) pop(px, PY - 70, 'Combo x' + mult() + '!', '#ffd60a');
+          }
+          continue;
+        }
+        if (o.y - o.h > H) { items.splice(i, 1); if (o.kind === 'block' && combo) { combo = 0; } }
+      }
+      for (var k = pops.length - 1; k >= 0; k--) { pops[k].life -= dt; pops[k].y -= 50 * dt; if (pops[k].life <= 0) pops.splice(k, 1); }
+    }
+
+    function draw() {
+      var grd = g.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, '#24124d'); grd.addColorStop(1, '#4a1d96');
+      g.fillStyle = grd; g.fillRect(0, 0, W, H);
+      g.fillStyle = 'rgba(255,255,255,.7)';
+      bg.forEach(function (s) { g.fillRect(s.x, s.y, s.s, s.s * 2); });
+      g.fillStyle = 'rgba(255,255,255,.06)'; for (var gx = 0; gx < W; gx += 42) g.fillRect(gx, 0, 1, H);
+      g.fillStyle = '#2b1366'; g.fillRect(0, PY + PS / 2 - 4, W, H); g.fillStyle = '#7b2ff7'; g.fillRect(0, PY + PS / 2 - 4, W, 4);
+      items.forEach(function (o) {
+        if (o.kind === 'block') drawBlock(g, o);
+        else if (o.kind === 'bug') drawBug(g, o, t);
+        else if (o.kind === 'star') drawStar(g, o, t);
+        else { g.fillStyle = '#ff4d6d'; heartPath(g, o.x, o.y - 16, 34); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 3; g.stroke(); }
+      });
+      // player
+      var flash = inv > 0 && Math.floor(inv * 12) % 2 === 0;
+      if (!flash) {
+        if (active('magnet')) { g.strokeStyle = 'rgba(239,71,111,.55)'; g.lineWidth = 3; g.beginPath(); g.arc(px, PY, PS * 0.78 + Math.sin(t * 8) * 3, 0, 7); g.stroke(); }
+        if (opts.avatar && opts.avatar.complete && opts.avatar.naturalWidth) g.drawImage(opts.avatar, px - PS / 2 - 4, PY - PS / 2 - 8, PS + 8, PS + 8);
+        else { g.fillStyle = '#ffd166'; g.beginPath(); g.arc(px, PY, PS / 2, 0, 7); g.fill(); }
+        if (shield) { g.fillStyle = 'rgba(142,202,230,.25)'; g.strokeStyle = '#8ecae6'; g.lineWidth = 3; g.beginPath(); g.arc(px, PY, PS * 0.66, 0, 7); g.fill(); g.stroke(); }
+      }
+      pops.forEach(function (p) {
+        g.globalAlpha = Math.max(0, Math.min(1, p.life * 1.6)); g.font = '900 22px Nunito, system-ui, sans-serif'; g.textAlign = 'center';
+        g.lineWidth = 5; g.strokeStyle = 'rgba(20,8,50,.8)'; g.strokeText(p.text, p.x, p.y); g.fillStyle = p.color; g.fillText(p.text, p.x, p.y);
+      });
+      g.globalAlpha = 1;
+      // HUD
+      for (var hI = 0; hI < Math.max(hearts, 0); hI++) { g.fillStyle = '#ff4d6d'; heartPath(g, 22 + hI * 30, 14, 24); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke(); }
+      g.textAlign = 'right'; g.font = '900 32px Nunito, system-ui, sans-serif';
+      g.lineWidth = 6; g.strokeStyle = '#1b1035'; g.strokeText(String(score), W - 14, 40); g.fillStyle = '#fff'; g.fillText(String(score), W - 14, 40);
+      if (mult() > 1) { g.font = '900 18px Nunito, system-ui, sans-serif'; g.fillStyle = '#ffd60a'; g.fillText('Combo x' + mult(), W - 14, 64); }
+      var row = 0;
+      ['slow', 'magnet', 'double'].forEach(function (p) {
+        if (!active(p)) return;
+        var left = POWER_TIME[p] - t, w = 70;
+        g.fillStyle = 'rgba(0,0,0,.35)'; rr(g, 14, 50 + row * 16, w, 10, 5); g.fill();
+        g.fillStyle = POWER_COLOR[p]; rr(g, 14, 50 + row * 16, Math.max(4, w * left / POWER_TIME[p]), 10, 5); g.fill();
+        g.textAlign = 'left'; g.font = '800 11px Nunito, system-ui, sans-serif'; g.fillStyle = '#fff';
+        g.fillText(p === 'double' ? 'x2 points' : p === 'slow' ? 'slow-mo' : 'magnet', 90, 59 + row * 16); row++;
+      });
+      if (t < 0) {
+        var n = Math.ceil(-t / 0.8);
+        g.textAlign = 'center'; g.font = '900 96px "Titan One", Nunito, system-ui, sans-serif';
+        g.lineWidth = 10; g.strokeStyle = '#1b1035'; g.strokeText(n > 0 ? String(n) : 'Go!', W / 2, H / 2); g.fillStyle = '#ffd60a'; g.fillText(n > 0 ? String(n) : 'Go!', W / 2, H / 2);
+        g.font = '800 18px Nunito, system-ui, sans-serif'; g.fillStyle = '#fff';
+        g.fillText('Catch blocks. Dodge bugs!', W / 2, H / 2 + 50);
+      }
+      if (over) {
+        g.fillStyle = 'rgba(20,8,50,' + Math.min(0.7, overT) + ')'; g.fillRect(0, 0, W, H);
+        g.textAlign = 'center'; g.font = '900 52px "Titan One", Nunito, system-ui, sans-serif';
+        g.lineWidth = 8; g.strokeStyle = '#1b1035'; g.strokeText('Game over', W / 2, H / 2 - 20); g.fillStyle = '#fff'; g.fillText('Game over', W / 2, H / 2 - 20);
+        g.font = '900 36px Nunito, system-ui, sans-serif'; g.fillStyle = '#ffd60a'; g.fillText(score + ' points', W / 2, H / 2 + 30);
+      }
+    }
+    function frame(ts) {
+      if (stopped) return;
+      var dt = last ? Math.min(0.05, (ts - last) / 1000) : 0; last = ts;
+      update(dt); draw();
+      raf = requestAnimationFrame(frame);
+    }
+    var finished = false;
+    function finish() { if (finished || stopped) return; finished = true; if (opts.onEnd) opts.onEnd(score, { caught: caught, bestCombo: bestCombo }); }
+    function toX(e) { var r = canvas.getBoundingClientRect(); return (e.clientX - r.left) / r.width * W; }
+    function onMove(e) { tx = toX(e); }
+    function onDown(e) { tx = toX(e); try { canvas.setPointerCapture(e.pointerId); } catch (x) { } }
+    function onKey(e) {
+      var down = e.type === 'keydown', k = e.key;
+      if (k === 'ArrowLeft' || k === 'a' || k === 'A') { keyL = down; e.preventDefault(); }
+      if (k === 'ArrowRight' || k === 'd' || k === 'D') { keyR = down; e.preventDefault(); }
+    }
+    canvas.addEventListener('pointermove', onMove);
+    canvas.addEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', onKey);
+    raf = requestAnimationFrame(frame);
+    return {
+      stop: function () {
+        stopped = true; cancelAnimationFrame(raf);
+        canvas.removeEventListener('pointermove', onMove); canvas.removeEventListener('pointerdown', onDown);
+        window.removeEventListener('keydown', onKey); window.removeEventListener('keyup', onKey);
+      },
+      score: function () { return score; }
+    };
+  }
+  return { create: create, W: W, H: H };
 })();
 
 
@@ -12719,7 +13205,7 @@ var SQ_MAPART = (function () {
       tabs = [['#/t/dash', '<svg class="i"><use href="#i-chart"/></svg>', 'Dashboard'], ['#/t/review', '<svg class="i"><use href="#i-inbox"/></svg>', 'Review' + (pending ? ' <span class="pill">' + pending + '</span>' : '')],
         ['#/t/map', '<svg class="i"><use href="#i-map"/></svg>', 'Class Map'], ['#/t/lessons', '<svg class="i"><use href="#i-library"/></svg>', 'Lessons'], ['#/t/standards', '<svg class="i"><use href="#i-ruler"/></svg>', 'Standards'], ['#/t/classroom', '<svg class="i"><use href="#i-school"/></svg>', 'Classroom'], ['#/t/classes', '<svg class="i"><use href="#i-sliders"/></svg>', 'Classes']];
     } else {
-      tabs = [['#/map', '<svg class="i"><use href="#i-map"/></svg>', 'Quest Map'], ['#/avatar', '<svg class="i"><use href="#i-palette"/></svg>', 'My Avatar'], ['#/badges', '<svg class="i"><use href="#i-award"/></svg>', 'Badges'], ['#/class', '<svg class="i"><use href="#i-users"/></svg>', 'My Class']];
+      tabs = [['#/map', '<svg class="i"><use href="#i-map"/></svg>', 'Quest Map'], ['#/avatar', '<svg class="i"><use href="#i-palette"/></svg>', 'My Avatar'], ['#/badges', '<svg class="i"><use href="#i-award"/></svg>', 'Badges'], ['#/arcade', '<svg class="i"><use href="#i-gamepad"/></svg>', 'Arcade'], ['#/class', '<svg class="i"><use href="#i-users"/></svg>', 'My Class']];
     }
     var cur = location.hash || '#/map';
     var html = '<header class="top"><a class="logo" href="' + (isTeacher() && r === 't' ? '#/t/dash' : '#/map') + '"><span class="logo-ico"><svg class="i"><use href="#i-compass"/></svg></span><span>Scratch<b>Quest</b></span></a><nav class="tabs">';
@@ -12753,6 +13239,7 @@ var SQ_MAPART = (function () {
     closeModal();
     stopSpeaking();
     csStop(); document.body.classList.remove('cs-on', 'cs-dark');
+    arcStop();
     var r = route();
     if (!S.boot) return;
     if (r[0] === 't') {
@@ -12769,12 +13256,14 @@ var SQ_MAPART = (function () {
     else if (r[0] === 'avatar') body = viewAvatar();
     else if (r[0] === 'badges') body = viewBadges();
     else if (r[0] === 'class') body = viewClass();
+    else if (r[0] === 'arcade') body = viewArcade();
     else body = viewMap();
     $app.innerHTML = header() + '<main>' + body + '</main>';
     afterRender(r);
   }
   function afterRender(r) {
     renderBlocks();
+    if (r[0] === 'arcade') { loadArcade(); S.arcTimer = setInterval(arcTick, 1000); }
     if (r[0] === 'map' || r[0] === '' || r[0] === 'class' || (r[0] === 't' && (r[1] === 'map' || r[1] === 'projector'))) loadClassView(r);
     if (r[0] === 'map' || r[0] === '' || (r[0] === 't' && r[1] === 'map')) {
       var you = document.querySelector('.node.current');
@@ -13394,7 +13883,7 @@ var SQ_MAPART = (function () {
     h += '<div class="row center"><button class="btn" data-act="av-random"><svg class="i"><use href="#i-dice"/></svg> Surprise me</button><button class="btn primary big" data-act="av-save"><svg class="i"><use href="#i-save"/></svg> Save my look</button></div>' +
       '<div class="collect"><div class="row between small"><b>Collection</b><span>' + col.have + ' / ' + col.total + ' items</span></div><div class="xpbar"><i style="width:' + Math.round(col.have / col.total * 100) + '%"></i></div></div>' +
       '<div class="row center small muted"><button class="linklike" data-act="sound-toggle">' + (SQ_SOUND.muted() ? 'Sound is off: turn it on' : 'Sound is on: turn it off') + '</button></div>' +
-      goalCard(p) + '</section>';
+      goalCard(p) + '<a class="arc-promo" href="#/arcade"><svg class="i"><use href="#i-gamepad"/></svg><span><b>Block Rush arcade</b><small>Power-ups, tickets and the class leaderboard</small></span><svg class="i"><use href="#i-arrow-right"/></svg></a></section>';
     // ---- the shop / wardrobe
     h += '<section class="card studio-shop"><div class="studio-tabs">' + AV_TABS.map(function (g) {
       return '<div class="tab-group"><span class="tg-label">' + g[0] + '</span>' + g[1].map(function (t) {
@@ -13433,6 +13922,164 @@ var SQ_MAPART = (function () {
     var bg = c === 'neon' ? 'linear-gradient(135deg,#ff3cac,#784ba0,#2b86c5)' : c;
     return '<button class="sw' + (on ? ' on' : '') + (ok ? '' : ' locked') + '" style="background:' + bg + '" data-act="av-color" data-key="' + key + '" data-c="' + c + '" title="' + (ok ? c : esc(A.unlockText(A.COLOR_UNLOCK[c]))) + '" aria-label="color ' + c + '">' + (ok ? '' : '<svg class="i"><use href="#i-lock"/></svg>') + '</button>';
   }
+  // ------------------------------------------------------------ arcade
+  var AR = SQ_ARCADE;
+  var PU_ICON = {
+    shield: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/>',
+    slow: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+    magnet: '<path d="M6 4v8a6 6 0 0 0 12 0V4h-4v8a2 2 0 0 1-4 0V4zM6 8h4M14 8h4"/>',
+    heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+    double: '<path d="M4 8l5 8M9 8l-5 8M14 16h6l-6-8h6" />',
+    ticket: '<path d="M3 8a2 2 0 0 0 0 4v0a2 2 0 0 0 0 4v2h18v-2a2 2 0 0 0 0-4 2 2 0 0 0 0-4V6H3zM9 6v12"/>'
+  };
+  function puIcon(id) {
+    var c = id === 'ticket' ? '#7b2ff7' : AR.POWER[id].color;
+    return '<span class="pu-ico" style="--pc:' + c + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + PU_ICON[id] + '</svg></span>';
+  }
+  function arcLeft(ms) { var m = Math.floor(Math.max(0, ms) / 60000); return m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' min' : fmtLeft(ms); }
+  function arcNow() { return Date.now() + (S.arcSkew || 0); }
+  function arcStop() {
+    if (S.arcTimer) { clearInterval(S.arcTimer); S.arcTimer = null; }
+    if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; }
+    S.arcRun = null;
+  }
+  function viewArcade() { return '<div id="arc-box" class="arcade">' + (S.arc ? arcHTML() : '<div class="card center muted">Loading the arcade…</div>') + '</div>'; }
+  function loadArcade() {
+    return call('arcade', {}).then(function (res) {
+      S.arc = res; S.arcSkew = res.now - Date.now();
+      if (!S.arcRun) arcPaint();
+    }).catch(function () { });
+  }
+  function arcPaint() { var b = document.getElementById('arc-box'); if (b) b.innerHTML = arcHTML(); }
+  function arcLive() {
+    var a = S.arc; if (!a) return 'off';
+    var m = a.info.mode;
+    if (m !== 'off' && a.info.closes && arcNow() > a.info.closes) m = 'off';
+    return m;
+  }
+  function arcCanPlay() { var m = arcLive(); return m === 'free' || (m === 'earned' && S.arc.me.until > arcNow()); }
+  function arcStatusChip() {
+    var a = S.arc, m = arcLive();
+    if (m === 'off') return '<span class="arc-chip off"><svg class="i"><use href="#i-lock"/></svg> Locked</span>';
+    if (m === 'free') return '<span class="arc-chip free"><svg class="i"><use href="#i-unlock"/></svg> Free play · closes in <b id="arc-clock">' + arcLeft(a.info.closes - arcNow()) + '</b></span>';
+    if (a.me.until > arcNow()) return '<span class="arc-chip pass"><svg class="i"><use href="#i-clock"/></svg> Your pass: <b id="arc-clock">' + arcLeft(a.me.until - arcNow()) + '</b> left</span>';
+    return '<span class="arc-chip open"><svg class="i"><use href="#i-unlock"/></svg> Open · use a ticket to play</span>';
+  }
+  function arcHTML() {
+    var a = S.arc, me = a.me, m = arcLive(), p = prof(), shop = shopOn();
+    var h = '<section class="arc-hero"><div><div class="eyebrow">Scratch Quest Arcade</div><h1>Block Rush</h1><p>Catch falling code blocks, dodge the bugs, and climb the class leaderboard.</p></div>' +
+      '<div class="arc-hero-side">' + arcStatusChip() + '<div class="arc-wallet"><span>' + puIcon('ticket') + '<b>' + me.tickets + '</b> ticket' + (me.tickets === 1 ? '' : 's') + '</span>' + (shop ? '<span>' + coinTag(Math.max(0, p.coins), 'big') + '</span>' : '') + '</div></div></section>';
+    h += '<div class="arc-grid"><section class="card arc-play" id="arc-play">' + arcPlayPanel() + '</section>';
+    // leaderboard
+    h += '<section class="card arc-board"><h2><svg class="i"><use href="#i-award"/></svg> Top scores</h2>';
+    if (!a.board.length) h += '<p class="muted">No scores yet this round. Be the first!</p>';
+    else h += '<ol class="lb">' + a.board.map(function (b, i) {
+      return '<li class="' + (b.key === a.you ? 'me ' : '') + (i < 3 ? 'top' + (i + 1) : '') + '"><span class="lb-n">' + (i + 1) + '</span>' + avatarImgTag(b.avatar, 'lb-av') +
+        '<span class="lb-name">' + esc(b.name) + (b.title ? '<small>' + esc(b.title) + '</small>' : '') + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>';
+    }).join('') + '</ol>';
+    h += '<div class="arc-mine"><div><span>Your best this round</span><b>' + fmtN(me.best) + '</b></div><div><span>All-time best</span><b>' + fmtN(me.allBest) + '</b></div></div>';
+    // trophies (titles earned by score)
+    h += '<h3>Arcade titles</h3><ul class="arc-troph">' + A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade; }).map(function (t) {
+      var got = me.allBest >= t.unlock.arcade;
+      return '<li class="r-' + t.rarity + (got ? ' got' : '') + '"><span class="title-prev sm">' + esc(t.name) + '</span><span class="small">' + (got ? '<svg class="i"><use href="#i-check"/></svg> Unlocked: wear it in the <a href="#/avatar">studio</a>' : 'Score ' + fmtN(t.unlock.arcade)) + '</span></li>';
+    }).join('') + '</ul></section></div>';
+    // shop
+    if (shop) {
+      h += '<section class="card arc-shop"><div class="row between"><h2><svg class="i"><use href="#i-zap"/></svg> Power-up shop</h2><span class="muted small">Each power-up works for one run. Bring up to ' + AR.MAX_POWER + '.</span></div><div class="pu-grid">';
+      h += '<div class="pu-card ticket">' + puIcon('ticket') + '<b>Arcade ticket</b><p>' + a.info.passMin + ' minutes of play. You also get one free for every quest you finish.</p>' +
+        '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span><button class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : '') + '" data-act="arc-buy" data-item="ticket"' + (p.coins >= a.info.ticketPrice ? '' : ' disabled') + '>' + coinTag(a.info.ticketPrice) + '</button></div></div>';
+      AR.POWERUPS.forEach(function (u) {
+        var n = me.inv[u.id] || 0, ok = p.coins >= u.price;
+        h += '<div class="pu-card">' + puIcon(u.id) + '<b>' + esc(u.name) + '</b><p>' + esc(u.desc) + '</p><div class="pu-foot"><span class="small">' + (n ? 'You have <b>' + n + '</b>' : 'None yet') + '</span>' +
+          '<button class="btn small' + (ok ? ' primary' : '') + '" data-act="arc-buy" data-item="' + u.id + '"' + (ok ? '' : ' disabled') + '>' + coinTag(u.price) + '</button></div></div>';
+      });
+      h += '</div><p class="muted small">Coins come from XP (1 coin for every 5 XP). Spending coins never lowers your XP or level.</p></section>';
+    }
+    return h;
+  }
+  function arcPlayPanel() {
+    var a = S.arc, me = a.me, m = arcLive();
+    if (m === 'off') return '<div class="arc-lock"><svg class="i big-ico"><use href="#i-lock"/></svg><h2>The arcade is locked</h2><p>Your teacher opens it during class. Until then, finish quests to earn tickets' + (shopOn() ? ' and save coins for power-ups' : '') + '.</p><a class="btn primary" href="#/map">Back to my quests</a></div>';
+    if (!arcCanPlay()) {
+      return '<div class="arc-lock open"><svg class="i big-ico"><use href="#i-gamepad"/></svg><h2>The arcade is open!</h2><p>Use a ticket to play for <b>' + a.info.passMin + ' minutes</b>.</p>' +
+        (me.tickets ? '<button class="btn primary big" data-act="arc-pass">Use a ticket · play ' + a.info.passMin + ' min</button>' : '<p class="muted">You have no tickets yet. Finish a quest to earn one' + (shopOn() ? ', or buy one below' : '') + '.</p>') + '</div>';
+    }
+    var sel = S.arcSel || [], inv = me.inv, owned = AR.POWERUPS.filter(function (u) { return inv[u.id]; });
+    var h = '<div class="arc-ready"><h2>Ready to play?</h2>';
+    if (owned.length) {
+      h += '<p class="small">Pick up to ' + AR.MAX_POWER + ' power-ups for this run:</p><div class="pu-pick">' + owned.map(function (u) {
+        var on = sel.indexOf(u.id) >= 0;
+        return '<button class="pu-tog' + (on ? ' on' : '') + '" data-act="arc-sel" data-id="' + u.id + '" title="' + esc(u.desc) + '">' + puIcon(u.id) + '<span>' + esc(u.name) + '</span><small>x' + inv[u.id] + '</small></button>';
+      }).join('') + '</div>';
+    } else if (shopOn()) h += '<p class="small muted">Tip: power-ups from the shop below give you a head start.</p>';
+    h += '<button class="btn primary huge" data-act="arc-go"><svg class="i"><use href="#i-gamepad"/></svg> Play Block Rush</button>' +
+      '<p class="small muted">Move with the mouse, your finger, or the arrow keys. Blocks in a row build a combo. Gold stars are worth 50!</p></div>';
+    return h;
+  }
+  function arcTick() {
+    if (!S.arc || route()[0] !== 'arcade') return;
+    var el = document.getElementById('arc-clock'), m = arcLive();
+    if (el) el.textContent = arcLeft((m === 'free' ? S.arc.info.closes : S.arc.me.until) - arcNow());
+    if (S.arcRun) return; // never interrupt a run in progress
+    var playable = arcCanPlay();
+    if (S.arcWasPlayable && !playable) { S.arcWasPlayable = false; arcPaint(); }
+    S.arcWasPlayable = playable;
+    S.arcPoll = (S.arcPoll || 0) + 1;
+    if (S.arcPoll % 20 === 0) loadArcade(); // notice when the teacher opens or locks the arcade
+  }
+  function arcStartGame() {
+    var box = document.getElementById('arc-play');
+    if (!box || S.arcRun) return;
+    S.arcRun = 'starting';
+    call('arcadeStart', { power: S.arcSel || [] }).then(function (res) {
+      S.arcRun = res.run; S.arc.me = res.me; S.arcSel = [];
+      box.innerHTML = '<div class="arc-stage"><canvas id="arc-canvas" aria-label="Block Rush game"></canvas>' +
+        (res.run.power.length ? '<div class="arc-powers">' + res.run.power.map(function (id) { return puIcon(id) + '<span>' + esc(AR.POWER[id].name) + '</span>'; }).join('') + '</div>' : '') + '</div>';
+      var img = new Image(), gav = Object.assign({}, S.me.state.avatar, { bg: 'solid', bgColor: 'transparent', frame: 'none' }); img.src = avatarURI(gav);
+      var cv = document.getElementById('arc-canvas');
+      cv.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      S.arcGame = SQ_GAME.create(cv, { avatar: img, power: res.run.power, onEnd: function (score) { arcFinish(res.run.id, score); } });
+    }).catch(function () { S.arcRun = null; arcPaint(); });
+  }
+  function arcFinish(runId, score) {
+    var before = prof();
+    call('arcadeEnd', { runId: runId, score: score }).then(function (res) {
+      if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; }
+      S.arcRun = null; S.arc.me = res.me; S.arc.board = res.board; S.me = res.student;
+      arcPaint();
+      var unlocked = A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade && res.score >= t.unlock.arcade && (before.arcadeBest || 0) < t.unlock.arcade; });
+      if (res.newBest || unlocked.length) { SQ_SOUND.play('badge'); confetti(); }
+      modal('<div class="arc-result"><div class="eyebrow">Block Rush</div><div class="arc-big">' + fmtN(res.score) + '</div><p>points</p>' +
+        (res.newBest ? '<p class="arc-nb"><svg class="i"><use href="#i-star"/></svg> New personal best!</p>' : '<p class="muted">Your best this round: ' + fmtN(res.me.best) + '</p>') +
+        (res.place ? '<p>You are <b>#' + res.place + '</b> on the class leaderboard.</p>' : '') +
+        unlocked.map(function (t) { return '<p class="arc-nb">New title unlocked: <b>' + esc(t.name) + '</b></p>'; }).join('') +
+        '<div class="row center">' + (arcCanPlay() ? '<button class="btn primary" data-act="arc-again">Play again</button>' : '') + '<button class="btn" data-act="close-modal">Done</button></div></div>', 'arc-modal');
+    }).catch(function () { S.arcRun = null; if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; } arcPaint(); });
+  }
+  // ---- teacher controls (Dashboard)
+  function tArcadeCard(c) {
+    var a = c.arcade || { mode: 'off', passMin: 5, ticketPrice: 40 }, board = (S.tArcBoard || {})[c.id];
+    var modes = [['off', 'lock', 'Locked', 'Nobody can play.'], ['earned', 'clock', 'Earned passes', 'Students spend a ticket for a ' + a.passMin + '-minute pass.'], ['free', 'unlock', 'Free play', 'Everyone can play, no ticket needed.']];
+    var h = '<div class="card t-arcade"><div class="row between"><h2><svg class="i"><use href="#i-gamepad"/></svg> Arcade: Block Rush</h2>' +
+      (a.mode !== 'off' ? '<span class="arc-chip ' + (a.mode === 'free' ? 'free' : 'pass') + '">Open until ' + new Date(a.closes).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '</span>' : '<span class="arc-chip off">Locked</span>') + '</div>' +
+      '<div class="arc-modes">' + modes.map(function (m) {
+        return '<button class="arc-mode' + (a.mode === m[0] ? ' on' : '') + '" data-act="arc-mode" data-mode="' + m[0] + '" data-id="' + c.id + '"><svg class="i"><use href="#i-' + m[1] + '"/></svg><b>' + m[2] + '</b><small>' + m[3] + '</small></button>';
+      }).join('') + '</div>' +
+      '<form class="row arc-set" data-form="arc-set" data-id="' + c.id + '"><label>Open for <select name="minutes" id="arc-min-' + c.id + '">' + [15, 30, 45, 60, 90].map(function (n) { return '<option value="' + n + '"' + (n === (S.arcMin || 45) ? ' selected' : '') + '>' + n + ' min</option>'; }).join('') + '</select></label>' +
+      '<label>Pass length <select name="passMin">' + [3, 5, 10, 15].map(function (n) { return '<option value="' + n + '"' + (n === a.passMin ? ' selected' : '') + '>' + n + ' min</option>'; }).join('') + '</select></label>' +
+      '<label>Ticket price (coins) <input type="number" name="ticketPrice" min="0" max="500" step="5" value="' + a.ticketPrice + '" class="tiny-input"></label><button class="btn small">Save</button></form>' +
+      '<p class="muted small">It locks itself when the time runs out, so it never stays open after class. Locking ends everyone’s passes right away (a game in progress can finish). Students earn one ticket per finished quest.</p>';
+    h += '<div class="row between"><h3>Top scores this round</h3><button class="btn small ghost" data-act="arc-reset" data-id="' + c.id + '"><svg class="i"><use href="#i-refresh"/></svg> Start a new round</button></div>';
+    if (!board) h += '<p class="muted small" id="arc-tboard">Loading…</p>';
+    else if (!board.length) h += '<p class="muted small">No scores yet.</p>';
+    else h += '<ol class="lb compact">' + board.slice(0, 5).map(function (b, i) { return '<li><span class="lb-n">' + (i + 1) + '</span>' + avatarImgTag(b.avatar, 'lb-av') + '<span class="lb-name">' + esc(b.name) + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>'; }).join('') + '</ol>';
+    return h + '</div>';
+  }
+  function tArcadeLoad(c) {
+    if ((S.tArcBoard || {})[c.id]) return;
+    call('arcadeBoardFor', { classId: c.id }).then(function (res) { S.tArcBoard = S.tArcBoard || {}; S.tArcBoard[c.id] = res.board; if (route()[1] === 'dash') render(); }).catch(function () { });
+  }
+
   // ------------------------------------------------------------ badges
   function viewBadges() {
     var p = prof();
@@ -13550,6 +14197,7 @@ var SQ_MAPART = (function () {
       '<div class="stat"><b>' + active + '</b><span>active this week</span></div>' +
       '<a class="stat link" href="#/t/review"><b>' + pend.length + '</b><span>waiting for review <svg class="i"><use href="#i-arrow-right"/></svg></span></a></div>';
     if (c.openThrough < R.MAX_TIER) h += '<div class="banner lock"><svg class="i"><use href="#i-clock"/></svg> Pacing gate: students can work through quest tier <b>' + c.openThrough + '</b> (' + esc(tierName(c.openThrough)) + '). <a href="#/t/classes">Change</a></div>';
+    h += tArcadeCard(c); tArcadeLoad(c);
     if (!ss.length) return h + '<div class="card"><h2>No students yet</h2><p>Have students open this web app and enter code <b class="code">' + esc(c.code) + '</b>.</p></div>';
     // progress grid
     h += '<div class="card"><div class="row between"><h2>Progress grid</h2><span class="legend-inline"><span class="cell s-done"></span>done <span class="cell s-submitted"></span>turned in <span class="cell s-returned"></span>sent back <span class="cell s-started"></span>working <span class="cell s-available"></span>ready <span class="cell s-locked"></span>locked</span></div><div class="grid-scroll"><table class="pgrid"><thead><tr><th>Student</th><th>Lv</th><th>XP</th>';
@@ -14177,6 +14825,40 @@ var SQ_MAPART = (function () {
       return;
     }
     if (act === 't-projector') { go('#/t/projector'); return; }
+    if (act === 'arc-sel') {
+      var sid = t.getAttribute('data-id'), sel = S.arcSel = S.arcSel || [], si = sel.indexOf(sid);
+      if (si >= 0) sel.splice(si, 1); else if (sel.length < AR.MAX_POWER) sel.push(sid); else { toast('You can bring ' + AR.MAX_POWER + ' power-ups per run.'); return; }
+      SQ_SOUND.play('tap'); document.getElementById('arc-play').innerHTML = arcPlayPanel(); return;
+    }
+    if (act === 'arc-go') { SQ_SOUND.play('pop'); arcStartGame(); return; }
+    if (act === 'arc-again') { closeModal(); arcStartGame(); return; }
+    if (act === 'arc-pass') {
+      t.disabled = true;
+      call('arcadePass', {}).then(function (res) { S.arc.me = res.me; SQ_SOUND.play('levelup'); toast('<svg class="i"><use href="#i-clock"/></svg> Your ' + S.arc.info.passMin + '-minute pass has started. Have fun!'); arcPaint(); }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'arc-buy') {
+      var it = t.getAttribute('data-item'); t.disabled = true;
+      call('arcadeBuy', { item: it }).then(function (res) {
+        S.arc.me = res.me; S.me = res.student; SQ_SOUND.play('buy');
+        toast('<span class="coin" aria-hidden="true"></span> <b>' + (it === 'ticket' ? 'Ticket' : esc(AR.POWER[it].name)) + '</b> added!', 't-badge');
+        var y = window.scrollY; render(); window.scrollTo(0, y);
+      }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'arc-mode') {
+      var cid = t.getAttribute('data-id'), sm = document.getElementById('arc-min-' + cid), mins = sm ? +sm.value : 45;
+      S.arcMin = mins;
+      call('setArcade', { classId: cid, mode: t.getAttribute('data-mode'), minutes: mins }).then(function (res) { return loadTeacher().then(function () { S.tArcBoard = S.tArcBoard || {}; S.tArcBoard[cid] = res.board; toast(res.cls.arcade.mode === 'off' ? 'Arcade locked' : 'Arcade open for ' + mins + ' minutes'); render(); }); }).catch(function () { });
+      return;
+    }
+    if (act === 'arc-reset') {
+      var rid = t.getAttribute('data-id');
+      ask('Start a new leaderboard round? Current top scores are cleared from the board (students keep their all-time best and titles).', 'Start new round').then(function (ok) {
+        if (ok) call('setArcade', { classId: rid, resetBoard: true }).then(function (res) { S.tArcBoard[rid] = res.board; toast('New round started'); render(); }).catch(function () { });
+      });
+      return;
+    }
     if (act === 'teacher-try') {
       var c0 = tc();
       if (!c0) { toast('Create a class first.'); return; }
@@ -14241,6 +14923,7 @@ var SQ_MAPART = (function () {
       render();
     });
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
+    else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
     else if (kind === 'class-set') {
       var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });

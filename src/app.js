@@ -163,7 +163,7 @@
       tabs = [['#/t/dash', '<svg class="i"><use href="#i-chart"/></svg>', 'Dashboard'], ['#/t/review', '<svg class="i"><use href="#i-inbox"/></svg>', 'Review' + (pending ? ' <span class="pill">' + pending + '</span>' : '')],
         ['#/t/map', '<svg class="i"><use href="#i-map"/></svg>', 'Class Map'], ['#/t/lessons', '<svg class="i"><use href="#i-library"/></svg>', 'Lessons'], ['#/t/standards', '<svg class="i"><use href="#i-ruler"/></svg>', 'Standards'], ['#/t/classroom', '<svg class="i"><use href="#i-school"/></svg>', 'Classroom'], ['#/t/classes', '<svg class="i"><use href="#i-sliders"/></svg>', 'Classes']];
     } else {
-      tabs = [['#/map', '<svg class="i"><use href="#i-map"/></svg>', 'Quest Map'], ['#/avatar', '<svg class="i"><use href="#i-palette"/></svg>', 'My Avatar'], ['#/badges', '<svg class="i"><use href="#i-award"/></svg>', 'Badges'], ['#/class', '<svg class="i"><use href="#i-users"/></svg>', 'My Class']];
+      tabs = [['#/map', '<svg class="i"><use href="#i-map"/></svg>', 'Quest Map'], ['#/avatar', '<svg class="i"><use href="#i-palette"/></svg>', 'My Avatar'], ['#/badges', '<svg class="i"><use href="#i-award"/></svg>', 'Badges'], ['#/arcade', '<svg class="i"><use href="#i-gamepad"/></svg>', 'Arcade'], ['#/class', '<svg class="i"><use href="#i-users"/></svg>', 'My Class']];
     }
     var cur = location.hash || '#/map';
     var html = '<header class="top"><a class="logo" href="' + (isTeacher() && r === 't' ? '#/t/dash' : '#/map') + '"><span class="logo-ico"><svg class="i"><use href="#i-compass"/></svg></span><span>Scratch<b>Quest</b></span></a><nav class="tabs">';
@@ -197,6 +197,7 @@
     closeModal();
     stopSpeaking();
     csStop(); document.body.classList.remove('cs-on', 'cs-dark');
+    arcStop();
     var r = route();
     if (!S.boot) return;
     if (r[0] === 't') {
@@ -213,12 +214,14 @@
     else if (r[0] === 'avatar') body = viewAvatar();
     else if (r[0] === 'badges') body = viewBadges();
     else if (r[0] === 'class') body = viewClass();
+    else if (r[0] === 'arcade') body = viewArcade();
     else body = viewMap();
     $app.innerHTML = header() + '<main>' + body + '</main>';
     afterRender(r);
   }
   function afterRender(r) {
     renderBlocks();
+    if (r[0] === 'arcade') { loadArcade(); S.arcTimer = setInterval(arcTick, 1000); }
     if (r[0] === 'map' || r[0] === '' || r[0] === 'class' || (r[0] === 't' && (r[1] === 'map' || r[1] === 'projector'))) loadClassView(r);
     if (r[0] === 'map' || r[0] === '' || (r[0] === 't' && r[1] === 'map')) {
       var you = document.querySelector('.node.current');
@@ -838,7 +841,7 @@
     h += '<div class="row center"><button class="btn" data-act="av-random"><svg class="i"><use href="#i-dice"/></svg> Surprise me</button><button class="btn primary big" data-act="av-save"><svg class="i"><use href="#i-save"/></svg> Save my look</button></div>' +
       '<div class="collect"><div class="row between small"><b>Collection</b><span>' + col.have + ' / ' + col.total + ' items</span></div><div class="xpbar"><i style="width:' + Math.round(col.have / col.total * 100) + '%"></i></div></div>' +
       '<div class="row center small muted"><button class="linklike" data-act="sound-toggle">' + (SQ_SOUND.muted() ? 'Sound is off: turn it on' : 'Sound is on: turn it off') + '</button></div>' +
-      goalCard(p) + '</section>';
+      goalCard(p) + '<a class="arc-promo" href="#/arcade"><svg class="i"><use href="#i-gamepad"/></svg><span><b>Block Rush arcade</b><small>Power-ups, tickets and the class leaderboard</small></span><svg class="i"><use href="#i-arrow-right"/></svg></a></section>';
     // ---- the shop / wardrobe
     h += '<section class="card studio-shop"><div class="studio-tabs">' + AV_TABS.map(function (g) {
       return '<div class="tab-group"><span class="tg-label">' + g[0] + '</span>' + g[1].map(function (t) {
@@ -877,6 +880,164 @@
     var bg = c === 'neon' ? 'linear-gradient(135deg,#ff3cac,#784ba0,#2b86c5)' : c;
     return '<button class="sw' + (on ? ' on' : '') + (ok ? '' : ' locked') + '" style="background:' + bg + '" data-act="av-color" data-key="' + key + '" data-c="' + c + '" title="' + (ok ? c : esc(A.unlockText(A.COLOR_UNLOCK[c]))) + '" aria-label="color ' + c + '">' + (ok ? '' : '<svg class="i"><use href="#i-lock"/></svg>') + '</button>';
   }
+  // ------------------------------------------------------------ arcade
+  var AR = SQ_ARCADE;
+  var PU_ICON = {
+    shield: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/>',
+    slow: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+    magnet: '<path d="M6 4v8a6 6 0 0 0 12 0V4h-4v8a2 2 0 0 1-4 0V4zM6 8h4M14 8h4"/>',
+    heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+    double: '<path d="M4 8l5 8M9 8l-5 8M14 16h6l-6-8h6" />',
+    ticket: '<path d="M3 8a2 2 0 0 0 0 4v0a2 2 0 0 0 0 4v2h18v-2a2 2 0 0 0 0-4 2 2 0 0 0 0-4V6H3zM9 6v12"/>'
+  };
+  function puIcon(id) {
+    var c = id === 'ticket' ? '#7b2ff7' : AR.POWER[id].color;
+    return '<span class="pu-ico" style="--pc:' + c + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + PU_ICON[id] + '</svg></span>';
+  }
+  function arcLeft(ms) { var m = Math.floor(Math.max(0, ms) / 60000); return m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' min' : fmtLeft(ms); }
+  function arcNow() { return Date.now() + (S.arcSkew || 0); }
+  function arcStop() {
+    if (S.arcTimer) { clearInterval(S.arcTimer); S.arcTimer = null; }
+    if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; }
+    S.arcRun = null;
+  }
+  function viewArcade() { return '<div id="arc-box" class="arcade">' + (S.arc ? arcHTML() : '<div class="card center muted">Loading the arcade…</div>') + '</div>'; }
+  function loadArcade() {
+    return call('arcade', {}).then(function (res) {
+      S.arc = res; S.arcSkew = res.now - Date.now();
+      if (!S.arcRun) arcPaint();
+    }).catch(function () { });
+  }
+  function arcPaint() { var b = document.getElementById('arc-box'); if (b) b.innerHTML = arcHTML(); }
+  function arcLive() {
+    var a = S.arc; if (!a) return 'off';
+    var m = a.info.mode;
+    if (m !== 'off' && a.info.closes && arcNow() > a.info.closes) m = 'off';
+    return m;
+  }
+  function arcCanPlay() { var m = arcLive(); return m === 'free' || (m === 'earned' && S.arc.me.until > arcNow()); }
+  function arcStatusChip() {
+    var a = S.arc, m = arcLive();
+    if (m === 'off') return '<span class="arc-chip off"><svg class="i"><use href="#i-lock"/></svg> Locked</span>';
+    if (m === 'free') return '<span class="arc-chip free"><svg class="i"><use href="#i-unlock"/></svg> Free play · closes in <b id="arc-clock">' + arcLeft(a.info.closes - arcNow()) + '</b></span>';
+    if (a.me.until > arcNow()) return '<span class="arc-chip pass"><svg class="i"><use href="#i-clock"/></svg> Your pass: <b id="arc-clock">' + arcLeft(a.me.until - arcNow()) + '</b> left</span>';
+    return '<span class="arc-chip open"><svg class="i"><use href="#i-unlock"/></svg> Open · use a ticket to play</span>';
+  }
+  function arcHTML() {
+    var a = S.arc, me = a.me, m = arcLive(), p = prof(), shop = shopOn();
+    var h = '<section class="arc-hero"><div><div class="eyebrow">Scratch Quest Arcade</div><h1>Block Rush</h1><p>Catch falling code blocks, dodge the bugs, and climb the class leaderboard.</p></div>' +
+      '<div class="arc-hero-side">' + arcStatusChip() + '<div class="arc-wallet"><span>' + puIcon('ticket') + '<b>' + me.tickets + '</b> ticket' + (me.tickets === 1 ? '' : 's') + '</span>' + (shop ? '<span>' + coinTag(Math.max(0, p.coins), 'big') + '</span>' : '') + '</div></div></section>';
+    h += '<div class="arc-grid"><section class="card arc-play" id="arc-play">' + arcPlayPanel() + '</section>';
+    // leaderboard
+    h += '<section class="card arc-board"><h2><svg class="i"><use href="#i-award"/></svg> Top scores</h2>';
+    if (!a.board.length) h += '<p class="muted">No scores yet this round. Be the first!</p>';
+    else h += '<ol class="lb">' + a.board.map(function (b, i) {
+      return '<li class="' + (b.key === a.you ? 'me ' : '') + (i < 3 ? 'top' + (i + 1) : '') + '"><span class="lb-n">' + (i + 1) + '</span>' + avatarImgTag(b.avatar, 'lb-av') +
+        '<span class="lb-name">' + esc(b.name) + (b.title ? '<small>' + esc(b.title) + '</small>' : '') + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>';
+    }).join('') + '</ol>';
+    h += '<div class="arc-mine"><div><span>Your best this round</span><b>' + fmtN(me.best) + '</b></div><div><span>All-time best</span><b>' + fmtN(me.allBest) + '</b></div></div>';
+    // trophies (titles earned by score)
+    h += '<h3>Arcade titles</h3><ul class="arc-troph">' + A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade; }).map(function (t) {
+      var got = me.allBest >= t.unlock.arcade;
+      return '<li class="r-' + t.rarity + (got ? ' got' : '') + '"><span class="title-prev sm">' + esc(t.name) + '</span><span class="small">' + (got ? '<svg class="i"><use href="#i-check"/></svg> Unlocked: wear it in the <a href="#/avatar">studio</a>' : 'Score ' + fmtN(t.unlock.arcade)) + '</span></li>';
+    }).join('') + '</ul></section></div>';
+    // shop
+    if (shop) {
+      h += '<section class="card arc-shop"><div class="row between"><h2><svg class="i"><use href="#i-zap"/></svg> Power-up shop</h2><span class="muted small">Each power-up works for one run. Bring up to ' + AR.MAX_POWER + '.</span></div><div class="pu-grid">';
+      h += '<div class="pu-card ticket">' + puIcon('ticket') + '<b>Arcade ticket</b><p>' + a.info.passMin + ' minutes of play. You also get one free for every quest you finish.</p>' +
+        '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span><button class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : '') + '" data-act="arc-buy" data-item="ticket"' + (p.coins >= a.info.ticketPrice ? '' : ' disabled') + '>' + coinTag(a.info.ticketPrice) + '</button></div></div>';
+      AR.POWERUPS.forEach(function (u) {
+        var n = me.inv[u.id] || 0, ok = p.coins >= u.price;
+        h += '<div class="pu-card">' + puIcon(u.id) + '<b>' + esc(u.name) + '</b><p>' + esc(u.desc) + '</p><div class="pu-foot"><span class="small">' + (n ? 'You have <b>' + n + '</b>' : 'None yet') + '</span>' +
+          '<button class="btn small' + (ok ? ' primary' : '') + '" data-act="arc-buy" data-item="' + u.id + '"' + (ok ? '' : ' disabled') + '>' + coinTag(u.price) + '</button></div></div>';
+      });
+      h += '</div><p class="muted small">Coins come from XP (1 coin for every 5 XP). Spending coins never lowers your XP or level.</p></section>';
+    }
+    return h;
+  }
+  function arcPlayPanel() {
+    var a = S.arc, me = a.me, m = arcLive();
+    if (m === 'off') return '<div class="arc-lock"><svg class="i big-ico"><use href="#i-lock"/></svg><h2>The arcade is locked</h2><p>Your teacher opens it during class. Until then, finish quests to earn tickets' + (shopOn() ? ' and save coins for power-ups' : '') + '.</p><a class="btn primary" href="#/map">Back to my quests</a></div>';
+    if (!arcCanPlay()) {
+      return '<div class="arc-lock open"><svg class="i big-ico"><use href="#i-gamepad"/></svg><h2>The arcade is open!</h2><p>Use a ticket to play for <b>' + a.info.passMin + ' minutes</b>.</p>' +
+        (me.tickets ? '<button class="btn primary big" data-act="arc-pass">Use a ticket · play ' + a.info.passMin + ' min</button>' : '<p class="muted">You have no tickets yet. Finish a quest to earn one' + (shopOn() ? ', or buy one below' : '') + '.</p>') + '</div>';
+    }
+    var sel = S.arcSel || [], inv = me.inv, owned = AR.POWERUPS.filter(function (u) { return inv[u.id]; });
+    var h = '<div class="arc-ready"><h2>Ready to play?</h2>';
+    if (owned.length) {
+      h += '<p class="small">Pick up to ' + AR.MAX_POWER + ' power-ups for this run:</p><div class="pu-pick">' + owned.map(function (u) {
+        var on = sel.indexOf(u.id) >= 0;
+        return '<button class="pu-tog' + (on ? ' on' : '') + '" data-act="arc-sel" data-id="' + u.id + '" title="' + esc(u.desc) + '">' + puIcon(u.id) + '<span>' + esc(u.name) + '</span><small>x' + inv[u.id] + '</small></button>';
+      }).join('') + '</div>';
+    } else if (shopOn()) h += '<p class="small muted">Tip: power-ups from the shop below give you a head start.</p>';
+    h += '<button class="btn primary huge" data-act="arc-go"><svg class="i"><use href="#i-gamepad"/></svg> Play Block Rush</button>' +
+      '<p class="small muted">Move with the mouse, your finger, or the arrow keys. Blocks in a row build a combo. Gold stars are worth 50!</p></div>';
+    return h;
+  }
+  function arcTick() {
+    if (!S.arc || route()[0] !== 'arcade') return;
+    var el = document.getElementById('arc-clock'), m = arcLive();
+    if (el) el.textContent = arcLeft((m === 'free' ? S.arc.info.closes : S.arc.me.until) - arcNow());
+    if (S.arcRun) return; // never interrupt a run in progress
+    var playable = arcCanPlay();
+    if (S.arcWasPlayable && !playable) { S.arcWasPlayable = false; arcPaint(); }
+    S.arcWasPlayable = playable;
+    S.arcPoll = (S.arcPoll || 0) + 1;
+    if (S.arcPoll % 20 === 0) loadArcade(); // notice when the teacher opens or locks the arcade
+  }
+  function arcStartGame() {
+    var box = document.getElementById('arc-play');
+    if (!box || S.arcRun) return;
+    S.arcRun = 'starting';
+    call('arcadeStart', { power: S.arcSel || [] }).then(function (res) {
+      S.arcRun = res.run; S.arc.me = res.me; S.arcSel = [];
+      box.innerHTML = '<div class="arc-stage"><canvas id="arc-canvas" aria-label="Block Rush game"></canvas>' +
+        (res.run.power.length ? '<div class="arc-powers">' + res.run.power.map(function (id) { return puIcon(id) + '<span>' + esc(AR.POWER[id].name) + '</span>'; }).join('') + '</div>' : '') + '</div>';
+      var img = new Image(), gav = Object.assign({}, S.me.state.avatar, { bg: 'solid', bgColor: 'transparent', frame: 'none' }); img.src = avatarURI(gav);
+      var cv = document.getElementById('arc-canvas');
+      cv.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      S.arcGame = SQ_GAME.create(cv, { avatar: img, power: res.run.power, onEnd: function (score) { arcFinish(res.run.id, score); } });
+    }).catch(function () { S.arcRun = null; arcPaint(); });
+  }
+  function arcFinish(runId, score) {
+    var before = prof();
+    call('arcadeEnd', { runId: runId, score: score }).then(function (res) {
+      if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; }
+      S.arcRun = null; S.arc.me = res.me; S.arc.board = res.board; S.me = res.student;
+      arcPaint();
+      var unlocked = A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade && res.score >= t.unlock.arcade && (before.arcadeBest || 0) < t.unlock.arcade; });
+      if (res.newBest || unlocked.length) { SQ_SOUND.play('badge'); confetti(); }
+      modal('<div class="arc-result"><div class="eyebrow">Block Rush</div><div class="arc-big">' + fmtN(res.score) + '</div><p>points</p>' +
+        (res.newBest ? '<p class="arc-nb"><svg class="i"><use href="#i-star"/></svg> New personal best!</p>' : '<p class="muted">Your best this round: ' + fmtN(res.me.best) + '</p>') +
+        (res.place ? '<p>You are <b>#' + res.place + '</b> on the class leaderboard.</p>' : '') +
+        unlocked.map(function (t) { return '<p class="arc-nb">New title unlocked: <b>' + esc(t.name) + '</b></p>'; }).join('') +
+        '<div class="row center">' + (arcCanPlay() ? '<button class="btn primary" data-act="arc-again">Play again</button>' : '') + '<button class="btn" data-act="close-modal">Done</button></div></div>', 'arc-modal');
+    }).catch(function () { S.arcRun = null; if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; } arcPaint(); });
+  }
+  // ---- teacher controls (Dashboard)
+  function tArcadeCard(c) {
+    var a = c.arcade || { mode: 'off', passMin: 5, ticketPrice: 40 }, board = (S.tArcBoard || {})[c.id];
+    var modes = [['off', 'lock', 'Locked', 'Nobody can play.'], ['earned', 'clock', 'Earned passes', 'Students spend a ticket for a ' + a.passMin + '-minute pass.'], ['free', 'unlock', 'Free play', 'Everyone can play, no ticket needed.']];
+    var h = '<div class="card t-arcade"><div class="row between"><h2><svg class="i"><use href="#i-gamepad"/></svg> Arcade: Block Rush</h2>' +
+      (a.mode !== 'off' ? '<span class="arc-chip ' + (a.mode === 'free' ? 'free' : 'pass') + '">Open until ' + new Date(a.closes).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '</span>' : '<span class="arc-chip off">Locked</span>') + '</div>' +
+      '<div class="arc-modes">' + modes.map(function (m) {
+        return '<button class="arc-mode' + (a.mode === m[0] ? ' on' : '') + '" data-act="arc-mode" data-mode="' + m[0] + '" data-id="' + c.id + '"><svg class="i"><use href="#i-' + m[1] + '"/></svg><b>' + m[2] + '</b><small>' + m[3] + '</small></button>';
+      }).join('') + '</div>' +
+      '<form class="row arc-set" data-form="arc-set" data-id="' + c.id + '"><label>Open for <select name="minutes" id="arc-min-' + c.id + '">' + [15, 30, 45, 60, 90].map(function (n) { return '<option value="' + n + '"' + (n === (S.arcMin || 45) ? ' selected' : '') + '>' + n + ' min</option>'; }).join('') + '</select></label>' +
+      '<label>Pass length <select name="passMin">' + [3, 5, 10, 15].map(function (n) { return '<option value="' + n + '"' + (n === a.passMin ? ' selected' : '') + '>' + n + ' min</option>'; }).join('') + '</select></label>' +
+      '<label>Ticket price (coins) <input type="number" name="ticketPrice" min="0" max="500" step="5" value="' + a.ticketPrice + '" class="tiny-input"></label><button class="btn small">Save</button></form>' +
+      '<p class="muted small">It locks itself when the time runs out, so it never stays open after class. Locking ends everyone’s passes right away (a game in progress can finish). Students earn one ticket per finished quest.</p>';
+    h += '<div class="row between"><h3>Top scores this round</h3><button class="btn small ghost" data-act="arc-reset" data-id="' + c.id + '"><svg class="i"><use href="#i-refresh"/></svg> Start a new round</button></div>';
+    if (!board) h += '<p class="muted small" id="arc-tboard">Loading…</p>';
+    else if (!board.length) h += '<p class="muted small">No scores yet.</p>';
+    else h += '<ol class="lb compact">' + board.slice(0, 5).map(function (b, i) { return '<li><span class="lb-n">' + (i + 1) + '</span>' + avatarImgTag(b.avatar, 'lb-av') + '<span class="lb-name">' + esc(b.name) + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>'; }).join('') + '</ol>';
+    return h + '</div>';
+  }
+  function tArcadeLoad(c) {
+    if ((S.tArcBoard || {})[c.id]) return;
+    call('arcadeBoardFor', { classId: c.id }).then(function (res) { S.tArcBoard = S.tArcBoard || {}; S.tArcBoard[c.id] = res.board; if (route()[1] === 'dash') render(); }).catch(function () { });
+  }
+
   // ------------------------------------------------------------ badges
   function viewBadges() {
     var p = prof();
@@ -994,6 +1155,7 @@
       '<div class="stat"><b>' + active + '</b><span>active this week</span></div>' +
       '<a class="stat link" href="#/t/review"><b>' + pend.length + '</b><span>waiting for review <svg class="i"><use href="#i-arrow-right"/></svg></span></a></div>';
     if (c.openThrough < R.MAX_TIER) h += '<div class="banner lock"><svg class="i"><use href="#i-clock"/></svg> Pacing gate: students can work through quest tier <b>' + c.openThrough + '</b> (' + esc(tierName(c.openThrough)) + '). <a href="#/t/classes">Change</a></div>';
+    h += tArcadeCard(c); tArcadeLoad(c);
     if (!ss.length) return h + '<div class="card"><h2>No students yet</h2><p>Have students open this web app and enter code <b class="code">' + esc(c.code) + '</b>.</p></div>';
     // progress grid
     h += '<div class="card"><div class="row between"><h2>Progress grid</h2><span class="legend-inline"><span class="cell s-done"></span>done <span class="cell s-submitted"></span>turned in <span class="cell s-returned"></span>sent back <span class="cell s-started"></span>working <span class="cell s-available"></span>ready <span class="cell s-locked"></span>locked</span></div><div class="grid-scroll"><table class="pgrid"><thead><tr><th>Student</th><th>Lv</th><th>XP</th>';
@@ -1621,6 +1783,40 @@
       return;
     }
     if (act === 't-projector') { go('#/t/projector'); return; }
+    if (act === 'arc-sel') {
+      var sid = t.getAttribute('data-id'), sel = S.arcSel = S.arcSel || [], si = sel.indexOf(sid);
+      if (si >= 0) sel.splice(si, 1); else if (sel.length < AR.MAX_POWER) sel.push(sid); else { toast('You can bring ' + AR.MAX_POWER + ' power-ups per run.'); return; }
+      SQ_SOUND.play('tap'); document.getElementById('arc-play').innerHTML = arcPlayPanel(); return;
+    }
+    if (act === 'arc-go') { SQ_SOUND.play('pop'); arcStartGame(); return; }
+    if (act === 'arc-again') { closeModal(); arcStartGame(); return; }
+    if (act === 'arc-pass') {
+      t.disabled = true;
+      call('arcadePass', {}).then(function (res) { S.arc.me = res.me; SQ_SOUND.play('levelup'); toast('<svg class="i"><use href="#i-clock"/></svg> Your ' + S.arc.info.passMin + '-minute pass has started. Have fun!'); arcPaint(); }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'arc-buy') {
+      var it = t.getAttribute('data-item'); t.disabled = true;
+      call('arcadeBuy', { item: it }).then(function (res) {
+        S.arc.me = res.me; S.me = res.student; SQ_SOUND.play('buy');
+        toast('<span class="coin" aria-hidden="true"></span> <b>' + (it === 'ticket' ? 'Ticket' : esc(AR.POWER[it].name)) + '</b> added!', 't-badge');
+        var y = window.scrollY; render(); window.scrollTo(0, y);
+      }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'arc-mode') {
+      var cid = t.getAttribute('data-id'), sm = document.getElementById('arc-min-' + cid), mins = sm ? +sm.value : 45;
+      S.arcMin = mins;
+      call('setArcade', { classId: cid, mode: t.getAttribute('data-mode'), minutes: mins }).then(function (res) { return loadTeacher().then(function () { S.tArcBoard = S.tArcBoard || {}; S.tArcBoard[cid] = res.board; toast(res.cls.arcade.mode === 'off' ? 'Arcade locked' : 'Arcade open for ' + mins + ' minutes'); render(); }); }).catch(function () { });
+      return;
+    }
+    if (act === 'arc-reset') {
+      var rid = t.getAttribute('data-id');
+      ask('Start a new leaderboard round? Current top scores are cleared from the board (students keep their all-time best and titles).', 'Start new round').then(function (ok) {
+        if (ok) call('setArcade', { classId: rid, resetBoard: true }).then(function (res) { S.tArcBoard[rid] = res.board; toast('New round started'); render(); }).catch(function () { });
+      });
+      return;
+    }
     if (act === 'teacher-try') {
       var c0 = tc();
       if (!c0) { toast('Create a class first.'); return; }
@@ -1685,6 +1881,7 @@
       render();
     });
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
+    else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
     else if (kind === 'class-set') {
       var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });

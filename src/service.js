@@ -10,7 +10,7 @@
  *   getSettings() -> obj             saveSettings(obj)
  */
 function SQ_SERVICE(store) {
-  var R = SQ_RULES, A = SQ_AVATAR;
+  var R = SQ_RULES, A = SQ_AVATAR, AR = SQ_ARCADE;
 
   function err(msg) { throw new Error(msg); }
   function now() { return Date.now(); }
@@ -26,7 +26,33 @@ function SQ_SERVICE(store) {
     if (!c) return null;
     classDefaults(c);
     return { id: c.id, name: c.name, code: c.code, openThrough: c.openThrough, requireApproval: c.requireApproval,
-      requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false };
+      requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false, arcade: arcadeInfo(c) };
+  }
+  // What students may know about the arcade: its live mode, closing time and pass rules
+  function arcadeInfo(c) {
+    var cfg = AR.config(c), mode = AR.liveMode(cfg, now());
+    return { mode: mode, closes: mode === 'off' ? 0 : cfg.closes, passMin: cfg.passMin, ticketPrice: cfg.ticketPrice, season: cfg.season };
+  }
+  function arcadeStatus(st) {
+    var a = AR.stateOf(st.state), p = R.profile(st.state), info = arcadeInfo(findClass(st.classId) || {});
+    var t = now();
+    return { tickets: AR.tickets(a, p.doneCount), until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
+      best: a.season === info.season ? a.best : 0, allBest: a.allBest, plays: a.plays, running: !!(a.run && t - a.run.t < AR.RUN_MAX_MS) };
+  }
+  // Top scores this season (only students; positive information only)
+  function arcadeBoard(classId, season) {
+    return store.getStudents().filter(function (s) {
+      var a = s.state.arcade;
+      return s.classId === classId && !s.isTeacher && a && a.season === season && a.best > 0;
+    }).sort(function (x, y) { return y.state.arcade.best - x.state.arcade.best; }).slice(0, 10).map(function (s) {
+      return { name: s.name, avatar: s.state.avatar || A.DEFAULT, score: s.state.arcade.best, title: A.titleText(s.state.avatar), key: memberId(s.email) };
+    });
+  }
+  function canPlay(st) {
+    var info = arcadeInfo(findClass(st.classId) || {}), a = AR.stateOf(st.state);
+    if (info.mode === 'off') err('The arcade is locked right now. Your teacher opens it during class.');
+    if (info.mode === 'earned' && !(a.until > now())) err('Start an arcade pass first.');
+    return info;
   }
   // Teachers also see the Google Classroom link details
   function teacherClass(c) {
@@ -80,12 +106,16 @@ function SQ_SERVICE(store) {
   function classMembers(classId) {
     return store.getStudents().filter(function (s) { return s.classId === classId; }).map(function (s) {
       var p = R.profile(s.state);
-      var h = 7;
-      for (var i = 0; i < s.email.length; i++) h = (h * 31 + s.email.charCodeAt(i)) % 2147483647;
-      return { id: 'm' + h.toString(36),
+      return { id: memberId(s.email),
         name: s.name, avatar: s.state.avatar || A.DEFAULT, xp: p.xp, level: p.level, rank: p.rank,
         current: p.current, done: Object.keys(p.done), badges: p.badges.length, teacher: !!s.isTeacher };
     });
+  }
+
+  function memberId(email) {
+    var h = 7;
+    for (var i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) % 2147483647;
+    return 'm' + h.toString(36);
   }
 
   function makeCode() {
@@ -219,7 +249,102 @@ function SQ_SERVICE(store) {
       return { student: persist(st) };
     },
 
+    // ---------------------------------------------------------- arcade
+    arcade: function (user) {
+      var st = requireStudent(user), c = findClass(st.classId) || {};
+      var info = arcadeInfo(c);
+      return { info: info, me: arcadeStatus(st), board: arcadeBoard(st.classId, info.season), you: memberId(st.email), now: now() };
+    },
+    // Buy a ticket or a power-up with coins
+    arcadeBuy: function (user, args) {
+      var st = requireStudent(user), c = classDefaults(findClass(st.classId) || {});
+      if (c.shop === false) err('The coin shop is turned off for your class.');
+      var a = AR.stateOf(st.state), p = R.profile(st.state), what = String(args.item || ''), price, name;
+      if (what === 'ticket') { price = AR.config(c).ticketPrice; name = 'an arcade ticket'; }
+      else if (AR.POWER[what]) { price = AR.POWER[what].price; name = AR.POWER[what].name; }
+      else err('That is not in the arcade shop.');
+      if ((a.inv[what] || 0) >= 9) err('You can hold up to 9 of those.');
+      if (p.coins < price) err('You need ' + (price - p.coins) + ' more coins for ' + name + '.');
+      a.spent += price;
+      if (what === 'ticket') a.bought += 1; else a.inv[what] = (a.inv[what] || 0) + 1;
+      persist(st);
+      return { me: arcadeStatus(st), student: selfView(st) };
+    },
+    // Spend a ticket to start a short pass (Earned mode)
+    arcadePass: function (user) {
+      var st = requireStudent(user), info = arcadeInfo(findClass(st.classId) || {}), a = AR.stateOf(st.state), p = R.profile(st.state);
+      if (info.mode === 'off') err('The arcade is locked right now.');
+      if (info.mode === 'free') err('It is free play right now. No ticket needed!');
+      if (a.until > now()) err('Your pass is already running.');
+      if (AR.tickets(a, p.doneCount) < 1) err('You need a ticket. Finish a quest to earn one!');
+      a.used += 1;
+      a.until = now() + info.passMin * 60e3;
+      if (info.closes) a.until = Math.min(a.until, info.closes);
+      persist(st);
+      return { me: arcadeStatus(st) };
+    },
+    arcadeStart: function (user, args) {
+      var st = requireStudent(user);
+      canPlay(st);
+      var a = AR.stateOf(st.state), want = (args.power || []).map(String), power = [];
+      want.forEach(function (id) {
+        if (AR.POWER[id] && power.indexOf(id) < 0 && power.length < AR.MAX_POWER && (a.inv[id] || 0) > 0) power.push(id);
+      });
+      power.forEach(function (id) { a.inv[id] -= 1; if (!a.inv[id]) delete a.inv[id]; });
+      a.run = { id: 'r' + now().toString(36) + Math.floor(Math.random() * 1e4), t: now(), power: power };
+      persist(st);
+      return { run: a.run, me: arcadeStatus(st) };
+    },
+    arcadeEnd: function (user, args) {
+      var st = requireStudent(user), a = AR.stateOf(st.state);
+      var c = findClass(st.classId) || {}, cfg = AR.config(c);
+      if (!a.run || a.run.id !== String(args.runId || '')) err('That run was not found. Start a new one!');
+      var ms = now() - a.run.t, score = Math.max(0, Math.floor(Number(args.score) || 0));
+      a.run = null;
+      if (ms > AR.RUN_MAX_MS) err('That run went too long to count.');
+      score = Math.min(score, AR.scoreCap(ms));
+      a.plays += 1;
+      if (a.season !== cfg.season) { a.season = cfg.season; a.best = 0; }
+      var newBest = score > a.best;
+      if (newBest) a.best = score;
+      var allBest = score > a.allBest;
+      if (allBest) a.allBest = score;
+      persist(st);
+      var board = arcadeBoard(st.classId, cfg.season), id = memberId(st.email), place = 0;
+      board.forEach(function (b, i) { if (b.key === id) place = i + 1; });
+      return { score: score, newBest: newBest, allBest: allBest, place: place, board: board, me: arcadeStatus(st), student: selfView(st) };
+    },
+
     // ---------------------------------------------------------- teacher
+    setArcade: function (user, args) {
+      requireTeacher(user);
+      var c = findClass(args.classId);
+      if (!c) err('Class not found.');
+      var cfg = AR.config(c);
+      if (args.mode !== undefined) {
+        if (['off', 'earned', 'free'].indexOf(args.mode) < 0) err('Unknown arcade mode.');
+        cfg.mode = args.mode;
+        var mins = Math.max(5, Math.min(240, Number(args.minutes) || 45));
+        cfg.closes = cfg.mode === 'off' ? 0 : now() + mins * 60e3;
+      }
+      if (args.passMin !== undefined) cfg.passMin = Math.max(1, Math.min(30, Number(args.passMin) || 5));
+      if (args.ticketPrice !== undefined) cfg.ticketPrice = Math.max(0, Math.min(500, Number(args.ticketPrice) || 0));
+      if (args.resetBoard) cfg.season += 1;
+      c.arcade = cfg;
+      store.saveClass(c);
+      // Locking ends everyone's passes right away
+      if (cfg.mode === 'off') store.getStudents().forEach(function (s) {
+        if (s.classId === c.id && s.state.arcade && s.state.arcade.until > now()) { s.state.arcade.until = 0; store.saveStudent(s); }
+      });
+      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season) };
+    },
+    arcadeBoardFor: function (user, args) {
+      requireTeacher(user);
+      var c = findClass(args.classId);
+      if (!c) err('Class not found.');
+      return { board: arcadeBoard(c.id, AR.config(c).season), info: arcadeInfo(c) };
+    },
+
     teacherData: function (user) {
       requireTeacher(user);
       return {

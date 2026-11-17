@@ -963,3 +963,92 @@ body.cs-on { background: #5b2bd6; }
 .ubd-card { box-shadow: 0 0 0 3px #ffd23f inset, var(--shadow); }
 .p-bigq { background: #fff6d6; border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
 .p-bigq p { margin: 4px 0 0; font-weight: 800; }
+
+/* ===================== Arcade: Block Rush ===================== */
+.arcade { display: grid; gap: 16px; }
+.arc-hero { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 22px 24px; border-radius: 14px; color: #fff;
+  background: radial-gradient(circle at 85% 20%, rgba(255, 214, 10, .35), transparent 40%), linear-gradient(135deg, #3a0ca3, #7209b7 55%, #f72585); box-shadow: 0 6px 0 #240b6b; }
+.arc-hero h1 { font-family: var(--display); font-size: clamp(2rem, 5vw, 3.2rem); margin: 0; color: #ffd60a; text-shadow: 0 4px 0 #240b6b; letter-spacing: .5px; }
+.arc-hero p { margin: .2em 0 0; max-width: 46ch; font-weight: 700; }
+.arc-hero .eyebrow { color: #ffe9a8; }
+.arc-hero-side { display: grid; gap: 10px; justify-items: end; }
+.arc-wallet { display: flex; gap: 10px; flex-wrap: wrap; }
+.arc-wallet > span { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, .16); padding: 6px 12px; border-radius: 10px; font-weight: 800; }
+.arc-wallet .coin-tag { color: #fff; }
+.arc-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-weight: 800; font-size: .92rem; background: #ede9fe; color: #4c1d95; }
+.arc-chip .i { width: 1em; height: 1em; }
+.arc-chip.off { background: #e5e7eb; color: #374151; }
+.arc-chip.free { background: #dcfce7; color: #14532d; }
+.arc-chip.pass { background: #fff3c4; color: #7c4a03; }
+.arc-chip.open { background: #e0f2fe; color: #0c4a6e; }
+.arc-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .arc-grid { grid-template-columns: 1fr; } }
+.arc-play { min-height: 320px; display: grid; place-items: center; }
+.arc-lock, .arc-ready { text-align: center; max-width: 460px; display: grid; gap: 8px; justify-items: center; }
+.big-ico { width: 64px; height: 64px; color: var(--accent); }
+.arc-lock .big-ico { color: var(--muted); }
+.arc-lock.open .big-ico { color: #7209b7; }
+.btn.huge { font-size: 1.35rem; padding: 16px 30px; }
+.arc-stage { width: 100%; display: grid; justify-items: center; gap: 10px; }
+#arc-canvas { width: min(100%, 420px); aspect-ratio: 420 / 600; border-radius: 14px; box-shadow: 0 6px 0 #240b6b, 0 14px 40px rgba(58, 12, 163, .35); touch-action: none; cursor: none; display: block; max-height: 78vh; object-fit: contain; }
+.arc-powers { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; font-weight: 800; font-size: .9rem; align-items: center; }
+.pu-ico { --pc: #7b2ff7; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--pc); box-shadow: 0 3px 0 rgba(0, 0, 0, .25), inset 0 2px 0 rgba(255, 255, 255, .35); flex: none; }
+.pu-ico svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.arc-powers .pu-ico, .arc-wallet .pu-ico { width: 28px; height: 28px; border-radius: 8px; }
+.arc-powers .pu-ico svg, .arc-wallet .pu-ico svg { width: 17px; height: 17px; }
+.pu-pick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.pu-tog { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); color: var(--ink); font: 800 .95rem Nunito, sans-serif; cursor: pointer; box-shadow: 0 3px 0 var(--line); }
+.pu-tog small { color: var(--muted); }
+.pu-tog.on { border-color: #7209b7; box-shadow: 0 3px 0 #7209b7, 0 0 0 4px rgba(114, 9, 183, .15); }
+.pu-tog .pu-ico { width: 30px; height: 30px; }
+.pu-tog .pu-ico svg { width: 18px; height: 18px; }
+.lb { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+.lb li { display: grid; grid-template-columns: 30px 40px 1fr auto; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: var(--bg2); border: 2px solid var(--line); }
+.lb li.me { border-color: #7209b7; background: #f5edff; }
+.lb-n { font: 900 1.1rem Nunito, system-ui, sans-serif; text-align: center; color: var(--muted); }
+.lb li.top1 .lb-n { color: #e0a800; } .lb li.top2 .lb-n { color: #8d99ae; } .lb li.top3 .lb-n { color: #c06a2b; }
+.lb li.top1 { border-color: #ffd60a; box-shadow: 0 0 0 3px rgba(255, 214, 10, .25); }
+.lb-av { width: 40px; height: 40px; border-radius: 8px; }
+.lb-name { font-weight: 800; line-height: 1.15; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.lb-name small { display: block; font-weight: 700; color: #7209b7; font-size: .75rem; }
+.lb-score { font: 900 1.2rem Nunito, system-ui, sans-serif; }
+.lb.compact li { grid-template-columns: 26px 32px 1fr auto; padding: 4px 8px; }
+.lb.compact .lb-av { width: 32px; height: 32px; }
+.arc-mine { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.arc-mine > div { background: var(--bg2); border-radius: 10px; padding: 8px 10px; border: 2px solid var(--line); }
+.arc-mine span { display: block; font-size: .8rem; color: var(--muted); font-weight: 700; }
+.arc-mine b { font: 900 1.5rem Nunito, system-ui, sans-serif; }
+.arc-troph { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.arc-troph li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; border: 2px dashed var(--line); opacity: .75; }
+.arc-troph li.got { border-style: solid; opacity: 1; }
+.arc-troph li.got.r-rare { border-color: #3a86ff; } .arc-troph li.got.r-epic { border-color: #a855f7; } .arc-troph li.got.r-legendary { border-color: #ffb703; }
+.pu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.pu-card { display: grid; gap: 6px; align-content: start; padding: 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg2); box-shadow: 0 4px 0 var(--line); }
+.pu-card p { margin: 0; font-size: .9rem; color: var(--muted); min-height: 2.6em; }
+.pu-card.ticket { background: linear-gradient(160deg, #f5edff, var(--bg2)); border-color: #c4a5f5; }
+.pu-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
+.arc-result { text-align: center; }
+.arc-big { font: 900 4.4rem Nunito, system-ui, sans-serif; color: #7209b7; line-height: 1; text-shadow: 0 4px 0 #ffd60a; }
+.arc-nb { font-weight: 900; color: #b45309; font-size: 1.15rem; }
+.t-arcade .arc-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+@media (max-width: 700px) { .t-arcade .arc-modes { grid-template-columns: 1fr; } }
+.arc-mode { display: grid; gap: 2px; justify-items: start; text-align: left; padding: 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg2); color: var(--ink); cursor: pointer; font: 700 .9rem Nunito, sans-serif; box-shadow: 0 4px 0 var(--line); }
+.arc-mode b { font-size: 1.05rem; }
+.arc-mode small { color: var(--muted); }
+.arc-mode .i { width: 22px; height: 22px; }
+.arc-mode.on { border-color: #7209b7; background: #f5edff; box-shadow: 0 4px 0 #7209b7; }
+.arc-mode[data-mode="off"].on { border-color: #4b5563; background: #f3f4f6; box-shadow: 0 4px 0 #4b5563; }
+.arc-mode[data-mode="free"].on { border-color: #16a34a; background: #ecfdf5; box-shadow: 0 4px 0 #16a34a; }
+.arc-set { flex-wrap: wrap; gap: 12px; align-items: end; }
+.arc-set label { display: grid; gap: 2px; font-weight: 700; font-size: .9rem; }
+.arc-promo { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 14px; border-radius: 12px; text-decoration: none; color: #fff; background: linear-gradient(135deg, #3a0ca3, #7209b7 60%, #f72585); box-shadow: 0 4px 0 #240b6b; }
+.arc-promo span { flex: 1; display: grid; }
+.arc-promo small { opacity: .85; }
+.arc-promo .i { width: 24px; height: 24px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lb li.me, :root:not([data-theme="light"]) .arc-mode.on, :root:not([data-theme="light"]) .pu-card.ticket { background: #2e2347; }
+}
+:root[data-theme="dark"] .lb li.me, :root[data-theme="dark"] .arc-mode.on, :root[data-theme="dark"] .pu-card.ticket { background: #2e2347; }
+
+.arc-troph .title-prev { flex: 0 1 auto; padding-left: 14px; padding-right: 14px; }
+.arc-wallet .coin-tag.big { font: 900 1.05rem Nunito, system-ui, sans-serif; }

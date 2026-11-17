@@ -11,7 +11,7 @@ const rd = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 // Lessons: one file per lesson in src/lessons/ (see docs/LESSON_SPEC.md)
 const lessonFiles = fs.readdirSync(path.join(root, 'src/lessons')).filter(f => f.endsWith('.js')).sort();
 const lessonsJs = 'var SQ_LESSONS = {};\n' + lessonFiles.map(f => rd('src/lessons/' + f)).join('\n');
-const shared = [lessonsJs, rd('src/rules.js'), rd('src/avatar.js'), rd('src/service.js'), rd('src/classroom.js')].join('\n\n');
+const shared = [lessonsJs, rd('src/rules.js'), rd('src/avatar.js'), rd('src/arcade.js'), rd('src/service.js'), rd('src/classroom.js')].join('\n\n');
 // "Where to look" screenshots, embedded as data URIs (client only)
 const shotDir = path.join(root, 'shots');
 const shots = {};
@@ -19,7 +19,7 @@ fs.readdirSync(shotDir).filter(f => f.endsWith('.webp')).forEach(f => {
   shots[f.replace('.webp', '')] = 'data:image/webp;base64,' + fs.readFileSync(path.join(shotDir, f)).toString('base64');
 });
 const shotsJs = 'var SQ_SHOTS = ' + JSON.stringify(shots) + ';\n' + rd('src/shotmap.js');
-const client = shared + '\n\n' + rd('src/standards.js') + '\n\n' + rd('src/understandings.js') + '\n\n' + rd('src/primers.js') + '\n\n' + shotsJs + '\n\n' + rd('src/api.js') + '\n\n' + rd('src/icons.js') + '\n\n' + rd('src/sounds.js') + '\n\n' + rd('src/mapart.js') + '\n\n' + rd('src/app.js');
+const client = shared + '\n\n' + rd('src/standards.js') + '\n\n' + rd('src/understandings.js') + '\n\n' + rd('src/primers.js') + '\n\n' + shotsJs + '\n\n' + rd('src/api.js') + '\n\n' + rd('src/icons.js') + '\n\n' + rd('src/sounds.js') + '\n\n' + rd('src/game.js') + '\n\n' + rd('src/mapart.js') + '\n\n' + rd('src/app.js');
 const safe = (s) => s.replace(/<\/script/gi, '<\\/script').replace(/<!--/g, '<\\!--');
 
 const html = rd('src/index.template.html')
@@ -46,7 +46,7 @@ const gasBuild = (async () => {
   const addPart = (name, body) => parts.push({ name, body: body + '\n<script>(window.SQ_PARTS=window.SQ_PARTS||{})[' + JSON.stringify(name) + ']=1;</script>\n' });
   addPart('Styles', '<style>' + minCss(rd('src/styles.css')) + '</style>');
   addPart('Shots', '<script>\nvar SQ_SHOTS = ' + JSON.stringify(shots) + ';\n</script>');
-  const engine = [rd('src/rules.js'), rd('src/avatar.js'), rd('src/standards.js'), rd('src/understandings.js'), rd('src/primers.js'), rd('src/shotmap.js'), rd('src/api.js'), rd('src/icons.js'), rd('src/sounds.js'), rd('src/mapart.js'), rd('src/app.js')].join('\n;\n');
+  const engine = [rd('src/rules.js'), rd('src/avatar.js'), rd('src/arcade.js'), rd('src/game.js'), rd('src/standards.js'), rd('src/understandings.js'), rd('src/primers.js'), rd('src/shotmap.js'), rd('src/api.js'), rd('src/icons.js'), rd('src/sounds.js'), rd('src/mapart.js'), rd('src/app.js')].join('\n;\n');
   addPart('Engine', '<script>\n' + safe(await mini(engine)) + '\n</script>');
   const order = parts.map(x => x.name);
   const shell = rd('src/index.template.html')

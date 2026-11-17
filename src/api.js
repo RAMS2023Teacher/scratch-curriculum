@@ -29,7 +29,7 @@ var SQ_API = (function () {
   }
 
   // ------------------------------------------------------------------ demo mode
-  var KEY = 'scratchQuestDemo.v3';
+  var KEY = 'scratchQuestDemo.v4';
   var mem = null;
   function load() {
     if (mem) return mem;
@@ -55,7 +55,8 @@ var SQ_API = (function () {
     var R = SQ_RULES;
     var d = { classes: [], students: [], settings: { videos: {} }, role: 'student' };
     var cls = { id: 'demo1', name: 'Period 3 · Demo Class', code: 'DEMO1', teacher: 'teacher@demo', openThrough: 14,
-      requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false };
+      requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false,
+      arcade: { mode: 'free', closes: Date.now() + 8 * 3600e3, passMin: 5, ticketPrice: 40, season: 1 } };
     d.classes.push(cls, { id: 'demo2', name: 'Period 5 · Demo Class', code: 'PIXEL', teacher: 'teacher@demo', openThrough: 7,
       requireApproval: true, requireLink: false, showLeaderboard: true, classGoal: 15000, archived: false });
     var names = ['Ava', 'Liam', 'Maya', 'Noah', 'Zoe', 'Ethan', 'Priya', 'Lucas', 'Chloe', 'Mateo', 'Isla', 'Owen', 'Sofia', 'Jayden'];
@@ -96,6 +97,7 @@ var SQ_API = (function () {
         }
         ns.touched = t + (j * 2 + i % 3) * 86400000;
       });
+      if (i % 5 !== 4) { var sc = [1840, 960, 2310, 420, 0, 1290, 680, 3050, 150, 1500, 770, 0, 1120, 530][i]; if (sc) st.arcade = { spent: 0, inv: {}, bought: 0, used: 1, until: 0, best: sc, season: 1, allBest: sc, plays: 3, run: null }; }
       if (i === 2) st.awards.push({ id: 'helper', note: 'Helped Owen fix his loop.', at: t });
       if (i === 7) st.awards.push({ id: 'creative', note: 'Amazing paint app idea!', at: t });
       var email = n.toLowerCase() + '@demo.school';

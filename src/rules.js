@@ -169,9 +169,10 @@ var SQ_RULES = (function () {
 
     var level = levelFor(xp);
     var owned = (state.owned || []).slice();
-    var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned) : { earned: 0, spent: 0, balance: 0 };
+    var arc = state.arcade || {};
+    var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned, arc.spent) : { earned: 0, spent: 0, balance: 0 };
     return {
-      owned: owned, coins: coins.balance, coinsEarned: coins.earned, goal: state.goal || null,
+      owned: owned, coins: coins.balance, coinsEarned: coins.earned, goal: state.goal || null, arcadeBest: arc.allBest || 0,
       xp: xp, level: level, rank: rankFor(level),
       levelStart: xpForLevel(level), levelNext: xpForLevel(level + 1),
       done: done, doneCount: Object.keys(done).length,

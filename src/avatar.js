@@ -76,7 +76,7 @@ var SQ_AVATAR = (function () {
   };
   CATALOG.aura = [{ id: 'none', name: 'None' }];
   CATALOG.effect = [{ id: 'none', name: 'None' }];
-  CATALOG.title = [{ id: 'none', name: 'No title' }, { id: 'rookie', name: 'Rookie Coder' }];
+  CATALOG.title = [{ id: 'none', name: 'No title' }, { id: 'rookie', name: 'Rookie Coder' }, { id: 'ace', name: 'Arcade Ace', rarity: 'rare', unlock: { arcade: 600 } }, { id: 'champ', name: 'Block Rush Champion', rarity: 'epic', unlock: { arcade: 2000 } }, { id: 'myth', name: 'Arcade Legend', rarity: 'legendary', unlock: { arcade: 4000 } }];
   Object.keys(SHOP).forEach(function (cat) {
     SHOP[cat].forEach(function (x) {
       CATALOG[cat].push({ id: x[0], name: x[1], rarity: x[3], unlock: { price: x[2], key: cat + ':' + x[0] } });
@@ -94,7 +94,7 @@ var SQ_AVATAR = (function () {
   function priceOf(key) { return PRICE[key] || 0; }
   function itemOf(cat, id) { return (CATALOG[cat] || []).filter(function (i) { return i.id === id; })[0] || null; }
   // Coins: earned from XP (1 coin per 5 XP), minus what was spent in the shop
-  function coinsFor(xp, owned) { var spent = 0; (owned || []).forEach(function (k) { spent += priceOf(k); }); return { earned: Math.floor(xp / 5), spent: spent, balance: Math.floor(xp / 5) - spent }; }
+  function coinsFor(xp, owned, extra) { var spent = Number(extra) || 0; (owned || []).forEach(function (k) { spent += priceOf(k); }); return { earned: Math.floor(xp / 5), spent: spent, balance: Math.floor(xp / 5) - spent }; }
 
   var COLORS = {
     skin: SKIN.concat(FUN_SKIN), hairColor: HAIR_COLORS.concat(['neon']), outfitColor: CLOTH_COLORS, bgColor: BG_COLORS
@@ -120,12 +120,14 @@ var SQ_AVATAR = (function () {
     if (unlock.price) return (prof.owned || []).indexOf(unlock.key) >= 0;
     if (unlock.level) return prof.level >= unlock.level;
     if (unlock.badge) return prof.badges.indexOf(unlock.badge) >= 0;
+    if (unlock.arcade) return (prof.arcadeBest || 0) >= unlock.arcade;
     return false;
   }
   function unlockText(unlock) {
     if (!unlock) return '';
     if (unlock.price) return unlock.price + ' coins';
     if (unlock.level) return 'Reach level ' + unlock.level;
+    if (unlock.arcade) return 'Score ' + unlock.arcade + ' in Block Rush';
     if (unlock.badge && typeof SQ_RULES !== 'undefined' && SQ_RULES.BADGE[unlock.badge]) return 'Earn the "' + SQ_RULES.BADGE[unlock.badge].name + '" badge';
     return 'Locked';
   }

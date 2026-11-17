@@ -15,6 +15,7 @@ Plain-language summary for teachers, administrators, and families. This describe
 | First name + last initial (e.g. "Maya L.") | Shown to the class on the quest map | Teacher's Google Sheet |
 | Avatar choices (cartoon parts, no photos) | Game feature | Teacher's Google Sheet |
 | Quest progress: steps checked, quiz answers, XP, badges | Progress tracking | Teacher's Google Sheet |
+| Arcade data: best scores, tickets used, power-ups owned, pass end time | Block Rush mini-game | Teacher's Google Sheet (inside the student's progress record) |
 | Scratch project links and short reflections the student types | Turning in work | Teacher's Google Sheet |
 | Teacher feedback, teacher badges, accommodation settings | Teaching | Teacher's Google Sheet |
 | Private accommodation notes | Teacher reminders | Teacher's Google Sheet. **Never sent to students.** |
@@ -23,7 +24,7 @@ Plain-language summary for teachers, administrators, and families. This describe
 
 ## Who can see what
 - **Teacher (the account that deployed the app, plus any co-teachers listed in the code):** everything above, through the app and the Sheet.
-- **A student:** their own progress, plus classmates' **first name + initial, avatar, level, and current quest** on the class map. Students can't see each other's reflections, project links, feedback, or accommodation settings. The XP leaderboard is **off** by default.
+- **A student:** their own progress, plus classmates' **first name + initial, avatar, level, and current quest** on the class map. Students can't see each other's reflections, project links, feedback, or accommodation settings. The XP leaderboard is **off** by default. The **arcade leaderboard** shows the top 10 Block Rush scores in the class (name, avatar, and score only). It is only used while the teacher has the arcade open, and the teacher can clear it at any time by starting a new round.
 - **Nobody outside the school domain** can open the app (Who has access: "Anyone within [your domain]").
 
 ## Google Classroom permissions (and why)
