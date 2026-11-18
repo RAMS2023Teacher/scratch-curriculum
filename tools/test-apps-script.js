@@ -288,6 +288,45 @@ test('data safety: the owner can reconnect the right data sheet; a weekly backup
   as(T, 'teacherData');
   assert.strictEqual(JSON.parse(props.BACKUPS).length, 1, 'only one backup a week');
 });
+test('data safety: combining two data sheets keeps everyone\'s work (no one goes back to the start)', () => {
+  const M = 'maya.lopez@school.org', L2 = 'liam.chen@school.org', Z = 'zed.new@school.org', oldId = props.DB_ID;
+  const before = as(T, 'teacherData');
+  const mayaOld = before.students.find(x => x.email === M), liamOld = before.students.find(x => x.email === L2);
+  assert.ok(mayaOld.state.nodes.t1, 'Maya has earlier work in the old sheet');
+  // The failure: the app starts using a new, empty sheet. A class keeps working in it.
+  const fresh = ctx.SpreadsheetApp.create('Scratch Quest Data');
+  props.DB_ID = fresh.getId();
+  const cls = as(T, 'createClass', { name: 'Wednesday 2' }).cls;
+  as(M, 'joinClass', { code: cls.code, name: 'Maya L.' });
+  as(M, 'toggleStep', { node: 't1', idx: 0, value: true });
+  as(Z, 'joinClass', { code: cls.code, name: 'Zed N.' });
+  as(Z, 'toggleStep', { node: 't1', idx: 0, value: true });
+  const zedXp = as(Z, 'bootstrap').student.profile.xp;
+  assert.ok(as(M, 'bootstrap').student.profile.xp < mayaOld.profile.xp, 'in the new sheet Maya looks like she started over');
+  // Combine: bring the old sheet into the one in use
+  assert.throws(() => as(M, 'dataMerge', { sheet: oldId }), /Only the owner/);
+  assert.throws(() => as(T, 'dataMerge', { sheet: fresh.getId() }), /already using/);
+  const pre = as(T, 'dataMerge', { sheet: 'https://docs.google.com/spreadsheets/d/' + oldId });
+  assert.strictEqual(pre.report.combined, 1, 'Maya is in both'); assert.ok(pre.report.added >= 2 && pre.report.classes.length >= 1);
+  assert.strictEqual(as(T, 'teacherData').students.length, 2, 'the preview changes nothing');
+  const res = as(T, 'dataMerge', { sheet: oldId, apply: true });
+  assert.ok(res.done && res.report.added === pre.report.added);
+  const after = as(T, 'teacherData');
+  const maya = after.students.find(x => x.email === M);
+  assert.ok(maya.profile.xp >= mayaOld.profile.xp, 'Maya has all her earlier XP back (' + maya.profile.xp + ')');
+  assert.deepStrictEqual(Object.keys(maya.profile.done).sort(), Object.keys(mayaOld.profile.done).sort());
+  assert.strictEqual(maya.classId, cls.id, 'and she stays in the class she is using now');
+  const liam = after.students.find(x => x.email === L2);
+  assert.strictEqual(liam.profile.xp, liamOld.profile.xp); assert.ok(after.classes.some(c => c.id === liam.classId), 'Liam is back, with his class');
+  assert.strictEqual(after.students.find(x => x.email === Z).profile.xp, zedXp, 'work done in the new sheet is untouched');
+  assert.ok(as(L2, 'bootstrap').student && as(L2, 'bootstrap').cls, 'Liam can open the app again');
+  const again = as(T, 'dataMerge', { sheet: oldId });
+  assert.strictEqual(again.report.added + again.report.combined, 0, 'combining twice adds nothing new');
+  assert.ok(JSON.parse(props.BACKUPS).some(b => /before combining/.test(sheetsById[b.id].getName())), 'a backup was made first');
+  assert.strictEqual(props.DB_ID, fresh.getId(), 'the app keeps using the same sheet, so nobody is interrupted');
+  props.DB_ID = oldId; // put the test world back for the checks below (the old sheet was only read, never changed)
+  assert.strictEqual(as(T, 'teacherData').students.find(x => x.email === M).profile.xp, mayaOld.profile.xp, 'the sheet that was read from is unchanged');
+});
 test('teacher-only settings: accommodations note is not sent to the student', () => {
   as(T, 'updateStudent', { email: 'liam.chen@school.org', accom: { coreOnly: true, note: 'IEP: chunk tasks' } });
   const self = JSON.stringify(as('liam.chen@school.org', 'bootstrap'));

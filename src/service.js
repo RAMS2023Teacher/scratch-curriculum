@@ -706,3 +706,91 @@ function SQ_SERVICE(store) {
   };
   return api;
 }
+
+/* Combine two sets of Scratch Quest data without losing anything.
+ * Everything in `source` is brought into `target`:
+ *   - a student only in source is added (with their class);
+ *   - a student in both keeps the BEST of each quest from either record, plus all badges, bonus XP,
+ *     owned items and arcade history, and stays in the class they used most recently.
+ * Nothing is ever removed from target. With apply=false it only reports what would happen.
+ */
+function SQ_MERGE(target, source, apply, tag) {
+  tag = String(tag || 'sheet'); // which sheet this came from, so combining the same sheet twice changes nothing
+  var R = SQ_RULES, RANK = { done: 4, submitted: 3, returned: 2 };
+  function copy(x) { return JSON.parse(JSON.stringify(x)); }
+  function score(ns) {
+    if (!ns) return -1;
+    return (RANK[ns.status] || 1) * 1000 + (ns.steps || []).filter(Boolean).length * 10 + Object.keys(ns.quiz || {}).length + (ns.challenge ? 5 : 0);
+  }
+  function mergeState(newer, older, firstTime) {
+    var out = copy(newer);
+    out.nodes = out.nodes || {};
+    Object.keys(older.nodes || {}).forEach(function (id) { if (score(older.nodes[id]) > score(out.nodes[id])) out.nodes[id] = copy(older.nodes[id]); });
+    var seen = {};
+    out.awards = out.awards || []; out.awards.forEach(function (a) { seen[a.id] = 1; });
+    (older.awards || []).forEach(function (a) { if (!seen[a.id]) out.awards.push(a); });
+    seen = {};
+    out.bonus = out.bonus || []; out.bonus.forEach(function (b) { seen[b.at + '|' + b.amount] = 1; });
+    (older.bonus || []).forEach(function (b) { if (!seen[b.at + '|' + b.amount]) out.bonus.push(b); });
+    if ((older.owned || []).length) { out.owned = out.owned || []; older.owned.forEach(function (k) { if (out.owned.indexOf(k) < 0) out.owned.push(k); }); }
+    if (!out.avatarSet && older.avatarSet) { out.avatar = older.avatar; out.avatarSet = true; }
+    if (!out.accom && older.accom) out.accom = older.accom;
+    if (!out.display && older.display) out.display = older.display;
+    if (older.fb) { out.fb = out.fb || {}; Object.keys(older.fb).forEach(function (id) { if (!out.fb[id]) out.fb[id] = older.fb[id]; }); }
+    if (older.arcade) {
+      if (!out.arcade) out.arcade = copy(older.arcade);
+      else {
+        var a = out.arcade, o = older.arcade;
+        // coins and tickets are separate histories in each sheet, so add them (once only)
+        if (firstTime) ['spent', 'earned', 'bought', 'used', 'plays', 'roundWins'].forEach(function (k) { a[k] = (a[k] || 0) + (o[k] || 0); });
+        a.allBest = Math.max(a.allBest || 0, o.allBest || 0);
+        a.goals = a.goals || []; (o.goals || []).forEach(function (g) { if (a.goals.indexOf(g) < 0) a.goals.push(g); });
+        if (firstTime) { a.inv = a.inv || {}; Object.keys(o.inv || {}).forEach(function (k) { a.inv[k] = Math.min(9, (a.inv[k] || 0) + o.inv[k]); }); }
+      }
+    }
+    return out;
+  }
+  var tClasses = {}, tCodes = {};
+  target.getClasses().forEach(function (c) { tClasses[c.id] = c; tCodes[c.code] = 1; });
+  var sClasses = {};
+  source.getClasses().forEach(function (c) { sClasses[c.id] = c; });
+  var report = { classes: [], added: 0, combined: 0, same: 0 }, needClass = {}, writes = [];
+  source.getStudents().forEach(function (s) {
+    var t = target.getStudent(s.email), res;
+    if (!t) { res = copy(s); res.mergedFrom = (res.mergedFrom || []).concat([tag]); report.added++; }
+    else {
+      var tNewer = (t.updated || 0) >= (s.updated || 0), newer = tNewer ? t : s, older = tNewer ? s : t;
+      var first = (t.mergedFrom || []).indexOf(tag) < 0;
+      res = copy(t);
+      res.state = mergeState(newer.state, older.state, first);
+      res.classId = tClasses[newer.classId] || sClasses[newer.classId] ? newer.classId : t.classId;
+      res.name = newer.name || t.name;
+      res.updated = Math.max(t.updated || 0, s.updated || 0);
+      if (!res.accomNote && s.accomNote) res.accomNote = s.accomNote;
+      if (JSON.stringify(res.state) === JSON.stringify(t.state) && res.classId === t.classId) { report.same++; return; }
+      report.combined++;
+      if (first) res.mergedFrom = (res.mergedFrom || []).concat([tag]);
+    }
+    var p = R.profile(res.state);
+    res.xp = p.xp; res.level = p.level; res.doneCount = p.doneCount; res.current = p.current;
+    res.seen = { level: p.level, badges: p.badges.slice(), done: Object.keys(p.done) };
+    if (!tClasses[res.classId] && sClasses[res.classId]) needClass[res.classId] = 1;
+    writes.push(res);
+  });
+  Object.keys(needClass).forEach(function (id) { report.classes.push(sClasses[id].name); });
+  if (!apply) return report;
+  Object.keys(needClass).forEach(function (id) {
+    var c = copy(sClasses[id]);
+    while (tCodes[c.code]) { c.code = ''; for (var i = 0; i < 5; i++) c.code += 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'.charAt(Math.floor(Math.random() * 31)); }
+    tCodes[c.code] = 1;
+    target.saveClass(c);
+  });
+  writes.forEach(function (st) { target.saveStudent(st); });
+  // lesson videos and starter links the teacher saved
+  var ts = target.getSettings() || {}, ss = source.getSettings() || {}, changed = false;
+  ['videos', 'starters'].forEach(function (k) {
+    Object.keys(ss[k] || {}).forEach(function (id) { ts[k] = ts[k] || {}; if (!ts[k][id]) { ts[k][id] = ss[k][id]; changed = true; } });
+  });
+  if (changed) target.saveSettings(ts);
+  return report;
+}

@@ -72,9 +72,10 @@ var READ_ONLY_ = { bootstrap: 1, classView: 1, teacherData: 1, classroomCourses:
 function api(action, args) {
   var user = currentUser_();
   // Data safety tools: only the person who owns this script may use them
-  if (action === 'dataInfo' || action === 'dataReconnect' || action === 'dataBackupNow') {
+  if (action === 'dataInfo' || action === 'dataReconnect' || action === 'dataBackupNow' || action === 'dataMerge') {
     if (user.email !== (Session.getEffectiveUser().getEmail() || '').toLowerCase()) throw new Error('Only the owner of this Scratch Quest can do that.');
     if (action === 'dataReconnect') return dataReconnect_(args || {});
+    if (action === 'dataMerge') return dataMerge_(args || {});
     if (action === 'dataBackupNow') { PropertiesService.getScriptProperties().deleteProperty('LAST_BACKUP'); maybeBackup_(db_()); }
     return dataInfo_();
   }
@@ -267,6 +268,31 @@ function dataReconnect_(args) {
   props.setProperty('DB_ID', ss.getId());
   return dataInfo_();
 }
+// Bring everything from another data sheet into the current one (nothing is removed; see SQ_MERGE).
+// args.apply = false only reports what would happen.
+function dataMerge_(args) {
+  var ref = String(args.sheet || '').trim(), src, cur = db_();
+  try { src = /^https?:/.test(ref) ? SpreadsheetApp.openByUrl(ref) : SpreadsheetApp.openById(ref); }
+  catch (e) { throw new Error('Could not open that spreadsheet. Paste the full link from your browser\'s address bar, and make sure you own it.'); }
+  if (!src.getSheetByName('Students') || !src.getSheetByName('Classes')) throw new Error('That spreadsheet is not a Scratch Quest data sheet (it has no Classes and Students tabs).');
+  if (src.getId() === cur.getId()) throw new Error('That is the sheet the app is already using. Paste the link to the OTHER Scratch Quest Data sheet.');
+  var props = PropertiesService.getScriptProperties();
+  rememberSheet_(props, src.getId());
+  if (!args.apply) return { report: SQ_MERGE(sheetStore_(cur), sheetStore_(src), false, src.getId()), from: sheetSummary_(src) };
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(28000); } catch (e) { throw new Error('BUSY: Scratch Quest is very busy right now. Try again in a moment.'); }
+  try {
+    // keep a copy of the current sheet first, so this can always be undone
+    var day = Utilities.formatDate(new Date(), 'America/New_York', 'yyyy-MM-dd HH:mm');
+    var copy = cur.copy('Scratch Quest Backup ' + day + ' (before combining)');
+    var list = []; try { list = JSON.parse(props.getProperty('BACKUPS') || '[]'); } catch (e) { list = []; }
+    list.push({ id: copy.getId(), url: copy.getUrl(), day: day, students: Math.max(0, cur.getSheetByName('Students').getLastRow() - 1) });
+    props.setProperty('BACKUPS', JSON.stringify(list.slice(-8)));
+    var report = SQ_MERGE(sheetStore_(cur), sheetStore_(src), true, src.getId());
+    SpreadsheetApp.flush();
+    return { report: report, done: true, info: dataInfo_() };
+  } finally { lock.releaseLock(); }
+}
 // A copy of the data sheet about once a week (made when the teacher opens the app)
 function maybeBackup_(ss) {
   try {
@@ -287,8 +313,8 @@ function bugRow_(b) {
   return [b.id, new Date(b.at), b.status + (b.auto ? ' (auto)' : ''), b.name, b.email, b.cls, b.where, b.text, JSON.stringify(b)];
 }
 
-function sheetStore_() {
-  var ss = db_();
+function sheetStore_(other) {
+  var ss = other || db_();
   var cache = {};
   function width(name) { return (SHEETS_[name] || progressHeader_()).length; }
   function rows(name) {

@@ -1491,7 +1491,12 @@
     if (better) h += '<div class="banner ret"><b>This sheet has fewer students than another one this app has used.</b> ' + row(better) + ' <button class="btn small primary" data-act="data-use" data-id="' + esc(better.id) + '">Use that one</button></div>';
     h += '<p class="small"><b>Backups</b> (a copy is made about once a week): ' + ((d.backups || []).length ? d.backups.slice().reverse().map(function (b) { return '<a href="' + esc(b.url) + '" target="_blank" rel="noopener">' + esc(b.day) + '</a> (' + b.students + ')'; }).join(' · ') : 'none yet') + ' <button class="btn tiny ghost" data-act="data-backup">Back up now</button></p>';
     if ((d.others || []).length) h += '<details class="p-more"><summary>Other data sheets this app has used</summary><ul class="small">' + d.others.map(function (o) { return '<li>' + row(o) + ' <button class="btn tiny" data-act="data-use" data-id="' + esc(o.id) + '">Use this one</button></li>'; }).join('') + '</ul></details>';
-    h += '<details class="p-more"' + (cur.students ? '' : ' open') + '><summary>Classes or students missing? Reconnect your data sheet</summary><p class="small">Open Google Drive and search for <b>Scratch Quest Data</b>. Open the one that has your students in its Students tab, copy the link from the address bar, and paste it here. Nothing is deleted; this only tells the app which sheet to use.</p>' +
+    var mp = S.mergePreview;
+    h += '<details class="p-more" open><summary>Some classes or students missing? Combine with another data sheet (safest)</summary><p class="small">Use this when the app started a new, empty sheet and some students have worked in it since. It brings every class and student from the other sheet into the one you are using now. A student who is in both keeps the best of each quest from either sheet. <b>Nothing is removed, nobody goes back to the beginning,</b> and a backup copy is made first. Open Google Drive, search for <b>Scratch Quest Data</b>, open the other sheet (the one with your missing students in its Students tab), and paste its link.</p>' +
+      '<form data-form="data-merge" class="row"><input name="sheet" placeholder="https://docs.google.com/spreadsheets/d/…" required style="flex:1;min-width:16em" value="' + esc(S.mergeSheet || '') + '"><button class="btn">Check what it would add</button></form>' +
+      (mp ? '<div class="banner done"><b>From “' + esc(mp.from.name) + '”</b> (' + mp.from.classes + ' classes, ' + mp.from.students + ' students): this would add <b>' + mp.report.added + '</b> student' + (mp.report.added === 1 ? '' : 's') + (mp.report.classes.length ? ' and the class' + (mp.report.classes.length === 1 ? '' : 'es') + ' <b>' + mp.report.classes.map(esc).join(', ') + '</b>' : '') + ', and combine progress for <b>' + mp.report.combined + '</b> student' + (mp.report.combined === 1 ? '' : 's') + ' who ' + (mp.report.combined === 1 ? 'is' : 'are') + ' in both. ' + mp.report.same + ' already match. ' +
+        (mp.report.added + mp.report.combined ? '<button class="btn primary" data-act="data-merge-go">Combine now</button>' : 'There is nothing new to bring in.') + '</div>' : '') + '</details>';
+    h += '<details class="p-more"><summary>Switch to a different data sheet instead (replaces what students see)</summary><p class="small">Open Google Drive and search for <b>Scratch Quest Data</b>. Open the one that has your students in its Students tab, copy the link from the address bar, and paste it here. Nothing is deleted; this only tells the app which sheet to use. <b>Work saved in the sheet you are using now will not show after switching</b>, so use Combine above if students have worked in it.</p>' +
       '<form data-form="data-reconnect" class="row"><input name="sheet" placeholder="https://docs.google.com/spreadsheets/d/…" required style="flex:1;min-width:16em"><button class="btn primary">Reconnect</button></form></details></div>';
     return h;
   }
@@ -2206,6 +2211,18 @@
       });
       return;
     }
+    if (act === 'data-merge-go') {
+      ask('Combine now? Every class and student from the other sheet is added to the one you are using. Nothing is removed, and a backup copy is made first. It is best to do this between classes; it can take up to a minute.', 'Combine now').then(function (ok) {
+        if (!ok) return;
+        t.disabled = true; toast('Combining… this can take up to a minute.');
+        call('dataMerge', { sheet: S.mergeSheet, apply: true }).then(function (res) {
+          S.mergePreview = null; S.mergeSheet = ''; S.dataInfo = res.info;
+          toast('<b>Done.</b> Added ' + res.report.added + ' students, combined ' + res.report.combined + '. Reloading…');
+          var keep = S.dataInfo; S = { boot: null, avatarTab: 'hair' }; S.dataInfo = keep; boot();
+        }).catch(function () { t.disabled = false; });
+      });
+      return;
+    }
     if (act === 'data-backup') { t.disabled = true; call('dataBackupNow', {}).then(function (d) { S.dataInfo = d; toast('Backup saved to your Google Drive'); render(); }).catch(function () { t.disabled = false; }); return; }
     if (act === 'display') {
       modal('<h2><svg class="i"><use href="#i-sliders"/></svg> Display</h2><p class="muted">Make Scratch Quest easier for you to read.</p><form data-form="display" class="stack accom-form">' + displayFields(disp()) +
@@ -2356,7 +2373,8 @@
     var p;
     var lockBtn = f.querySelector('[aria-disabled="true"]');
     if (lockBtn) { if (btn) btn.disabled = false; lockedClick(lockBtn); return; }
-    if (kind === 'data-reconnect') p = call('dataReconnect', { sheet: v.sheet }).then(function (d) { toast('Reconnected: ' + d.current.students + ' students found. Reloading…'); S = { boot: null, avatarTab: 'hair' }; boot(); });
+    if (kind === 'data-merge') { S.mergeSheet = v.sheet; p = call('dataMerge', { sheet: v.sheet, apply: false }).then(function (res) { S.mergePreview = res; render(); }); }
+    else if (kind === 'data-reconnect') p = call('dataReconnect', { sheet: v.sheet }).then(function (d) { toast('Reconnected: ' + d.current.students + ' students found. Reloading…'); S = { boot: null, avatarTab: 'hair' }; boot(); });
     else if (kind === 'display') p = call('setDisplay', { display: displayFrom(v) }).then(function (res) { S.me = res.student; closeModal(); render(); toast('Display settings saved'); });
     else if (kind === 'stu-display') p = call('updateStudent', { email: f.getAttribute('data-email'), display: displayFrom(v) }).then(function () { return loadTeacher(); }).then(function () { toast('Display settings saved for this student'); render(); });
     else if (kind === 'bug') p = call('reportBug', { text: v.text, where: bugWhere(), info: bugInfo() }).then(function () { closeModal(); S.bugs = null; toast('<svg class="i"><use href="#i-check"/></svg> Thanks! Your report was sent to your teacher.'); });
