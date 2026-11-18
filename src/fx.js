@@ -6,7 +6,7 @@
 var SQ_FX = (function () {
   var queue = [], open = null;
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function reduced() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
+  function reduced() { if (document.documentElement.classList.contains('rm')) return true; try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
   function play(n, delay) { if (typeof SQ_SOUND === 'undefined') return; if (delay) setTimeout(function () { SQ_SOUND.play(n); }, delay); else SQ_SOUND.play(n); }
   function rnd(a, b) { return a + Math.random() * (b - a); }
 

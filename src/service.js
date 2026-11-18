@@ -31,12 +31,12 @@ function SQ_SERVICE(store) {
   // What students may know about the arcade: its live mode, closing time and pass rules
   function arcadeInfo(c) {
     var cfg = AR.config(c), mode = AR.liveMode(cfg, now());
-    return { mode: mode, closes: mode === 'off' ? 0 : cfg.closes, passMin: cfg.passMin, ticketPrice: cfg.ticketPrice, season: cfg.season };
+    return { mode: mode, closes: mode === 'off' ? 0 : cfg.closes, passMin: cfg.passMin, ticketPrice: cfg.ticketPrice, questsPerTicket: cfg.questsPerTicket, season: cfg.season };
   }
   function arcadeStatus(st) {
     var a = AR.stateOf(st.state), p = R.profile(st.state), info = arcadeInfo(findClass(st.classId) || {});
     var t = now();
-    return { tickets: AR.tickets(a, p.doneCount), until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
+    return { tickets: AR.tickets(a, p.doneCount, info.questsPerTicket), toNext: info.questsPerTicket - (p.doneCount % info.questsPerTicket), goals: a.goals, until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
       best: a.season === info.season ? a.best : 0, allBest: a.allBest, plays: a.plays, running: !!(a.run && t - a.run.t < AR.RUN_MAX_MS) };
   }
   // Top scores this season (only students; positive information only)
@@ -112,6 +112,13 @@ function SQ_SERVICE(store) {
     });
   }
 
+  // Display settings a student (or their teacher) can choose
+  function cleanDisplay(d) {
+    d = d || {};
+    return { size: ['m', 'l', 'xl'].indexOf(d.size) >= 0 ? d.size : 'm', font: d.font === 'easy' ? 'easy' : 'default',
+      contrast: !!d.contrast, motion: !!d.motion, lang: LANGS.indexOf(d.lang) >= 0 ? d.lang : 'en' };
+  }
+  var LANGS = ['en', 'pt'];
   var HELP_TTL = 60 * 60e3; // a help request expires after an hour
   var FB_REASONS = ['unclear', 'broken', 'hard', 'easy', 'other'];
   // Feedback lives on the student record OUTSIDE quest progress (state.nodes), so reopening
@@ -302,6 +309,50 @@ function SQ_SERVICE(store) {
       return api.helpList(user, { classId: args.classId });
     },
 
+    // ---------------------------------------------------------- display settings and translation
+    setDisplay: function (user, args) {
+      var st = requireStudent(user);
+      st.state.display = cleanDisplay(args.display);
+      return { student: persist(st) };
+    },
+    // Machine translation of page text (Google Translate, built into Apps Script). Results are saved in the
+    // "Translations" tab, where the teacher can correct them. Only signed-in class members can call it.
+    translate: function (user, args) {
+      if (!user.isTeacher) requireStudent(user);
+      var lang = String(args.lang || '');
+      if (LANGS.indexOf(lang) < 1) err('That language is not available.');
+      var list = (args.items || []).slice(0, 80).map(function (x) { return { t: String(x.t || '').slice(0, 3000), html: !!x.html }; });
+      if (!store.translate) return { out: null };
+      return { out: store.translate(list, lang) };
+    },
+
+    // ---------------------------------------------------------- bug reports
+    reportBug: function (user, args) {
+      var st = store.getStudent(user.email), c = st ? findClass(st.classId) : null;
+      if (!st && !user.isTeacher) err('Join a class first.');
+      var recent = store.bugAll().filter(function (b) { return b.email === user.email && now() - b.at < 60 * 60e3; });
+      if (recent.length >= 10) err('Thanks! You have sent a lot of reports this hour. Tell your teacher about this one.');
+      var text = clean(args.text, 600);
+      if (!text) err('Tell us what happened.');
+      if (args.auto && recent.some(function (b) { return b.text === text; })) return { ok: true };
+      var info = {}; Object.keys(args.info || {}).slice(0, 20).forEach(function (k) { info[clean(k, 30)] = clean(typeof args.info[k] === 'string' ? args.info[k] : JSON.stringify(args.info[k]), 400); });
+      store.bugAdd({ id: 'b' + now().toString(36) + Math.floor(Math.random() * 1e4), at: now(), status: 'new', auto: !!args.auto,
+        name: st ? st.name : clean(user.name, 24), email: user.email, cls: c ? c.name : (user.isTeacher ? 'teacher' : ''), where: clean(args.where, 120), text: text, info: info });
+      return { ok: true };
+    },
+    bugList: function (user) {
+      requireTeacher(user);
+      return { bugs: store.bugAll().sort(function (a, b) { return b.at - a.at; }).slice(0, 200) };
+    },
+    bugUpdate: function (user, args) {
+      requireTeacher(user);
+      var b = store.bugAll().filter(function (x) { return x.id === String(args.id || ''); })[0];
+      if (!b) err('Report not found.');
+      if (args.remove) store.bugDelete(b.id);
+      else { b.status = args.status === 'fixed' ? 'fixed' : 'new'; store.bugSave(b); }
+      return api.bugList(user);
+    },
+
     // ---------------------------------------------------------- lesson feedback (for improving the lessons)
     flagConfusing: function (user, args) {
       var st = requireStudent(user), node = String(args.node || ''), Lf = lesson(node);
@@ -333,7 +384,7 @@ function SQ_SERVICE(store) {
       var st = requireStudent(user), c = classDefaults(findClass(st.classId) || {});
       if (c.shop === false) err('The coin shop is turned off for your class.');
       var a = AR.stateOf(st.state), p = R.profile(st.state), what = String(args.item || ''), price, name;
-      if (what === 'ticket') { price = AR.config(c).ticketPrice; name = 'an arcade ticket'; }
+      if (what === 'ticket') { price = AR.config(c).ticketPrice; name = 'an arcade ticket'; if (!price) err('Tickets can only be earned by finishing quests.'); }
       else if (AR.POWER[what]) { price = AR.POWER[what].price; name = AR.POWER[what].name; }
       else err('That is not in the arcade shop.');
       if ((a.inv[what] || 0) >= 9) err('You can hold up to 9 of those.');
@@ -349,7 +400,7 @@ function SQ_SERVICE(store) {
       if (info.mode === 'off') err('The arcade is locked right now.');
       if (info.mode === 'free') err('It is free play right now. No ticket needed!');
       if (a.until > now()) err('Your pass is already running.');
-      if (AR.tickets(a, p.doneCount) < 1) err('You need a ticket. Finish a quest to earn one!');
+      if (AR.tickets(a, p.doneCount, info.questsPerTicket) < 1) err('You need a ticket. Finish quests to earn one!');
       a.used += 1;
       a.until = now() + info.passMin * 60e3;
       if (info.closes) a.until = Math.min(a.until, info.closes);
@@ -382,10 +433,18 @@ function SQ_SERVICE(store) {
       if (newBest) a.best = score;
       var allBest = score > a.allBest;
       if (allBest) a.allBest = score;
+      // rewards: coins for the run (with a daily limit) and one-time prizes for score goals
+      var today = new Date(now()).toISOString().slice(0, 10);
+      if (a.day !== today) { a.day = today; a.dayCoins = 0; }
+      var runCoins = Math.max(0, Math.min(AR.RUN_COINS, Math.floor(score / 100), AR.DAY_COINS - a.dayCoins));
+      a.dayCoins += runCoins;
+      var newGoals = [];
+      AR.GOALS.forEach(function (g) { if (score >= g[0] && a.goals.indexOf(g[0]) < 0) { a.goals.push(g[0]); newGoals.push({ score: g[0], coins: g[1] }); runCoins += g[1]; } });
+      a.earned += runCoins;
       persist(st);
       var board = arcadeBoard(st.classId, cfg.season), id = memberId(st.email), place = 0;
       board.forEach(function (b, i) { if (b.key === id) place = i + 1; });
-      return { score: score, newBest: newBest, allBest: allBest, place: place, board: board, me: arcadeStatus(st), student: selfView(st) };
+      return { score: score, newBest: newBest, allBest: allBest, place: place, board: board, coins: runCoins, goals: newGoals, me: arcadeStatus(st), student: selfView(st) };
     },
 
     // ---------------------------------------------------------- teacher
@@ -401,15 +460,23 @@ function SQ_SERVICE(store) {
         cfg.closes = cfg.mode === 'off' ? 0 : now() + mins * 60e3;
       }
       if (args.passMin !== undefined) cfg.passMin = Math.max(1, Math.min(30, Number(args.passMin) || 5));
-      if (args.ticketPrice !== undefined) cfg.ticketPrice = Math.max(0, Math.min(500, Number(args.ticketPrice) || 0));
-      if (args.resetBoard) cfg.season += 1;
+      if (args.ticketPrice !== undefined) cfg.ticketPrice = Math.max(0, Math.min(1000, Number(args.ticketPrice) || 0));
+      if (args.questsPerTicket !== undefined) cfg.questsPerTicket = Math.max(1, Math.min(5, Math.round(Number(args.questsPerTicket)) || 1));
+      var winners = [];
+      if (args.resetBoard) {
+        // the top 3 of the round that is ending win coins (and the Round Champion badge)
+        var top = store.getStudents().filter(function (s) { var x = s.state.arcade; return s.classId === c.id && !s.isTeacher && x && x.season === cfg.season && x.best > 0; })
+          .sort(function (x, y) { return y.state.arcade.best - x.state.arcade.best; }).slice(0, AR.ROUND_PRIZES.length);
+        top.forEach(function (s, i) { var x = AR.stateOf(s.state); x.earned += AR.ROUND_PRIZES[i]; x.roundWins += 1; persist(s); winners.push({ name: s.name, place: i + 1, coins: AR.ROUND_PRIZES[i] }); });
+        cfg.season += 1;
+      }
       c.arcade = cfg;
       store.saveClass(c);
       // Locking ends everyone's passes right away
       if (cfg.mode === 'off') store.getStudents().forEach(function (s) {
         if (s.classId === c.id && s.state.arcade && s.state.arcade.until > now()) { s.state.arcade.until = 0; store.saveStudent(s); }
       });
-      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season) };
+      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season), winners: winners };
     },
     arcadeBoardFor: function (user, args) {
       requireTeacher(user);
@@ -425,7 +492,8 @@ function SQ_SERVICE(store) {
         students: store.getStudents().map(function (s) {
           return { email: s.email, name: s.name, classId: s.classId, isTeacher: !!s.isTeacher, state: s.state, profile: R.profile(s.state), updated: s.updated, accomNote: s.accomNote || '' };
         }),
-        settings: settings()
+        settings: settings(),
+        newBugs: store.bugAll().filter(function (b) { return b.status === 'new'; }).length
       };
     },
     createClass: function (user, args) {
@@ -500,6 +568,7 @@ function SQ_SERVICE(store) {
         st.state.accom = { coreOnly: !!args.accom.coreOnly, autoRead: !!args.accom.autoRead };
         st.accomNote = clean(args.accom.note, 300); // kept outside state so students never receive it
       }
+      if (args.display) st.state.display = cleanDisplay(args.display);
       return { student: persist(st) };
     },
     // ---- Class Screen (projector, teacher only). Sends ONLY positive information:
@@ -541,7 +610,7 @@ function SQ_SERVICE(store) {
       // "Race to the finish": where each student is inside today's quest (positive-only stages).
       var sc0 = c.screen || {};
       var raceQ = (args.quest && SQ_LESSONS[args.quest]) ? args.quest
-        : ((sc0.focus || []).filter(function (id) { return SQ_LESSONS[id]; })[0] || Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0] || 't1');
+        : ((sc0.raceQuest && SQ_LESSONS[sc0.raceQuest] ? sc0.raceQuest : null) || (sc0.focus || []).filter(function (id) { return SQ_LESSONS[id]; })[0] || Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0] || 't1');
       var RL = SQ_LESSONS[raceQ], core = R.coreSteps(RL);
       var stations = [{ key: 'start', label: 'Start' }].concat(core.map(function (i, j) { return { key: 's' + j, label: RL.steps[i].title }; }))
         .concat([{ key: 'check', label: 'Quick check' }, { key: 'turnin', label: 'Turn in' }, { key: 'finish', label: 'Finish!' }]);
@@ -584,6 +653,7 @@ function SQ_SERVICE(store) {
         showHelpers: sc.showHelpers === undefined ? cur.showHelpers !== false : !!sc.showHelpers,
         showWins: sc.showWins === undefined ? cur.showWins !== false : !!sc.showWins,
         dark: sc.dark === undefined ? !!cur.dark : !!sc.dark,
+        raceQuest: sc.raceQuest === undefined ? cur.raceQuest || '' : (R.NODE[sc.raceQuest] ? sc.raceQuest : ''),
         view: sc.view === undefined ? (cur.view || 'quest') : (['map', 'teams'].indexOf(sc.view) >= 0 ? sc.view : 'quest')
       };
       if (args.teams) {

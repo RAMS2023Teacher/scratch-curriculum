@@ -92,7 +92,11 @@ var SQ_RULES = (function () {
     { id: 'capstone',     icon: '🚀', name: 'Capstone Hero',    desc: 'Finish your Capstone Build.',             test: doneAll(['f2']) },
     { id: 'showcase',     icon: '👑', name: 'Showcase Star',    desc: 'Present on Showcase Day.',                test: doneAll(['f3']) },
     { id: 'explorer',     icon: '🧭', name: 'Explorer',         desc: 'Finish 17 quests (try extra branches!).', test: function (c) { return Object.keys(c.done).length >= 17; } },
-    { id: 'toolkit',      icon: '🧰', name: 'Power Up',         desc: 'Finish the Power-Up Pack toolkit.',        test: doneAll(['t5']) }
+    { id: 'toolkit',      icon: '🧰', name: 'Power Up',         desc: 'Finish the Power-Up Pack toolkit.',        test: doneAll(['t5']) },
+    { id: 'arcade_rookie', icon: '🕹️', name: 'Arcade Rookie',   desc: 'Play your first game of Block Rush.',      test: function (c) { return ((c.state.arcade || {}).plays || 0) >= 1; } },
+    { id: 'high_scorer',  icon: '🎯', name: 'High Scorer',      desc: 'Score 1,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 1000; } },
+    { id: 'arcade_master', icon: '👾', name: 'Arcade Master',   desc: 'Score 3,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 3000; } },
+    { id: 'round_champ',  icon: '🏆', name: 'Round Champion',   desc: 'Finish a leaderboard round in the top 3.', test: function (c) { return ((c.state.arcade || {}).roundWins || 0) >= 1; } }
   ];
   // Awarded by the teacher only
   var TEACHER_BADGES = [
@@ -172,7 +176,7 @@ var SQ_RULES = (function () {
     var level = levelFor(xp);
     var owned = (state.owned || []).slice();
     var arc = state.arcade || {};
-    var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned, arc.spent) : { earned: 0, spent: 0, balance: 0 };
+    var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned, (arc.spent || 0) - (arc.earned || 0)) : { earned: 0, spent: 0, balance: 0 };
     return {
       owned: owned, coins: coins.balance, coinsEarned: coins.earned, goal: state.goal || null, arcadeBest: arc.allBest || 0,
       xp: xp, level: level, rank: rankFor(level),

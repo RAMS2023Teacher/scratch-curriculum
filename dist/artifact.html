@@ -1,6 +1,6 @@
 <title>Scratch Quest</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;700;800;900&family=Lexend:wght@400;600;800&display=swap">
 <style>
 :root {
   --bg: #f4f1ea; --bg2: #fffdf8; --card: #ffffff; --ink: #2b2235; --muted: #6b6475; --line: #e7e1d6;
@@ -1221,6 +1221,37 @@ body.cs-on { background: #5b2bd6; }
 
 /* hidden really means hidden (the button and card styles set their own display) */
 .cs-helpbtn[hidden], .cs-needhelp[hidden], .cs [hidden] { display: none !important; }
+
+/* ===================== Display settings (per student) ===================== */
+html.fs-l body { zoom: 1.12; }
+html.fs-xl body { zoom: 1.25; }
+html.font-easy { --display: "Lexend", system-ui, sans-serif; }
+html.font-easy body, html.font-easy button, html.font-easy input, html.font-easy select, html.font-easy textarea, html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .btn { font-family: "Lexend", system-ui, sans-serif !important; letter-spacing: .01em; }
+html.font-easy body { line-height: 1.7; }
+html.hc { --ink: #000000; --muted: #2b2b2b; --line: #3a3a3a; --card: #ffffff; --bg2: #ffffff; }
+html.hc .card, html.hc .pcard, html.hc .btn, html.hc input, html.hc select, html.hc textarea { border-color: #000 !important; }
+html.hc .muted, html.hc small { color: #2b2b2b !important; }
+html.hc main a:not(.btn):not(.back):not(.p-back) { text-decoration: underline; }
+html.rm *, html.rm *::before, html.rm *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition: none !important; }
+html.rm .confetti, html.rm .xp-float, html.rm .fx-rays, html.rm .fx-parts, html.rm .fx-burst, html.rm .fx-coin, html.rm .fx-shine, html.rm .fx-lv-ring { display: none !important; }
+.accom-form select { max-width: 16em; }
+/* bug reports */
+.bug-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.bug-list > li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg2); }
+.bug-list > li.fixed { opacity: .55; }
+.bug-list details ul { margin: 4px 0 0; padding-left: 18px; word-break: break-word; }
+.modal textarea { width: 100%; font: inherit; padding: 8px 10px; border-radius: 10px; border: 2px solid var(--line); }
+/* class screen quest picker */
+.cs-pick label { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: .8em; }
+.cs-pick select { font: inherit; font-weight: 800; padding: 2px 6px; border-radius: 8px; border: 2px solid var(--line); max-width: 15em; background: var(--card); color: var(--ink); }
+/* arcade goals */
+.arc-goals { list-style: none; margin: 0 0 6px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.arc-goals li { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 10px; border: 2px dashed var(--line); font-weight: 800; font-size: .9rem; }
+.arc-goals li.got { border-style: solid; border-color: #22a559; background: color-mix(in srgb, #22c55e 12%, var(--card)); }
+.arc-goals .i { width: 1em; height: 1em; color: #17803f; }
+.arc-coins { font-weight: 900; font-size: 1.2rem; }
+
+[hidden] { display: none !important; }
 
 </style>
 
@@ -11008,7 +11039,11 @@ var SQ_RULES = (function () {
     { id: 'capstone',     icon: '🚀', name: 'Capstone Hero',    desc: 'Finish your Capstone Build.',             test: doneAll(['f2']) },
     { id: 'showcase',     icon: '👑', name: 'Showcase Star',    desc: 'Present on Showcase Day.',                test: doneAll(['f3']) },
     { id: 'explorer',     icon: '🧭', name: 'Explorer',         desc: 'Finish 17 quests (try extra branches!).', test: function (c) { return Object.keys(c.done).length >= 17; } },
-    { id: 'toolkit',      icon: '🧰', name: 'Power Up',         desc: 'Finish the Power-Up Pack toolkit.',        test: doneAll(['t5']) }
+    { id: 'toolkit',      icon: '🧰', name: 'Power Up',         desc: 'Finish the Power-Up Pack toolkit.',        test: doneAll(['t5']) },
+    { id: 'arcade_rookie', icon: '🕹️', name: 'Arcade Rookie',   desc: 'Play your first game of Block Rush.',      test: function (c) { return ((c.state.arcade || {}).plays || 0) >= 1; } },
+    { id: 'high_scorer',  icon: '🎯', name: 'High Scorer',      desc: 'Score 1,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 1000; } },
+    { id: 'arcade_master', icon: '👾', name: 'Arcade Master',   desc: 'Score 3,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 3000; } },
+    { id: 'round_champ',  icon: '🏆', name: 'Round Champion',   desc: 'Finish a leaderboard round in the top 3.', test: function (c) { return ((c.state.arcade || {}).roundWins || 0) >= 1; } }
   ];
   // Awarded by the teacher only
   var TEACHER_BADGES = [
@@ -11088,7 +11123,7 @@ var SQ_RULES = (function () {
     var level = levelFor(xp);
     var owned = (state.owned || []).slice();
     var arc = state.arcade || {};
-    var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned, arc.spent) : { earned: 0, spent: 0, balance: 0 };
+    var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned, (arc.spent || 0) - (arc.earned || 0)) : { earned: 0, spent: 0, balance: 0 };
     return {
       owned: owned, coins: coins.balance, coinsEarned: coins.earned, goal: state.goal || null, arcadeBest: arc.allBest || 0,
       xp: xp, level: level, rank: rankFor(level),
@@ -11578,7 +11613,14 @@ var SQ_ARCADE = (function () {
   ];
   var POWER = {};
   POWERUPS.forEach(function (p) { POWER[p.id] = p; });
-  var DEFAULTS = { mode: 'off', closes: 0, passMin: 5, ticketPrice: 40, season: 1 };
+  // questsPerTicket: finished quests needed for each free ticket. ticketPrice 0 = tickets can't be bought.
+  var DEFAULTS = { mode: 'off', closes: 0, passMin: 5, ticketPrice: 100, questsPerTicket: 2, season: 1 };
+  // Rewards. Coins per run: 1 for every 100 points (up to RUN_COINS a run and DAY_COINS a day).
+  var RUN_COINS = 25, DAY_COINS = 100;
+  // One-time score goals: [score, coin prize]
+  var GOALS = [[300, 20], [600, 40], [1000, 60], [1500, 80], [2000, 100], [3000, 150], [4000, 250]];
+  // Coins for 1st, 2nd and 3rd place when the teacher starts a new leaderboard round
+  var ROUND_PRIZES = [100, 60, 30];
   var MAX_POWER = 2;          // power-ups per run
   var RUN_MAX_MS = 12 * 60e3; // a run longer than this is not accepted
   var GRACE_MS = 3 * 60e3;    // a run started before the pass ended may still finish
@@ -11594,18 +11636,18 @@ var SQ_ARCADE = (function () {
     if (cfg.closes && now > cfg.closes) return 'off';
     return cfg.mode;
   }
-  function blank() { return { spent: 0, inv: {}, bought: 0, used: 0, until: 0, best: 0, season: 0, allBest: 0, plays: 0, run: null }; }
+  function blank() { return { spent: 0, earned: 0, goals: [], roundWins: 0, day: '', dayCoins: 0, inv: {}, bought: 0, used: 0, until: 0, best: 0, season: 0, allBest: 0, plays: 0, run: null }; }
   function stateOf(state) {
     var a = state.arcade || (state.arcade = blank()), b = blank();
     for (var k in b) if (a[k] === undefined) a[k] = b[k];
     return a;
   }
   // One ticket for every finished quest, plus any bought with coins, minus those used.
-  function tickets(a, doneCount) { return Math.max(0, (doneCount || 0) + (a.bought || 0) - (a.used || 0)); }
+  function tickets(a, doneCount, per) { return Math.max(0, Math.floor((doneCount || 0) / Math.max(1, per || 1)) + (a.bought || 0) - (a.used || 0)); }
   // Most points a fair run could reach in this much time (the game tops out well below this).
   function scoreCap(ms) { return Math.round(500 + Math.max(0, ms) / 1000 * 250); }
 
-  return { GAME: GAME, POWERUPS: POWERUPS, POWER: POWER, DEFAULTS: DEFAULTS, MAX_POWER: MAX_POWER, RUN_MAX_MS: RUN_MAX_MS, GRACE_MS: GRACE_MS,
+  return { RUN_COINS: RUN_COINS, DAY_COINS: DAY_COINS, GOALS: GOALS, ROUND_PRIZES: ROUND_PRIZES, GAME: GAME, POWERUPS: POWERUPS, POWER: POWER, DEFAULTS: DEFAULTS, MAX_POWER: MAX_POWER, RUN_MAX_MS: RUN_MAX_MS, GRACE_MS: GRACE_MS,
     config: config, liveMode: liveMode, stateOf: stateOf, tickets: tickets, scoreCap: scoreCap };
 })();
 
@@ -11643,12 +11685,12 @@ function SQ_SERVICE(store) {
   // What students may know about the arcade: its live mode, closing time and pass rules
   function arcadeInfo(c) {
     var cfg = AR.config(c), mode = AR.liveMode(cfg, now());
-    return { mode: mode, closes: mode === 'off' ? 0 : cfg.closes, passMin: cfg.passMin, ticketPrice: cfg.ticketPrice, season: cfg.season };
+    return { mode: mode, closes: mode === 'off' ? 0 : cfg.closes, passMin: cfg.passMin, ticketPrice: cfg.ticketPrice, questsPerTicket: cfg.questsPerTicket, season: cfg.season };
   }
   function arcadeStatus(st) {
     var a = AR.stateOf(st.state), p = R.profile(st.state), info = arcadeInfo(findClass(st.classId) || {});
     var t = now();
-    return { tickets: AR.tickets(a, p.doneCount), until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
+    return { tickets: AR.tickets(a, p.doneCount, info.questsPerTicket), toNext: info.questsPerTicket - (p.doneCount % info.questsPerTicket), goals: a.goals, until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
       best: a.season === info.season ? a.best : 0, allBest: a.allBest, plays: a.plays, running: !!(a.run && t - a.run.t < AR.RUN_MAX_MS) };
   }
   // Top scores this season (only students; positive information only)
@@ -11724,6 +11766,13 @@ function SQ_SERVICE(store) {
     });
   }
 
+  // Display settings a student (or their teacher) can choose
+  function cleanDisplay(d) {
+    d = d || {};
+    return { size: ['m', 'l', 'xl'].indexOf(d.size) >= 0 ? d.size : 'm', font: d.font === 'easy' ? 'easy' : 'default',
+      contrast: !!d.contrast, motion: !!d.motion, lang: LANGS.indexOf(d.lang) >= 0 ? d.lang : 'en' };
+  }
+  var LANGS = ['en', 'pt'];
   var HELP_TTL = 60 * 60e3; // a help request expires after an hour
   var FB_REASONS = ['unclear', 'broken', 'hard', 'easy', 'other'];
   // Feedback lives on the student record OUTSIDE quest progress (state.nodes), so reopening
@@ -11914,6 +11963,50 @@ function SQ_SERVICE(store) {
       return api.helpList(user, { classId: args.classId });
     },
 
+    // ---------------------------------------------------------- display settings and translation
+    setDisplay: function (user, args) {
+      var st = requireStudent(user);
+      st.state.display = cleanDisplay(args.display);
+      return { student: persist(st) };
+    },
+    // Machine translation of page text (Google Translate, built into Apps Script). Results are saved in the
+    // "Translations" tab, where the teacher can correct them. Only signed-in class members can call it.
+    translate: function (user, args) {
+      if (!user.isTeacher) requireStudent(user);
+      var lang = String(args.lang || '');
+      if (LANGS.indexOf(lang) < 1) err('That language is not available.');
+      var list = (args.items || []).slice(0, 80).map(function (x) { return { t: String(x.t || '').slice(0, 3000), html: !!x.html }; });
+      if (!store.translate) return { out: null };
+      return { out: store.translate(list, lang) };
+    },
+
+    // ---------------------------------------------------------- bug reports
+    reportBug: function (user, args) {
+      var st = store.getStudent(user.email), c = st ? findClass(st.classId) : null;
+      if (!st && !user.isTeacher) err('Join a class first.');
+      var recent = store.bugAll().filter(function (b) { return b.email === user.email && now() - b.at < 60 * 60e3; });
+      if (recent.length >= 10) err('Thanks! You have sent a lot of reports this hour. Tell your teacher about this one.');
+      var text = clean(args.text, 600);
+      if (!text) err('Tell us what happened.');
+      if (args.auto && recent.some(function (b) { return b.text === text; })) return { ok: true };
+      var info = {}; Object.keys(args.info || {}).slice(0, 20).forEach(function (k) { info[clean(k, 30)] = clean(typeof args.info[k] === 'string' ? args.info[k] : JSON.stringify(args.info[k]), 400); });
+      store.bugAdd({ id: 'b' + now().toString(36) + Math.floor(Math.random() * 1e4), at: now(), status: 'new', auto: !!args.auto,
+        name: st ? st.name : clean(user.name, 24), email: user.email, cls: c ? c.name : (user.isTeacher ? 'teacher' : ''), where: clean(args.where, 120), text: text, info: info });
+      return { ok: true };
+    },
+    bugList: function (user) {
+      requireTeacher(user);
+      return { bugs: store.bugAll().sort(function (a, b) { return b.at - a.at; }).slice(0, 200) };
+    },
+    bugUpdate: function (user, args) {
+      requireTeacher(user);
+      var b = store.bugAll().filter(function (x) { return x.id === String(args.id || ''); })[0];
+      if (!b) err('Report not found.');
+      if (args.remove) store.bugDelete(b.id);
+      else { b.status = args.status === 'fixed' ? 'fixed' : 'new'; store.bugSave(b); }
+      return api.bugList(user);
+    },
+
     // ---------------------------------------------------------- lesson feedback (for improving the lessons)
     flagConfusing: function (user, args) {
       var st = requireStudent(user), node = String(args.node || ''), Lf = lesson(node);
@@ -11945,7 +12038,7 @@ function SQ_SERVICE(store) {
       var st = requireStudent(user), c = classDefaults(findClass(st.classId) || {});
       if (c.shop === false) err('The coin shop is turned off for your class.');
       var a = AR.stateOf(st.state), p = R.profile(st.state), what = String(args.item || ''), price, name;
-      if (what === 'ticket') { price = AR.config(c).ticketPrice; name = 'an arcade ticket'; }
+      if (what === 'ticket') { price = AR.config(c).ticketPrice; name = 'an arcade ticket'; if (!price) err('Tickets can only be earned by finishing quests.'); }
       else if (AR.POWER[what]) { price = AR.POWER[what].price; name = AR.POWER[what].name; }
       else err('That is not in the arcade shop.');
       if ((a.inv[what] || 0) >= 9) err('You can hold up to 9 of those.');
@@ -11961,7 +12054,7 @@ function SQ_SERVICE(store) {
       if (info.mode === 'off') err('The arcade is locked right now.');
       if (info.mode === 'free') err('It is free play right now. No ticket needed!');
       if (a.until > now()) err('Your pass is already running.');
-      if (AR.tickets(a, p.doneCount) < 1) err('You need a ticket. Finish a quest to earn one!');
+      if (AR.tickets(a, p.doneCount, info.questsPerTicket) < 1) err('You need a ticket. Finish quests to earn one!');
       a.used += 1;
       a.until = now() + info.passMin * 60e3;
       if (info.closes) a.until = Math.min(a.until, info.closes);
@@ -11994,10 +12087,18 @@ function SQ_SERVICE(store) {
       if (newBest) a.best = score;
       var allBest = score > a.allBest;
       if (allBest) a.allBest = score;
+      // rewards: coins for the run (with a daily limit) and one-time prizes for score goals
+      var today = new Date(now()).toISOString().slice(0, 10);
+      if (a.day !== today) { a.day = today; a.dayCoins = 0; }
+      var runCoins = Math.max(0, Math.min(AR.RUN_COINS, Math.floor(score / 100), AR.DAY_COINS - a.dayCoins));
+      a.dayCoins += runCoins;
+      var newGoals = [];
+      AR.GOALS.forEach(function (g) { if (score >= g[0] && a.goals.indexOf(g[0]) < 0) { a.goals.push(g[0]); newGoals.push({ score: g[0], coins: g[1] }); runCoins += g[1]; } });
+      a.earned += runCoins;
       persist(st);
       var board = arcadeBoard(st.classId, cfg.season), id = memberId(st.email), place = 0;
       board.forEach(function (b, i) { if (b.key === id) place = i + 1; });
-      return { score: score, newBest: newBest, allBest: allBest, place: place, board: board, me: arcadeStatus(st), student: selfView(st) };
+      return { score: score, newBest: newBest, allBest: allBest, place: place, board: board, coins: runCoins, goals: newGoals, me: arcadeStatus(st), student: selfView(st) };
     },
 
     // ---------------------------------------------------------- teacher
@@ -12013,15 +12114,23 @@ function SQ_SERVICE(store) {
         cfg.closes = cfg.mode === 'off' ? 0 : now() + mins * 60e3;
       }
       if (args.passMin !== undefined) cfg.passMin = Math.max(1, Math.min(30, Number(args.passMin) || 5));
-      if (args.ticketPrice !== undefined) cfg.ticketPrice = Math.max(0, Math.min(500, Number(args.ticketPrice) || 0));
-      if (args.resetBoard) cfg.season += 1;
+      if (args.ticketPrice !== undefined) cfg.ticketPrice = Math.max(0, Math.min(1000, Number(args.ticketPrice) || 0));
+      if (args.questsPerTicket !== undefined) cfg.questsPerTicket = Math.max(1, Math.min(5, Math.round(Number(args.questsPerTicket)) || 1));
+      var winners = [];
+      if (args.resetBoard) {
+        // the top 3 of the round that is ending win coins (and the Round Champion badge)
+        var top = store.getStudents().filter(function (s) { var x = s.state.arcade; return s.classId === c.id && !s.isTeacher && x && x.season === cfg.season && x.best > 0; })
+          .sort(function (x, y) { return y.state.arcade.best - x.state.arcade.best; }).slice(0, AR.ROUND_PRIZES.length);
+        top.forEach(function (s, i) { var x = AR.stateOf(s.state); x.earned += AR.ROUND_PRIZES[i]; x.roundWins += 1; persist(s); winners.push({ name: s.name, place: i + 1, coins: AR.ROUND_PRIZES[i] }); });
+        cfg.season += 1;
+      }
       c.arcade = cfg;
       store.saveClass(c);
       // Locking ends everyone's passes right away
       if (cfg.mode === 'off') store.getStudents().forEach(function (s) {
         if (s.classId === c.id && s.state.arcade && s.state.arcade.until > now()) { s.state.arcade.until = 0; store.saveStudent(s); }
       });
-      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season) };
+      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season), winners: winners };
     },
     arcadeBoardFor: function (user, args) {
       requireTeacher(user);
@@ -12037,7 +12146,8 @@ function SQ_SERVICE(store) {
         students: store.getStudents().map(function (s) {
           return { email: s.email, name: s.name, classId: s.classId, isTeacher: !!s.isTeacher, state: s.state, profile: R.profile(s.state), updated: s.updated, accomNote: s.accomNote || '' };
         }),
-        settings: settings()
+        settings: settings(),
+        newBugs: store.bugAll().filter(function (b) { return b.status === 'new'; }).length
       };
     },
     createClass: function (user, args) {
@@ -12112,6 +12222,7 @@ function SQ_SERVICE(store) {
         st.state.accom = { coreOnly: !!args.accom.coreOnly, autoRead: !!args.accom.autoRead };
         st.accomNote = clean(args.accom.note, 300); // kept outside state so students never receive it
       }
+      if (args.display) st.state.display = cleanDisplay(args.display);
       return { student: persist(st) };
     },
     // ---- Class Screen (projector, teacher only). Sends ONLY positive information:
@@ -12153,7 +12264,7 @@ function SQ_SERVICE(store) {
       // "Race to the finish": where each student is inside today's quest (positive-only stages).
       var sc0 = c.screen || {};
       var raceQ = (args.quest && SQ_LESSONS[args.quest]) ? args.quest
-        : ((sc0.focus || []).filter(function (id) { return SQ_LESSONS[id]; })[0] || Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0] || 't1');
+        : ((sc0.raceQuest && SQ_LESSONS[sc0.raceQuest] ? sc0.raceQuest : null) || (sc0.focus || []).filter(function (id) { return SQ_LESSONS[id]; })[0] || Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0] || 't1');
       var RL = SQ_LESSONS[raceQ], core = R.coreSteps(RL);
       var stations = [{ key: 'start', label: 'Start' }].concat(core.map(function (i, j) { return { key: 's' + j, label: RL.steps[i].title }; }))
         .concat([{ key: 'check', label: 'Quick check' }, { key: 'turnin', label: 'Turn in' }, { key: 'finish', label: 'Finish!' }]);
@@ -12196,6 +12307,7 @@ function SQ_SERVICE(store) {
         showHelpers: sc.showHelpers === undefined ? cur.showHelpers !== false : !!sc.showHelpers,
         showWins: sc.showWins === undefined ? cur.showWins !== false : !!sc.showWins,
         dark: sc.dark === undefined ? !!cur.dark : !!sc.dark,
+        raceQuest: sc.raceQuest === undefined ? cur.raceQuest || '' : (R.NODE[sc.raceQuest] ? sc.raceQuest : ''),
         view: sc.view === undefined ? (cur.view || 'quest') : (['map', 'teams'].indexOf(sc.view) >= 0 ? sc.view : 'quest')
       };
       if (args.teams) {
@@ -12689,7 +12801,7 @@ var SQ_API = (function () {
   }
 
   // ------------------------------------------------------------------ demo mode
-  var KEY = 'scratchQuestDemo.v4';
+  var KEY = 'scratchQuestDemo.v5';
   var mem = null;
   function load() {
     if (mem) return mem;
@@ -12709,6 +12821,10 @@ var SQ_API = (function () {
     deleteStudent: function (email) { var d = load(); d.students = d.students.filter(function (s) { return s.email !== email; }); save(); },
     getSettings: function () { return load().settings || {}; },
     saveSettings: function (o) { load().settings = o; save(); },
+    bugAll: function () { return load().bugs || []; },
+    bugAdd: function (b) { var d = load(); d.bugs = d.bugs || []; d.bugs.push(b); save(); },
+    bugSave: function (b) { var d = load(); d.bugs = (d.bugs || []).map(function (x) { return x.id === b.id ? b : x; }); save(); },
+    bugDelete: function (id) { var d = load(); d.bugs = (d.bugs || []).filter(function (x) { return x.id !== id; }); save(); },
     helpAll: function () { return load().help || {}; },
     helpPut: function (id, o) { var d = load(); d.help = d.help || {}; if (o) d.help[id] = o; else delete d.help[id]; save(); }
   };
@@ -12718,7 +12834,7 @@ var SQ_API = (function () {
     var d = { classes: [], students: [], settings: { videos: {} }, role: 'student' };
     var cls = { id: 'demo1', name: 'Period 3 · Demo Class', code: 'DEMO1', teacher: 'teacher@demo', openThrough: 14,
       requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false,
-      arcade: { mode: 'free', closes: Date.now() + 8 * 3600e3, passMin: 5, ticketPrice: 40, season: 1 } };
+      arcade: { mode: 'free', closes: Date.now() + 8 * 3600e3, passMin: 5, ticketPrice: 100, questsPerTicket: 2, season: 1 } };
     d.classes.push(cls, { id: 'demo2', name: 'Period 5 · Demo Class', code: 'PIXEL', teacher: 'teacher@demo', openThrough: 7,
       requireApproval: true, requireLink: false, showLeaderboard: true, classGoal: 15000, archived: false });
     var names = ['Ava', 'Liam', 'Maya', 'Noah', 'Zoe', 'Ethan', 'Priya', 'Lucas', 'Chloe', 'Mateo', 'Isla', 'Owen', 'Sofia', 'Jayden'];
@@ -12966,6 +13082,114 @@ var SQ_SOUND = (function () {
 })();
 
 
+var SQ_BUILD = "2026-11-18";
+var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
+
+/* Scratch Quest — page translation for students (Brazilian Portuguese).
+ * How it works: after the page draws, this finds the visible text, looks each piece up in a
+ * saved dictionary, and asks the server to translate anything new (Google Translate, built
+ * into Apps Script). Translations are remembered on the device and in the teacher's Sheet
+ * ("Translations" tab), where the teacher can correct them.
+ * Never translated: names and anything inside an element marked class="notr", code blocks,
+ * pictures, and what people type into boxes.
+ */
+var SQ_I18N = (function () {
+  var lang = 'en', dict = {}, done = {}, miss = {}, queue = {}, timer = null, obs = null, sender = null, busy = false, dirty = false;
+  // Hand-written translations for the words students see most (these win over machine translation).
+  var BUILTIN = { pt: {
+    'Quest Map': 'Mapa de Missões', 'My Avatar': 'Meu Avatar', 'Badges': 'Medalhas', 'Arcade': 'Fliperama', 'My Class': 'Minha Turma',
+    'Map': 'Mapa', 'Words': 'Palavras', 'Back': 'Voltar', 'Next': 'Próximo', 'Skip': 'Pular', 'Read to me': 'Ler para mim', 'Stop': 'Parar',
+    'Tell me more': 'Conte-me mais', 'Need a hint?': 'Precisa de uma dica?', 'I did it!': 'Consegui!', 'Got it': 'Entendi',
+    'Your mission': 'Sua missão', 'Big question': 'Grande pergunta', 'Start quest': 'Começar missão', 'Continue quest': 'Continuar missão',
+    'Keep going': 'Continuar', 'Let\'s go!': 'Vamos lá!', 'Turn it in!': 'Entregar!', 'Turn in your quest': 'Entregue sua missão',
+    'Quest complete!': 'Missão concluída!', 'Complete': 'Concluída', 'Keep questing!': 'Continue a aventura!', 'Awesome!': 'Incrível!',
+    'Level up!': 'Subiu de nível!', 'Badge unlocked!': 'Medalha desbloqueada!', 'Save my look': 'Salvar meu visual', 'Surprise me': 'Me surpreenda',
+    'I’m stuck': 'Preciso de ajuda', 'Ask for help': 'Pedir ajuda', 'Confusing?': 'Confuso?', '🤔 Confusing?': '🤔 Confuso?', '✋ I’m stuck': '✋ Preciso de ajuda', 'Rate this quest': 'Avalie esta missão',
+    'Finished': 'Concluída', 'Ready to start': 'Pronta para começar', 'Locked': 'Bloqueada', 'Display': 'Aparência', 'Report a bug': 'Avisar de um erro',
+    'coins': 'moedas', 'Done': 'Pronto', 'Save': 'Salvar', 'Cancel': 'Cancelar', 'Send': 'Enviar', 'Top scores': 'Melhores pontuações'
+  } };
+  var SAFE = { B: 1, I: 1, EM: 1, STRONG: 1, U: 1, BR: 1, KBD: 1, MARK: 1 };
+  var SKIP = { SCRIPT: 1, STYLE: 1, PRE: 1, CODE: 1, INPUT: 1, TEXTAREA: 1, SELECT: 1, CANVAS: 1, IMG: 1, IFRAME: 1, svg: 1, SVG: 1 };
+  function norm(t) { return String(t).replace(/\s+/g, ' ').trim(); }
+  function wordy(t) { return /[A-Za-z]{2}/.test(t); }
+  function load() {
+    dict = {}; done = {}; miss = {};
+    try { dict = JSON.parse(localStorage.getItem('sq-tr-' + lang) || '{}') || {}; } catch (e) { dict = {}; }
+    var b = BUILTIN[lang] || {};
+    Object.keys(b).forEach(function (k) { dict['t|' + k] = b[k]; });
+    Object.keys(dict).forEach(function (k) { done[norm(dict[k])] = 1; });
+  }
+  function save() { try { localStorage.setItem('sq-tr-' + lang, JSON.stringify(dict)); } catch (e) { /* storage full or blocked: keep in memory */ } }
+  function put(target, html, tr) {
+    if (html) { target.innerHTML = tr; done[norm(target.innerHTML)] = 1; }
+    else { var m = /^(\s*)[\s\S]*?(\s*)$/.exec(target.nodeValue); target.nodeValue = m[1] + tr + m[2]; done[norm(tr)] = 1; }
+  }
+  function unit(target, html) {
+    var src = norm(html ? target.innerHTML : target.nodeValue);
+    if (!src || !wordy(src) || done[src] || src.length > 2500) return;
+    var k = (html ? 'h|' : 't|') + src, hit = dict[k];
+    if (hit !== undefined) { if (hit !== src) put(target, html, hit); return; }
+    if (miss[k]) return;
+    (queue[k] = queue[k] || []).push(target);
+    if (!timer) timer = setTimeout(flush, 60);
+  }
+  function simple(el) {
+    var all = el.getElementsByTagName('*');
+    for (var i = 0; i < all.length; i++) if (!SAFE[all[i].tagName]) return false;
+    return all.length > 0;
+  }
+  function walk(el) {
+    if (!el || el.nodeType !== 1 || SKIP[el.tagName] || (el.classList && (el.classList.contains('notr') || el.classList.contains('scratchblocks')))) return;
+    if (simple(el) && wordy(el.textContent)) { unit(el, true); return; }
+    for (var n = el.firstChild; n; n = n.nextSibling) {
+      if (n.nodeType === 3) unit(n, false); else if (n.nodeType === 1) walk(n);
+    }
+  }
+  function flush() {
+    timer = null;
+    if (busy || lang === 'en' || !sender) return;
+    var keys = Object.keys(queue).slice(0, 40);
+    if (!keys.length) return;
+    busy = true;
+    var items = keys.map(function (k) { return { t: k.slice(2), html: k.charAt(0) === 'h' }; });
+    var forLang = lang;
+    sender(lang, items).then(function (out) {
+      busy = false;
+      if (forLang !== lang) return;
+      keys.forEach(function (k, i) {
+        var targets = queue[k] || []; delete queue[k];
+        if (!out || out[i] == null) { miss[k] = 1; return; }
+        dict[k] = out[i];
+        targets.forEach(function (t) {
+          if (!t.isConnected) return;
+          var html = k.charAt(0) === 'h';
+          if (norm(html ? t.innerHTML : t.nodeValue) === k.slice(2)) put(t, html, out[i]);
+        });
+      });
+      if (out) save();
+      if (Object.keys(queue).length) timer = setTimeout(flush, 30);
+    }).catch(function () { busy = false; keys.forEach(function (k) { miss[k] = 1; delete queue[k]; }); });
+  }
+  function scan() { dirty = false; if (lang !== 'en') walk(document.body); }
+  return {
+    lang: function () { return lang; },
+    // l: 'en' or 'pt'. send(lang, items) -> Promise of an array of translations (or null when unavailable)
+    set: function (l, send) {
+      sender = send || sender;
+      if (l === lang) { if (l !== 'en') scan(); return; }
+      lang = l; queue = {};
+      document.documentElement.lang = l === 'pt' ? 'pt-BR' : 'en';
+      if (obs) { obs.disconnect(); obs = null; }
+      if (l === 'en') return;
+      load();
+      obs = new MutationObserver(function () { if (!dirty) { dirty = true; Promise.resolve().then(scan); } });
+      obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+      scan();
+    }
+  };
+})();
+
+
 /* Scratch Quest — celebration effects.
  * Big moments (quest complete, badge, level up, a new item) get a full-screen reveal, one at a time.
  * Small moments (a step, a right answer, coins) get a quick burst near what was clicked.
@@ -12974,7 +13198,7 @@ var SQ_SOUND = (function () {
 var SQ_FX = (function () {
   var queue = [], open = null;
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function reduced() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
+  function reduced() { if (document.documentElement.classList.contains('rm')) return true; try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
   function play(n, delay) { if (typeof SQ_SOUND === 'undefined') return; if (delay) setTimeout(function () { SQ_SOUND.play(n); }, delay); else SQ_SOUND.play(n); }
   function rnd(a, b) { return a + Math.random() * (b - a); }
 
@@ -13540,7 +13764,19 @@ var SQ_MAPART = (function () {
   function closeModal() { var m = document.querySelector('.modal-wrap'); if (m) m.remove(); }
   function renderBlocks() {
     if (typeof scratchblocks === 'undefined') return;
-    try { scratchblocks.renderMatching('pre.blocks', { style: 'scratch3', languages: ['en'], scale: 0.85 }); } catch (e) { /* show as text */ }
+    try {
+      if (SQ_I18N.lang() === 'pt' && typeof SQ_BLOCKS_PT !== 'undefined') {
+        // draw the blocks in Brazilian Portuguese so they match a Scratch editor set to Portuguese
+        if (!scratchblocks.allLanguages.pt_br) scratchblocks.loadLanguages({ pt_br: SQ_BLOCKS_PT });
+        document.querySelectorAll('pre.blocks').forEach(function (pre) {
+          var doc = scratchblocks.parse(pre.textContent, { languages: ['en'] });
+          doc.translate(scratchblocks.allLanguages.pt_br);
+          var svg = scratchblocks.render(doc, { style: 'scratch3', scale: 0.85 });
+          var box = document.createElement('div'); box.className = 'scratchblocks'; box.appendChild(svg);
+          pre.parentNode.replaceChild(box, pre);
+        });
+      } else scratchblocks.renderMatching('pre.blocks', { style: 'scratch3', languages: ['en'], scale: 0.85 });
+    } catch (e) { /* show as text */ }
   }
   function videoEmbed(url) {
     if (!url) return '';
@@ -13655,7 +13891,7 @@ var SQ_MAPART = (function () {
     if (isTeacher() && route()[0] === 't') {
       var pending = S.teacher ? pendingList().length : 0;
       tabs = [['#/t/dash', '<svg class="i"><use href="#i-chart"/></svg>', 'Dashboard'], ['#/t/review', '<svg class="i"><use href="#i-inbox"/></svg>', 'Review' + (pending ? ' <span class="pill">' + pending + '</span>' : '')],
-        ['#/t/map', '<svg class="i"><use href="#i-map"/></svg>', 'Class Map'], ['#/t/lessons', '<svg class="i"><use href="#i-library"/></svg>', 'Lessons'], ['#/t/standards', '<svg class="i"><use href="#i-ruler"/></svg>', 'Standards'], ['#/t/feedback', '<svg class="i"><use href="#i-message"/></svg>', 'Feedback'], ['#/t/classroom', '<svg class="i"><use href="#i-school"/></svg>', 'Classroom'], ['#/t/classes', '<svg class="i"><use href="#i-sliders"/></svg>', 'Classes']];
+        ['#/t/map', '<svg class="i"><use href="#i-map"/></svg>', 'Class Map'], ['#/t/lessons', '<svg class="i"><use href="#i-library"/></svg>', 'Lessons'], ['#/t/standards', '<svg class="i"><use href="#i-ruler"/></svg>', 'Standards'], ['#/t/feedback', '<svg class="i"><use href="#i-message"/></svg>', 'Feedback' + (S.teacher && S.teacher.newBugs ? ' <span class="pill">' + S.teacher.newBugs + '</span>' : '')], ['#/t/classroom', '<svg class="i"><use href="#i-school"/></svg>', 'Classroom'], ['#/t/classes', '<svg class="i"><use href="#i-sliders"/></svg>', 'Classes']];
     } else {
       tabs = [['#/map', '<svg class="i"><use href="#i-map"/></svg>', 'Quest Map'], ['#/avatar', '<svg class="i"><use href="#i-palette"/></svg>', 'My Avatar'], ['#/badges', '<svg class="i"><use href="#i-award"/></svg>', 'Badges'], ['#/arcade', '<svg class="i"><use href="#i-gamepad"/></svg>', 'Arcade'], ['#/class', '<svg class="i"><use href="#i-users"/></svg>', 'My Class']];
     }
@@ -13665,7 +13901,9 @@ var SQ_MAPART = (function () {
       var active = cur.indexOf(t[0]) === 0 || (t[0] === '#/map' && cur.indexOf('#/quest') === 0);
       html += '<a href="' + t[0] + '" class="' + (active ? 'on' : '') + '"><span aria-hidden="true">' + t[1] + '</span> <span class="tl">' + t[2] + '</span></a>';
     });
-    html += '</nav><div class="me"><button class="snd-btn' + (SQ_SOUND.muted() ? ' off' : '') + '" data-act="sound-toggle" title="' + (SQ_SOUND.muted() ? 'Sound is off' : 'Sound is on') + '" aria-label="' + (SQ_SOUND.muted() ? 'Turn sound on' : 'Turn sound off') + '"><svg class="i"><use href="#i-volume"/></svg></button>';
+    html += '</nav><div class="me"><button class="snd-btn' + (SQ_SOUND.muted() ? ' off' : '') + '" data-act="sound-toggle" title="' + (SQ_SOUND.muted() ? 'Sound is off' : 'Sound is on') + '" aria-label="' + (SQ_SOUND.muted() ? 'Turn sound on' : 'Turn sound off') + '"><svg class="i"><use href="#i-volume"/></svg></button>' +
+      (S.me && r !== 't' ? '<button class="snd-btn" data-act="display" title="Display settings" aria-label="Display settings"><svg class="i"><use href="#i-sliders"/></svg></button>' : '') +
+      (S.me || isTeacher() ? '<button class="snd-btn" data-act="bug" title="Report a bug" aria-label="Report a bug"><svg class="i"><use href="#i-bug"/></svg></button>' : '');
     if (isTeacher()) {
       html += r === 't'
         ? (S.me ? '<a class="btn small ghost" href="#/map"><svg class="i"><use href="#i-eye"/></svg> Student view</a>' : '<button class="btn small ghost" data-act="teacher-try"><svg class="i"><use href="#i-eye"/></svg> Try as student</button>')
@@ -13699,6 +13937,7 @@ var SQ_MAPART = (function () {
     (S.polls || []).forEach(clearInterval); S.polls = [];
     var r = route();
     if (!S.boot) return;
+    applyDisplay();
     if (r[0] === 't') {
       if (!isTeacher()) return go('#/map');
       return renderTeacher(r);
@@ -13776,7 +14015,7 @@ var SQ_MAPART = (function () {
     var p = prof(), st = S.me.state;
     var next = suggestNext(st);
     var html = '<div class="map-layout"><aside class="map-side">';
-    html += '<div class="card hello"><div class="hello-av">' + A.svg(st.avatar, 84) + '</div><div><h2>Hi, ' + esc(S.me.name) + '!</h2>' + (A.titleText(st.avatar) ? '<div class="np-title sm">' + esc(A.titleText(st.avatar)) + '</div>' : '') + '<p class="muted">' + esc(S.cls.name) + '</p>' +
+    html += '<div class="card hello"><div class="hello-av">' + A.svg(st.avatar, 84) + '</div><div><h2 class="notr">Hi, ' + esc(S.me.name) + '!</h2>' + (A.titleText(st.avatar) ? '<div class="np-title sm">' + esc(A.titleText(st.avatar)) + '</div>' : '') + '<p class="muted">' + esc(S.cls.name) + '</p>' +
       '<p><b>' + p.doneCount + '</b> quests done · <b>' + p.badges.length + '</b> badges</p></div></div>';
     html += goalCard(p, true);
     if (next) {
@@ -14271,7 +14510,9 @@ var SQ_MAPART = (function () {
     var text = parts.join('. ').replace(/[✅📨📖💡🎯🔥⚡]/gu, '').replace(/→|➜/g, ', then ').replace(/[\[\]()]/g, '').replace(/\s+/g, ' ').replace(/\.\s*\./g, '.');
     var u = new SpeechSynthesisUtterance(text);
     u.rate = 0.92; u.pitch = 1.05; u.lang = 'en-US';
-    var v = pickVoice(); if (v) u.voice = v;
+    var v = pickVoice();
+    if (SQ_I18N.lang() === 'pt') { u.lang = 'pt-BR'; v = (speech.getVoices() || []).filter(function (x) { return /^pt/i.test(x.lang); }).sort(function (a, b) { return /BR/i.test(b.lang) - /BR/i.test(a.lang); })[0] || null; }
+    if (v) u.voice = v;
     u.onend = u.onerror = function () { btn.classList.remove('on'); btn.querySelector('span').textContent = 'Read to me'; };
     btn.classList.add('on'); btn.querySelector('span').textContent = 'Stop';
     speech.speak(u);
@@ -14338,7 +14579,7 @@ var SQ_MAPART = (function () {
       '<div class="pedestal' + (S.studioBurst ? ' burst' : '') + '"><div class="spot"></div>' +
       '<i class="tw t1"></i><i class="tw t2"></i><i class="tw t3"></i><i class="tw t4"></i><i class="tw t5"></i>' +
       '<div class="stage-av">' + A.svg(d, 230, { title: 'Your character' }) + '</div><div class="plinth"></div></div>' +
-      '<div class="nameplate"><b>' + esc(S.me.name) + '</b>' + (title ? '<span class="np-title">' + esc(title) + '</span>' : '') + '<span class="np-lv">Level ' + p.level + ' · ' + esc(p.rank) + '</span></div>';
+      '<div class="nameplate"><b class="notr">' + esc(S.me.name) + '</b>' + (title ? '<span class="np-title">' + esc(title) + '</span>' : '') + '<span class="np-lv">Level ' + p.level + ' · ' + esc(p.rank) + '</span></div>';
     if (owe.length) {
       var cost = owe.reduce(function (a, x) { return a + x.item.unlock.price; }, 0);
       h += '<div class="tryon"><b>Trying on:</b> ' + owe.map(function (x) { return esc(x.item.name); }).join(', ') + ' (' + coinTag(cost) + ')' +
@@ -14554,6 +14795,7 @@ var SQ_MAPART = (function () {
       '<label class="switch small"><input type="checkbox" data-act="fb-all"' + (S.fbAll ? ' checked' : '') + '> All my classes</label></div>' +
       '<div class="t-actions"><button class="btn primary" data-act="fb-copy"' + (ids.length ? '' : ' disabled') + '><svg class="i"><use href="#i-clipboard"/></svg> Copy report for Claude</button><button class="btn" data-act="fb-download"' + (ids.length ? '' : ' disabled') + '><svg class="i"><use href="#i-save"/></svg> Download .md</button></div></div>';
     h += '<div class="banner small"><svg class="i"><use href="#i-alert"/></svg> The report leaves out student names, but students type their own notes. Skim them for names before you paste the report into an AI tool.</div>';
+    h += tBugs();
     if (!ids.length) return h + '<div class="card"><h2>No feedback yet</h2><p>Students can tap <b>🤔 Confusing?</b> under any step or quick check, ask for help with <b>✋ I’m stuck</b>, and rate each quest when they turn it in (+' + R.XP.rate + ' XP).</p></div>';
     ids.forEach(function (id) {
       var o = fbStats(id, ss), Lx = L[id];
@@ -14569,6 +14811,75 @@ var SQ_MAPART = (function () {
       if (quotes.length) h += '<h3>Students said</h3><ul class="fb-quotes">' + quotes.slice(0, 6).map(function (q) { return '<li><span class="muted small">' + q[0] + ':</span> “' + esc(q[1]) + '”</li>'; }).join('') + '</ul>';
       h += '</div>';
     });
+    return h;
+  }
+
+  // ------------------------------------------------------------ display settings, translation, bug reports
+  function disp() { return (S.me && S.me.state.display) || {}; }
+  function applyDisplay() {
+    var d = route()[0] === 't' ? {} : disp(), h = document.documentElement;
+    h.classList.toggle('fs-l', d.size === 'l'); h.classList.toggle('fs-xl', d.size === 'xl');
+    h.classList.toggle('font-easy', d.font === 'easy'); h.classList.toggle('hc', !!d.contrast); h.classList.toggle('rm', !!d.motion);
+    SQ_I18N.set(d.lang === 'pt' ? 'pt' : 'en', function (lang, items) { return API.call('translate', { lang: lang, items: items }).then(function (r) { return r.out; }); });
+  }
+  function displayFields(d) {
+    d = d || {};
+    return '<label>Text size <select name="size">' + [['m', 'Normal'], ['l', 'Large'], ['xl', 'Extra large']].map(function (x) { return '<option value="' + x[0] + '"' + ((d.size || 'm') === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label>' +
+      '<label>Language <select name="lang" class="notr"><option value="en"' + (d.lang !== 'pt' ? ' selected' : '') + '>English</option><option value="pt"' + (d.lang === 'pt' ? ' selected' : '') + '>Português (Brasil)</option></select></label>' +
+      '<label class="switch"><input type="checkbox" name="font"' + (d.font === 'easy' ? ' checked' : '') + '> Easy-to-read letters</label>' +
+      '<label class="switch"><input type="checkbox" name="contrast"' + (d.contrast ? ' checked' : '') + '> Stronger contrast (darker text and outlines)</label>' +
+      '<label class="switch"><input type="checkbox" name="motion"' + (d.motion ? ' checked' : '') + '> Less movement (calmer animations)</label>';
+  }
+  function displayFrom(v) { return { size: v.size, lang: v.lang, font: v.font ? 'easy' : 'default', contrast: !!v.contrast, motion: !!v.motion }; }
+  // remember the last few errors so a bug report can include them
+  var ERRS = [], AUTO = {};
+  function noteError(msg) {
+    msg = String(msg || 'Error').slice(0, 300);
+    ERRS.push(msg); if (ERRS.length > 5) ERRS.shift();
+    if (S.boot && (S.me || isTeacher()) && !AUTO[msg] && Object.keys(AUTO).length < 3) {
+      AUTO[msg] = 1;
+      API.call('reportBug', { auto: true, text: msg, where: location.hash, info: bugInfo() }).catch(function () { });
+    }
+  }
+  window.addEventListener('error', function (e) { noteError((e.message || 'Error') + (e.filename ? ' @' + String(e.filename).split('/').pop() + ':' + e.lineno : '')); });
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; if (r && r.name && r.name !== 'Error') noteError(r.name + ': ' + r.message); });
+  function bugInfo() {
+    var r = route(), o = { page: location.hash || '#/map', screen: innerWidth + 'x' + innerHeight, device: navigator.userAgent, build: typeof SQ_BUILD === 'undefined' ? '' : SQ_BUILD,
+      online: String(navigator.onLine), display: JSON.stringify(disp()), errors: ERRS.join(' | ') };
+    if (r[0] === 'quest' && S.card) o.card = 'card ' + ((S.card[r[1]] || 0) + 1);
+    return o;
+  }
+  function bugWhere() {
+    var r = route();
+    if (r[0] === 'quest' && L[r[1]]) return 'Quest: ' + L[r[1]].title + ', card ' + (((S.card || {})[r[1]] || 0) + 1);
+    return 'Page: ' + (location.hash || '#/map');
+  }
+  function loadBugs() {
+    if (S.bugs) return;
+    S.bugs = [];
+    call('bugList', {}).then(function (res) { S.bugs = res.bugs; S.bugsLoaded = true; if (route()[1] === 'feedback') render(); }).catch(function () { S.bugs = null; });
+  }
+  function bugsMarkdown() {
+    var md = '# Scratch Quest bug reports\n\nReported from student and teacher devices. Names are removed. The app source is in `src/` (see `src/app.js` for the page code and `src/service.js` for the server rules).\n';
+    (S.bugs || []).filter(function (b) { return b.status !== 'fixed'; }).forEach(function (b, i) {
+      md += '\n## ' + (i + 1) + '. ' + b.text.replace(/\n/g, ' ') + '\n\n- When: ' + new Date(b.at).toISOString().slice(0, 16).replace('T', ' ') + ' UTC' + (b.auto ? ' (caught automatically)' : ' (typed by a ' + (b.cls === 'teacher' ? 'teacher' : 'student') + ')') + '\n- Where: ' + (b.where || '?') + '\n';
+      Object.keys(b.info || {}).forEach(function (k) { if (b.info[k]) md += '- ' + k + ': ' + b.info[k] + '\n'; });
+    });
+    return md;
+  }
+  function tBugs() {
+    loadBugs();
+    var list = S.bugs || [], open = list.filter(function (b) { return b.status !== 'fixed'; });
+    var h = '<div class="card bug-card"><div class="row between"><h2><svg class="i"><use href="#i-bug"/></svg> Bug reports ' + (open.length ? '<span class="pill">' + open.length + '</span>' : '') + '</h2>' +
+      '<button class="btn small" data-act="bug-copy"' + (open.length ? '' : ' disabled') + '><svg class="i"><use href="#i-clipboard"/></svg> Copy for Claude</button></div>';
+    if (!S.bugsLoaded) return h + '<p class="muted small">Loading…</p></div>';
+    if (!list.length) return h + '<p class="muted small">No bug reports. Students and teachers can send one with the bug button at the top of any page. Errors on a student’s Chromebook are also reported automatically.</p></div>';
+    h += '<ul class="bug-list">' + list.slice(0, 60).map(function (b) {
+      return '<li class="' + (b.status === 'fixed' ? 'fixed' : '') + '"><div class="grow"><b>' + esc(b.text) + '</b><div class="small muted">' + ago(b.at) + ' · ' + esc(b.name || '') + (b.cls ? ' · ' + esc(b.cls) : '') + ' · ' + esc(b.where || '') + (b.auto ? ' · <span class="chip">caught automatically</span>' : '') + '</div>' +
+        '<details class="small"><summary>Device details</summary><ul>' + Object.keys(b.info || {}).map(function (k) { return b.info[k] ? '<li><b>' + esc(k) + ':</b> ' + esc(b.info[k]) + '</li>' : ''; }).join('') + '</ul></details></div>' +
+        '<div class="row"><button class="btn small' + (b.status === 'fixed' ? ' ghost' : ' primary') + '" data-act="bug-status" data-id="' + b.id + '" data-status="' + (b.status === 'fixed' ? 'new' : 'fixed') + '">' + (b.status === 'fixed' ? 'Reopen' : '<svg class="i"><use href="#i-check"/></svg> Fixed') + '</button>' +
+        '<button class="btn small ghost" data-act="bug-del" data-id="' + b.id + '" aria-label="Delete this report"><svg class="i"><use href="#i-trash"/></svg></button></div></li>';
+    }).join('') + '</ul></div>';
     return h;
   }
 
@@ -14625,9 +14936,13 @@ var SQ_MAPART = (function () {
     if (!a.board.length) h += '<p class="muted">No scores yet this round. Be the first!</p>';
     else h += '<ol class="lb">' + a.board.map(function (b, i) {
       return '<li class="' + (b.key === a.you ? 'me ' : '') + (i < 3 ? 'top' + (i + 1) : '') + '"><span class="lb-n">' + (i + 1) + '</span>' + avatarImgTag(b.avatar, 'lb-av') +
-        '<span class="lb-name">' + esc(b.name) + (b.title ? '<small>' + esc(b.title) + '</small>' : '') + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>';
+        '<span class="lb-name notr">' + esc(b.name) + (b.title ? '<small>' + esc(b.title) + '</small>' : '') + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>';
     }).join('') + '</ol>';
     h += '<div class="arc-mine"><div><span>Your best this round</span><b>' + fmtN(me.best) + '</b></div><div><span>All-time best</span><b>' + fmtN(me.allBest) + '</b></div></div>';
+    h += '<h3>Score goals</h3><ul class="arc-goals">' + AR.GOALS.map(function (g) {
+      var got = (me.goals || []).indexOf(g[0]) >= 0;
+      return '<li class="' + (got ? 'got' : '') + '"><span>' + (got ? '<svg class="i"><use href="#i-check"/></svg> ' : '') + 'Score ' + fmtN(g[0]) + '</span>' + coinTag(g[1]) + '</li>';
+    }).join('') + '</ul><p class="muted small">Every 100 points also earns 1 coin (up to ' + AR.RUN_COINS + ' a game and ' + AR.DAY_COINS + ' a day). When a round ends, the top 3 win ' + AR.ROUND_PRIZES.join(', ') + ' coins.</p>';
     // trophies (titles earned by score)
     h += '<h3>Arcade titles</h3><ul class="arc-troph">' + A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade; }).map(function (t) {
       var got = me.allBest >= t.unlock.arcade;
@@ -14636,8 +14951,8 @@ var SQ_MAPART = (function () {
     // shop
     if (shop) {
       h += '<section class="card arc-shop"><div class="row between"><h2><svg class="i"><use href="#i-zap"/></svg> Power-up shop</h2><span class="muted small">Each power-up works for one run. Bring up to ' + AR.MAX_POWER + '.</span></div><div class="pu-grid">';
-      h += '<div class="pu-card ticket">' + puIcon('ticket') + '<b>Arcade ticket</b><p>' + a.info.passMin + ' minutes of play. You also get one free for every quest you finish.</p>' +
-        '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span><button class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (a.info.ticketPrice - p.coins) + ' more coins. Earn coins by finishing steps and quests.') + '" data-act="arc-buy" data-item="ticket">' + coinTag(a.info.ticketPrice) + '</button></div></div>';
+      h += '<div class="pu-card ticket">' + puIcon('ticket') + '<b>Arcade ticket</b><p>' + a.info.passMin + ' minutes of play. ' + arcTicketRule() + '</p>' +
+        '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span>' + (a.info.ticketPrice ? '' : '<span class="small muted">Earn only</span>') + '<button' + (a.info.ticketPrice ? '' : ' hidden') + ' class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (a.info.ticketPrice - p.coins) + ' more coins. Earn coins by finishing steps and quests.') + '" data-act="arc-buy" data-item="ticket">' + coinTag(a.info.ticketPrice) + '</button></div></div>';
       AR.POWERUPS.forEach(function (u) {
         var n = me.inv[u.id] || 0, ok = p.coins >= u.price;
         h += '<div class="pu-card">' + puIcon(u.id) + '<b>' + esc(u.name) + '</b><p>' + esc(u.desc) + '</p><div class="pu-foot"><span class="small">' + (n ? 'You have <b>' + n + '</b>' : 'None yet') + '</span>' +
@@ -14647,12 +14962,16 @@ var SQ_MAPART = (function () {
     }
     return h;
   }
+  function arcTicketRule() {
+    var a = S.arc, n = a.info.questsPerTicket || 1;
+    return n === 1 ? 'You earn a ticket for every quest you finish.' : 'You earn a ticket for every ' + n + ' quests you finish (' + a.me.toNext + ' more to go).';
+  }
   function arcPlayPanel() {
     var a = S.arc, me = a.me, m = arcLive();
     if (m === 'off') return '<div class="arc-lock"><svg class="i big-ico"><use href="#i-lock"/></svg><h2>The arcade is locked</h2><p>Your teacher opens it during class. Until then, finish quests to earn tickets' + (shopOn() ? ' and save coins for power-ups' : '') + '.</p><a class="btn primary" href="#/map">Back to my quests</a></div>';
     if (!arcCanPlay()) {
       return '<div class="arc-lock open"><svg class="i big-ico"><use href="#i-gamepad"/></svg><h2>The arcade is open!</h2><p>Use a ticket to play for <b>' + a.info.passMin + ' minutes</b>.</p>' +
-        (me.tickets ? '<button class="btn primary big" data-act="arc-pass">Use a ticket · play ' + a.info.passMin + ' min</button>' : '<p class="muted">You have no tickets yet. Finish a quest to earn one' + (shopOn() ? ', or buy one below' : '') + '.</p>') + '</div>';
+        (me.tickets ? '<button class="btn primary big" data-act="arc-pass">Use a ticket · play ' + a.info.passMin + ' min</button>' : '<p class="muted">You have no tickets yet. ' + arcTicketRule() + (shopOn() && a.info.ticketPrice ? ' You can also buy one below.' : '') + '</p>') + '</div>';
     }
     var sel = S.arcSel || [], inv = me.inv, owned = AR.POWERUPS.filter(function (u) { return inv[u.id]; });
     var h = '<div class="arc-ready"><h2>Ready to play?</h2>';
@@ -14698,10 +15017,13 @@ var SQ_MAPART = (function () {
       S.arcRun = null; S.arc.me = res.me; S.arc.board = res.board; S.me = res.student;
       arcPaint();
       var unlocked = A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade && res.score >= t.unlock.arcade && (before.arcadeBest || 0) < t.unlock.arcade; });
-      if (res.newBest || unlocked.length) { SQ_SOUND.play('badge'); confetti(); }
+      if (res.newBest || unlocked.length || (res.goals || []).length) { SQ_SOUND.play('badge'); confetti(); } else if (res.coins) SQ_SOUND.play('coin');
+      celebrate(before, S.me.profile, null, true);
       modal('<div class="arc-result"><div class="eyebrow">Block Rush</div><div class="arc-big">' + fmtN(res.score) + '</div><p>points</p>' +
         (res.newBest ? '<p class="arc-nb"><svg class="i"><use href="#i-star"/></svg> New personal best!</p>' : '<p class="muted">Your best this round: ' + fmtN(res.me.best) + '</p>') +
         (res.place ? '<p>You are <b>#' + res.place + '</b> on the class leaderboard.</p>' : '') +
+        (res.coins ? '<p class="arc-coins">' + coinTag(res.coins, 'big') + ' coins earned</p>' : '') +
+        (res.goals || []).map(function (g) { return '<p class="arc-nb">Score goal reached: ' + fmtN(g.score) + ' (+' + g.coins + ' coins)</p>'; }).join('') +
         unlocked.map(function (t) { return '<p class="arc-nb">New title unlocked: <b>' + esc(t.name) + '</b></p>'; }).join('') +
         '<div class="row center">' + (arcCanPlay() ? '<button class="btn primary" data-act="arc-again">Play again</button>' : '') + '<button class="btn" data-act="close-modal">Done</button></div></div>', 'arc-modal');
     }).catch(function () { S.arcRun = null; if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; } arcPaint(); });
@@ -14717,8 +15039,9 @@ var SQ_MAPART = (function () {
       }).join('') + '</div>' +
       '<form class="row arc-set" data-form="arc-set" data-id="' + c.id + '"><label>Open for <select name="minutes" id="arc-min-' + c.id + '">' + [15, 30, 45, 60, 90].map(function (n) { return '<option value="' + n + '"' + (n === (S.arcMin || 45) ? ' selected' : '') + '>' + n + ' min</option>'; }).join('') + '</select></label>' +
       '<label>Pass length <select name="passMin">' + [3, 5, 10, 15].map(function (n) { return '<option value="' + n + '"' + (n === a.passMin ? ' selected' : '') + '>' + n + ' min</option>'; }).join('') + '</select></label>' +
-      '<label>Ticket price (coins) <input type="number" name="ticketPrice" min="0" max="500" step="5" value="' + a.ticketPrice + '" class="tiny-input"></label><button class="btn small">Save</button></form>' +
-      '<p class="muted small">It locks itself when the time runs out, so it never stays open after class. Locking ends everyone’s passes right away (a game in progress can finish). Students earn one ticket per finished quest.</p>';
+      '<label>Quests per ticket <select name="questsPerTicket">' + [1, 2, 3, 4, 5].map(function (n) { return '<option value="' + n + '"' + (n === (a.questsPerTicket || 2) ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' +
+      '<label>Ticket price (0 = can’t buy) <input type="number" name="ticketPrice" min="0" max="1000" step="10" value="' + a.ticketPrice + '" class="tiny-input"></label><button class="btn small">Save</button></form>' +
+      '<p class="muted small">It locks itself when the time runs out, so it never stays open after class. Locking ends everyone’s passes right away (a game in progress can finish). Students earn a ticket for every ' + (a.questsPerTicket || 2) + ' finished quest' + ((a.questsPerTicket || 2) === 1 ? '' : 's') + '. Games earn coins (1 per 100 points, up to ' + AR.RUN_COINS + ' a game and ' + AR.DAY_COINS + ' a day), score goals pay one-time prizes, and starting a new round gives the top 3 ' + AR.ROUND_PRIZES.join(', ') + ' coins.</p>';
     h += '<div class="row between"><h3>Top scores this round</h3><button class="btn small ghost" data-act="arc-reset" data-id="' + c.id + '"><svg class="i"><use href="#i-refresh"/></svg> Start a new round</button></div>';
     if (!board) h += '<p class="muted small" id="arc-tboard">Loading…</p>';
     else if (!board.length) h += '<p class="muted small">No scores yet.</p>';
@@ -15017,7 +15340,7 @@ var SQ_MAPART = (function () {
         '<button class="cs-btn" data-act="cs-bell" title="Test the help doorbell (also turns on sound on this computer)" aria-label="Test the doorbell">🔔</button>' +
         '<button class="cs-btn" data-act="cs-setup" title="Set up the screen"><svg class="i"><use href="#i-sliders"/></svg> <span>Set up</span></button><button class="cs-btn" data-act="cs-full" title="Full screen"><svg class="i"><use href="#i-maximize"/></svg> <span>Full screen</span></button><a class="cs-btn" href="#/t/dash" title="Exit"><svg class="i"><use href="#i-x"/></svg> <span>Exit</span></a></div></header>' +
         '<div class="cs-grid"><section class="cs-main">' +
-        '<div class="cs-card cs-racebox"><div class="cs-race-h"><h2 id="cs-race-h"></h2><div class="cs-race-meta" id="cs-race-meta"></div><div class="cs-views" id="cs-views"></div></div>' +
+        '<div class="cs-card cs-racebox"><div class="cs-race-h"><h2 id="cs-race-h"></h2><div class="cs-race-meta" id="cs-race-meta"></div><div class="cs-pick" id="cs-quest-pick"></div><div class="cs-views" id="cs-views"></div></div>' +
         '<div id="cs-race" class="cs-race"></div><div id="cs-others" class="cs-others"></div></div>' +
         '<div class="cs-row2"><div class="cs-card cs-mission"><h2><svg class="i"><use href="#i-target"/></svg> What to work on</h2><div id="cs-mission"></div></div>' +
         '<div class="cs-card cs-helpbox" id="cs-helpbox"><h2><svg class="i"><use href="#i-help"/></svg> Who to ask for help</h2><div id="cs-help"></div></div></div>' +
@@ -15047,6 +15370,8 @@ var SQ_MAPART = (function () {
     csSet('cs-views', [['quest', 'Today\'s quest'], ['map', 'Whole map']].concat(teams.length ? [['teams', 'Teams']] : []).map(function (v) {
       return '<button class="cs-chip' + (v[0] === view ? ' on' : '') + '" data-act="cs-view" data-v="' + v[0] + '">' + v[1] + '</button>';
     }).join(''));
+    csSet('cs-quest-pick', view === 'quest' ? '<label>Showing <select data-act="cs-quest" aria-label="Quest shown on the track"><option value="">Auto (where most students are)</option>' + R.NODES.map(function (n) {
+      return '<option value="' + n.id + '"' + (sc.raceQuest === n.id ? ' selected' : '') + '>Quest ' + n.tier + ': ' + esc(title(n.id)) + '</option>'; }).join('') + '</select></label>' : '');
     // ---- the track ("race to the finish") ----
     var stations, groups = {};
     if (view === 'quest' && race) {
@@ -15335,6 +15660,7 @@ var SQ_MAPART = (function () {
       '<label class="switch"><input type="checkbox" name="autoRead"' + ((s.state.accom || {}).autoRead ? ' checked' : '') + '> Read each card aloud automatically</label>' +
       '<input name="note" maxlength="300" placeholder="Private note (e.g. IEP: extended time, chunked tasks)" value="' + esc(s.accomNote || '') + '">' +
       '<button class="btn">Save accommodations</button></form>' +
+      '<h2><svg class="i"><use href="#i-eye"/></svg> Display</h2><form data-form="stu-display" data-email="' + esc(email) + '" class="stack accom-form">' + displayFields(s.state.display) + '<button class="btn">Save display settings</button></form>' +
       '<button class="btn danger small" data-act="remove-stu" data-email="' + esc(email) + '">Remove student</button></div></div>';
     h += '<div class="card"><h2><svg class="i"><use href="#i-map"/></svg> Quests</h2><table class="qtable"><thead><tr><th>Quest</th><th>Status</th><th>Steps</th><th>Quick check</th><th><svg class="i"><use href="#i-zap"/></svg></th><th>Project / reflection</th><th></th></tr></thead><tbody>';
     R.NODES.forEach(function (n) {
@@ -15525,6 +15851,23 @@ var SQ_MAPART = (function () {
       return;
     }
     if (act === 't-projector') { go('#/t/projector'); return; }
+    if (act === 'display') {
+      modal('<h2><svg class="i"><use href="#i-sliders"/></svg> Display</h2><p class="muted">Make Scratch Quest easier for you to read.</p><form data-form="display" class="stack accom-form">' + displayFields(disp()) +
+        '<button class="btn primary big">Save</button></form>');
+      return;
+    }
+    if (act === 'bug') {
+      modal('<h2><svg class="i"><use href="#i-bug"/></svg> Report a bug</h2><p class="muted">Something not working? Tell us what happened.</p><form data-form="bug" class="stack">' +
+        '<label>What went wrong? What did you click just before? <textarea name="text" rows="4" maxlength="600" required placeholder="e.g. I clicked I did it! and nothing happened"></textarea></label>' +
+        '<p class="small muted">We also send the page you are on (' + esc(bugWhere()) + '), your screen size, and the kind of computer, so the bug can be fixed.</p><button class="btn primary big">Send report</button></form>');
+      return;
+    }
+    if (act === 'bug-copy') { copyText(bugsMarkdown()); return; }
+    if (act === 'bug-status' || act === 'bug-del') {
+      var bargs = { id: t.getAttribute('data-id') }; if (act === 'bug-del') bargs.remove = true; else bargs.status = t.getAttribute('data-status');
+      call('bugUpdate', bargs).then(function (res) { S.bugs = res.bugs; S.teacher.newBugs = res.bugs.filter(function (b) { return b.status === 'new'; }).length; render(); }).catch(function () { });
+      return;
+    }
     if (act === 'ask-help') {
       var hs = t.getAttribute('data-step');
       modal('<h2><span class="hand">✋</span> Ask for help</h2><p class="muted">Your teacher will see where you are. Keep trying while you wait!</p><form data-form="ask-help" data-node="' + t.getAttribute('data-node') + '" data-step="' + esc(hs) + '" class="stack">' +
@@ -15583,8 +15926,8 @@ var SQ_MAPART = (function () {
     }
     if (act === 'arc-reset') {
       var rid = t.getAttribute('data-id');
-      ask('Start a new leaderboard round? Current top scores are cleared from the board (students keep their all-time best and titles).', 'Start new round').then(function (ok) {
-        if (ok) call('setArcade', { classId: rid, resetBoard: true }).then(function (res) { S.tArcBoard[rid] = res.board; toast('New round started'); render(); }).catch(function () { });
+      ask('Start a new leaderboard round? The top 3 win coin prizes, then the board is cleared (students keep their all-time best and titles).', 'Start new round').then(function (ok) {
+        if (ok) call('setArcade', { classId: rid, resetBoard: true }).then(function (res) { S.tArcBoard[rid] = res.board; toast('New round started.' + ((res.winners || []).length ? ' Prizes: ' + res.winners.map(function (w) { return esc(w.name) + ' +' + w.coins; }).join(', ') : '')); render(); }).catch(function () { });
       });
       return;
     }
@@ -15639,6 +15982,9 @@ var SQ_MAPART = (function () {
     var pv = document.getElementById('gc-preview'); if (pv) pv.textContent = gcLabel(gf.elements.word.value, gf.elements.unit.value, 3) + ': ' + title('t3');
     gf.querySelectorAll('.gc-num').forEach(function (el, i) { el.textContent = (gf.elements.unit.value.trim() ? gf.elements.unit.value.trim() + '.' : '') + (i + 1); });
   });
+  document.addEventListener('change', function (e) {
+    if (e.target.getAttribute && e.target.getAttribute('data-act') === 'cs-quest') csSave({ raceQuest: e.target.value }).catch(function () { });
+  });
   ['input', 'change'].forEach(function (ev) {
     document.addEventListener(ev, function (e) { var z = e.target.closest && e.target.closest('.lockzone'); if (z) { if (e.target.type === 'checkbox' && ev === 'change') SQ_SOUND.play('tap'); lockUpdate(z); } });
   });
@@ -15654,7 +16000,10 @@ var SQ_MAPART = (function () {
     var p;
     var lockBtn = f.querySelector('[aria-disabled="true"]');
     if (lockBtn) { if (btn) btn.disabled = false; lockedClick(lockBtn); return; }
-    if (kind === 'ask-help') p = call('askHelp', { node: f.getAttribute('data-node'), step: /^\d+$/.test(f.getAttribute('data-step')) ? +f.getAttribute('data-step') : (f.getAttribute('data-step') || null), note: v.note }).then(function (res) {
+    if (kind === 'display') p = call('setDisplay', { display: displayFrom(v) }).then(function (res) { S.me = res.student; closeModal(); render(); toast('Display settings saved'); });
+    else if (kind === 'stu-display') p = call('updateStudent', { email: f.getAttribute('data-email'), display: displayFrom(v) }).then(function () { return loadTeacher(); }).then(function () { toast('Display settings saved for this student'); render(); });
+    else if (kind === 'bug') p = call('reportBug', { text: v.text, where: bugWhere(), info: bugInfo() }).then(function () { closeModal(); S.bugs = null; toast('<svg class="i"><use href="#i-check"/></svg> Thanks! Your report was sent to your teacher.'); });
+    else if (kind === 'ask-help') p = call('askHelp', { node: f.getAttribute('data-node'), step: /^\d+$/.test(f.getAttribute('data-step')) ? +f.getAttribute('data-step') : (f.getAttribute('data-step') || null), note: v.note }).then(function (res) {
       S.help = res.help; closeModal(); SQ_SOUND.play('pop'); toast('<span class="t-ico">✋</span><div><b>Help is on the way!</b><br>Keep trying while you wait.</div>'); S.keepScroll = true; var y9 = window.scrollY; render(); window.scrollTo(0, y9);
     });
     else if (kind === 'confusing') {
@@ -15677,7 +16026,7 @@ var SQ_MAPART = (function () {
       render();
     });
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
-    else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
+    else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice, questsPerTicket: +v.questsPerTicket }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
     else if (kind === 'class-set') {
       var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });

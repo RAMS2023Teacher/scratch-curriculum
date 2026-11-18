@@ -83,7 +83,19 @@
   function closeModal() { var m = document.querySelector('.modal-wrap'); if (m) m.remove(); }
   function renderBlocks() {
     if (typeof scratchblocks === 'undefined') return;
-    try { scratchblocks.renderMatching('pre.blocks', { style: 'scratch3', languages: ['en'], scale: 0.85 }); } catch (e) { /* show as text */ }
+    try {
+      if (SQ_I18N.lang() === 'pt' && typeof SQ_BLOCKS_PT !== 'undefined') {
+        // draw the blocks in Brazilian Portuguese so they match a Scratch editor set to Portuguese
+        if (!scratchblocks.allLanguages.pt_br) scratchblocks.loadLanguages({ pt_br: SQ_BLOCKS_PT });
+        document.querySelectorAll('pre.blocks').forEach(function (pre) {
+          var doc = scratchblocks.parse(pre.textContent, { languages: ['en'] });
+          doc.translate(scratchblocks.allLanguages.pt_br);
+          var svg = scratchblocks.render(doc, { style: 'scratch3', scale: 0.85 });
+          var box = document.createElement('div'); box.className = 'scratchblocks'; box.appendChild(svg);
+          pre.parentNode.replaceChild(box, pre);
+        });
+      } else scratchblocks.renderMatching('pre.blocks', { style: 'scratch3', languages: ['en'], scale: 0.85 });
+    } catch (e) { /* show as text */ }
   }
   function videoEmbed(url) {
     if (!url) return '';
@@ -198,7 +210,7 @@
     if (isTeacher() && route()[0] === 't') {
       var pending = S.teacher ? pendingList().length : 0;
       tabs = [['#/t/dash', '<svg class="i"><use href="#i-chart"/></svg>', 'Dashboard'], ['#/t/review', '<svg class="i"><use href="#i-inbox"/></svg>', 'Review' + (pending ? ' <span class="pill">' + pending + '</span>' : '')],
-        ['#/t/map', '<svg class="i"><use href="#i-map"/></svg>', 'Class Map'], ['#/t/lessons', '<svg class="i"><use href="#i-library"/></svg>', 'Lessons'], ['#/t/standards', '<svg class="i"><use href="#i-ruler"/></svg>', 'Standards'], ['#/t/feedback', '<svg class="i"><use href="#i-message"/></svg>', 'Feedback'], ['#/t/classroom', '<svg class="i"><use href="#i-school"/></svg>', 'Classroom'], ['#/t/classes', '<svg class="i"><use href="#i-sliders"/></svg>', 'Classes']];
+        ['#/t/map', '<svg class="i"><use href="#i-map"/></svg>', 'Class Map'], ['#/t/lessons', '<svg class="i"><use href="#i-library"/></svg>', 'Lessons'], ['#/t/standards', '<svg class="i"><use href="#i-ruler"/></svg>', 'Standards'], ['#/t/feedback', '<svg class="i"><use href="#i-message"/></svg>', 'Feedback' + (S.teacher && S.teacher.newBugs ? ' <span class="pill">' + S.teacher.newBugs + '</span>' : '')], ['#/t/classroom', '<svg class="i"><use href="#i-school"/></svg>', 'Classroom'], ['#/t/classes', '<svg class="i"><use href="#i-sliders"/></svg>', 'Classes']];
     } else {
       tabs = [['#/map', '<svg class="i"><use href="#i-map"/></svg>', 'Quest Map'], ['#/avatar', '<svg class="i"><use href="#i-palette"/></svg>', 'My Avatar'], ['#/badges', '<svg class="i"><use href="#i-award"/></svg>', 'Badges'], ['#/arcade', '<svg class="i"><use href="#i-gamepad"/></svg>', 'Arcade'], ['#/class', '<svg class="i"><use href="#i-users"/></svg>', 'My Class']];
     }
@@ -208,7 +220,9 @@
       var active = cur.indexOf(t[0]) === 0 || (t[0] === '#/map' && cur.indexOf('#/quest') === 0);
       html += '<a href="' + t[0] + '" class="' + (active ? 'on' : '') + '"><span aria-hidden="true">' + t[1] + '</span> <span class="tl">' + t[2] + '</span></a>';
     });
-    html += '</nav><div class="me"><button class="snd-btn' + (SQ_SOUND.muted() ? ' off' : '') + '" data-act="sound-toggle" title="' + (SQ_SOUND.muted() ? 'Sound is off' : 'Sound is on') + '" aria-label="' + (SQ_SOUND.muted() ? 'Turn sound on' : 'Turn sound off') + '"><svg class="i"><use href="#i-volume"/></svg></button>';
+    html += '</nav><div class="me"><button class="snd-btn' + (SQ_SOUND.muted() ? ' off' : '') + '" data-act="sound-toggle" title="' + (SQ_SOUND.muted() ? 'Sound is off' : 'Sound is on') + '" aria-label="' + (SQ_SOUND.muted() ? 'Turn sound on' : 'Turn sound off') + '"><svg class="i"><use href="#i-volume"/></svg></button>' +
+      (S.me && r !== 't' ? '<button class="snd-btn" data-act="display" title="Display settings" aria-label="Display settings"><svg class="i"><use href="#i-sliders"/></svg></button>' : '') +
+      (S.me || isTeacher() ? '<button class="snd-btn" data-act="bug" title="Report a bug" aria-label="Report a bug"><svg class="i"><use href="#i-bug"/></svg></button>' : '');
     if (isTeacher()) {
       html += r === 't'
         ? (S.me ? '<a class="btn small ghost" href="#/map"><svg class="i"><use href="#i-eye"/></svg> Student view</a>' : '<button class="btn small ghost" data-act="teacher-try"><svg class="i"><use href="#i-eye"/></svg> Try as student</button>')
@@ -242,6 +256,7 @@
     (S.polls || []).forEach(clearInterval); S.polls = [];
     var r = route();
     if (!S.boot) return;
+    applyDisplay();
     if (r[0] === 't') {
       if (!isTeacher()) return go('#/map');
       return renderTeacher(r);
@@ -319,7 +334,7 @@
     var p = prof(), st = S.me.state;
     var next = suggestNext(st);
     var html = '<div class="map-layout"><aside class="map-side">';
-    html += '<div class="card hello"><div class="hello-av">' + A.svg(st.avatar, 84) + '</div><div><h2>Hi, ' + esc(S.me.name) + '!</h2>' + (A.titleText(st.avatar) ? '<div class="np-title sm">' + esc(A.titleText(st.avatar)) + '</div>' : '') + '<p class="muted">' + esc(S.cls.name) + '</p>' +
+    html += '<div class="card hello"><div class="hello-av">' + A.svg(st.avatar, 84) + '</div><div><h2 class="notr">Hi, ' + esc(S.me.name) + '!</h2>' + (A.titleText(st.avatar) ? '<div class="np-title sm">' + esc(A.titleText(st.avatar)) + '</div>' : '') + '<p class="muted">' + esc(S.cls.name) + '</p>' +
       '<p><b>' + p.doneCount + '</b> quests done · <b>' + p.badges.length + '</b> badges</p></div></div>';
     html += goalCard(p, true);
     if (next) {
@@ -814,7 +829,9 @@
     var text = parts.join('. ').replace(/[✅📨📖💡🎯🔥⚡]/gu, '').replace(/→|➜/g, ', then ').replace(/[\[\]()]/g, '').replace(/\s+/g, ' ').replace(/\.\s*\./g, '.');
     var u = new SpeechSynthesisUtterance(text);
     u.rate = 0.92; u.pitch = 1.05; u.lang = 'en-US';
-    var v = pickVoice(); if (v) u.voice = v;
+    var v = pickVoice();
+    if (SQ_I18N.lang() === 'pt') { u.lang = 'pt-BR'; v = (speech.getVoices() || []).filter(function (x) { return /^pt/i.test(x.lang); }).sort(function (a, b) { return /BR/i.test(b.lang) - /BR/i.test(a.lang); })[0] || null; }
+    if (v) u.voice = v;
     u.onend = u.onerror = function () { btn.classList.remove('on'); btn.querySelector('span').textContent = 'Read to me'; };
     btn.classList.add('on'); btn.querySelector('span').textContent = 'Stop';
     speech.speak(u);
@@ -881,7 +898,7 @@
       '<div class="pedestal' + (S.studioBurst ? ' burst' : '') + '"><div class="spot"></div>' +
       '<i class="tw t1"></i><i class="tw t2"></i><i class="tw t3"></i><i class="tw t4"></i><i class="tw t5"></i>' +
       '<div class="stage-av">' + A.svg(d, 230, { title: 'Your character' }) + '</div><div class="plinth"></div></div>' +
-      '<div class="nameplate"><b>' + esc(S.me.name) + '</b>' + (title ? '<span class="np-title">' + esc(title) + '</span>' : '') + '<span class="np-lv">Level ' + p.level + ' · ' + esc(p.rank) + '</span></div>';
+      '<div class="nameplate"><b class="notr">' + esc(S.me.name) + '</b>' + (title ? '<span class="np-title">' + esc(title) + '</span>' : '') + '<span class="np-lv">Level ' + p.level + ' · ' + esc(p.rank) + '</span></div>';
     if (owe.length) {
       var cost = owe.reduce(function (a, x) { return a + x.item.unlock.price; }, 0);
       h += '<div class="tryon"><b>Trying on:</b> ' + owe.map(function (x) { return esc(x.item.name); }).join(', ') + ' (' + coinTag(cost) + ')' +
@@ -1097,6 +1114,7 @@
       '<label class="switch small"><input type="checkbox" data-act="fb-all"' + (S.fbAll ? ' checked' : '') + '> All my classes</label></div>' +
       '<div class="t-actions"><button class="btn primary" data-act="fb-copy"' + (ids.length ? '' : ' disabled') + '><svg class="i"><use href="#i-clipboard"/></svg> Copy report for Claude</button><button class="btn" data-act="fb-download"' + (ids.length ? '' : ' disabled') + '><svg class="i"><use href="#i-save"/></svg> Download .md</button></div></div>';
     h += '<div class="banner small"><svg class="i"><use href="#i-alert"/></svg> The report leaves out student names, but students type their own notes. Skim them for names before you paste the report into an AI tool.</div>';
+    h += tBugs();
     if (!ids.length) return h + '<div class="card"><h2>No feedback yet</h2><p>Students can tap <b>🤔 Confusing?</b> under any step or quick check, ask for help with <b>✋ I’m stuck</b>, and rate each quest when they turn it in (+' + R.XP.rate + ' XP).</p></div>';
     ids.forEach(function (id) {
       var o = fbStats(id, ss), Lx = L[id];
@@ -1112,6 +1130,75 @@
       if (quotes.length) h += '<h3>Students said</h3><ul class="fb-quotes">' + quotes.slice(0, 6).map(function (q) { return '<li><span class="muted small">' + q[0] + ':</span> “' + esc(q[1]) + '”</li>'; }).join('') + '</ul>';
       h += '</div>';
     });
+    return h;
+  }
+
+  // ------------------------------------------------------------ display settings, translation, bug reports
+  function disp() { return (S.me && S.me.state.display) || {}; }
+  function applyDisplay() {
+    var d = route()[0] === 't' ? {} : disp(), h = document.documentElement;
+    h.classList.toggle('fs-l', d.size === 'l'); h.classList.toggle('fs-xl', d.size === 'xl');
+    h.classList.toggle('font-easy', d.font === 'easy'); h.classList.toggle('hc', !!d.contrast); h.classList.toggle('rm', !!d.motion);
+    SQ_I18N.set(d.lang === 'pt' ? 'pt' : 'en', function (lang, items) { return API.call('translate', { lang: lang, items: items }).then(function (r) { return r.out; }); });
+  }
+  function displayFields(d) {
+    d = d || {};
+    return '<label>Text size <select name="size">' + [['m', 'Normal'], ['l', 'Large'], ['xl', 'Extra large']].map(function (x) { return '<option value="' + x[0] + '"' + ((d.size || 'm') === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label>' +
+      '<label>Language <select name="lang" class="notr"><option value="en"' + (d.lang !== 'pt' ? ' selected' : '') + '>English</option><option value="pt"' + (d.lang === 'pt' ? ' selected' : '') + '>Português (Brasil)</option></select></label>' +
+      '<label class="switch"><input type="checkbox" name="font"' + (d.font === 'easy' ? ' checked' : '') + '> Easy-to-read letters</label>' +
+      '<label class="switch"><input type="checkbox" name="contrast"' + (d.contrast ? ' checked' : '') + '> Stronger contrast (darker text and outlines)</label>' +
+      '<label class="switch"><input type="checkbox" name="motion"' + (d.motion ? ' checked' : '') + '> Less movement (calmer animations)</label>';
+  }
+  function displayFrom(v) { return { size: v.size, lang: v.lang, font: v.font ? 'easy' : 'default', contrast: !!v.contrast, motion: !!v.motion }; }
+  // remember the last few errors so a bug report can include them
+  var ERRS = [], AUTO = {};
+  function noteError(msg) {
+    msg = String(msg || 'Error').slice(0, 300);
+    ERRS.push(msg); if (ERRS.length > 5) ERRS.shift();
+    if (S.boot && (S.me || isTeacher()) && !AUTO[msg] && Object.keys(AUTO).length < 3) {
+      AUTO[msg] = 1;
+      API.call('reportBug', { auto: true, text: msg, where: location.hash, info: bugInfo() }).catch(function () { });
+    }
+  }
+  window.addEventListener('error', function (e) { noteError((e.message || 'Error') + (e.filename ? ' @' + String(e.filename).split('/').pop() + ':' + e.lineno : '')); });
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; if (r && r.name && r.name !== 'Error') noteError(r.name + ': ' + r.message); });
+  function bugInfo() {
+    var r = route(), o = { page: location.hash || '#/map', screen: innerWidth + 'x' + innerHeight, device: navigator.userAgent, build: typeof SQ_BUILD === 'undefined' ? '' : SQ_BUILD,
+      online: String(navigator.onLine), display: JSON.stringify(disp()), errors: ERRS.join(' | ') };
+    if (r[0] === 'quest' && S.card) o.card = 'card ' + ((S.card[r[1]] || 0) + 1);
+    return o;
+  }
+  function bugWhere() {
+    var r = route();
+    if (r[0] === 'quest' && L[r[1]]) return 'Quest: ' + L[r[1]].title + ', card ' + (((S.card || {})[r[1]] || 0) + 1);
+    return 'Page: ' + (location.hash || '#/map');
+  }
+  function loadBugs() {
+    if (S.bugs) return;
+    S.bugs = [];
+    call('bugList', {}).then(function (res) { S.bugs = res.bugs; S.bugsLoaded = true; if (route()[1] === 'feedback') render(); }).catch(function () { S.bugs = null; });
+  }
+  function bugsMarkdown() {
+    var md = '# Scratch Quest bug reports\n\nReported from student and teacher devices. Names are removed. The app source is in `src/` (see `src/app.js` for the page code and `src/service.js` for the server rules).\n';
+    (S.bugs || []).filter(function (b) { return b.status !== 'fixed'; }).forEach(function (b, i) {
+      md += '\n## ' + (i + 1) + '. ' + b.text.replace(/\n/g, ' ') + '\n\n- When: ' + new Date(b.at).toISOString().slice(0, 16).replace('T', ' ') + ' UTC' + (b.auto ? ' (caught automatically)' : ' (typed by a ' + (b.cls === 'teacher' ? 'teacher' : 'student') + ')') + '\n- Where: ' + (b.where || '?') + '\n';
+      Object.keys(b.info || {}).forEach(function (k) { if (b.info[k]) md += '- ' + k + ': ' + b.info[k] + '\n'; });
+    });
+    return md;
+  }
+  function tBugs() {
+    loadBugs();
+    var list = S.bugs || [], open = list.filter(function (b) { return b.status !== 'fixed'; });
+    var h = '<div class="card bug-card"><div class="row between"><h2><svg class="i"><use href="#i-bug"/></svg> Bug reports ' + (open.length ? '<span class="pill">' + open.length + '</span>' : '') + '</h2>' +
+      '<button class="btn small" data-act="bug-copy"' + (open.length ? '' : ' disabled') + '><svg class="i"><use href="#i-clipboard"/></svg> Copy for Claude</button></div>';
+    if (!S.bugsLoaded) return h + '<p class="muted small">Loading…</p></div>';
+    if (!list.length) return h + '<p class="muted small">No bug reports. Students and teachers can send one with the bug button at the top of any page. Errors on a student’s Chromebook are also reported automatically.</p></div>';
+    h += '<ul class="bug-list">' + list.slice(0, 60).map(function (b) {
+      return '<li class="' + (b.status === 'fixed' ? 'fixed' : '') + '"><div class="grow"><b>' + esc(b.text) + '</b><div class="small muted">' + ago(b.at) + ' · ' + esc(b.name || '') + (b.cls ? ' · ' + esc(b.cls) : '') + ' · ' + esc(b.where || '') + (b.auto ? ' · <span class="chip">caught automatically</span>' : '') + '</div>' +
+        '<details class="small"><summary>Device details</summary><ul>' + Object.keys(b.info || {}).map(function (k) { return b.info[k] ? '<li><b>' + esc(k) + ':</b> ' + esc(b.info[k]) + '</li>' : ''; }).join('') + '</ul></details></div>' +
+        '<div class="row"><button class="btn small' + (b.status === 'fixed' ? ' ghost' : ' primary') + '" data-act="bug-status" data-id="' + b.id + '" data-status="' + (b.status === 'fixed' ? 'new' : 'fixed') + '">' + (b.status === 'fixed' ? 'Reopen' : '<svg class="i"><use href="#i-check"/></svg> Fixed') + '</button>' +
+        '<button class="btn small ghost" data-act="bug-del" data-id="' + b.id + '" aria-label="Delete this report"><svg class="i"><use href="#i-trash"/></svg></button></div></li>';
+    }).join('') + '</ul></div>';
     return h;
   }
 
@@ -1168,9 +1255,13 @@
     if (!a.board.length) h += '<p class="muted">No scores yet this round. Be the first!</p>';
     else h += '<ol class="lb">' + a.board.map(function (b, i) {
       return '<li class="' + (b.key === a.you ? 'me ' : '') + (i < 3 ? 'top' + (i + 1) : '') + '"><span class="lb-n">' + (i + 1) + '</span>' + avatarImgTag(b.avatar, 'lb-av') +
-        '<span class="lb-name">' + esc(b.name) + (b.title ? '<small>' + esc(b.title) + '</small>' : '') + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>';
+        '<span class="lb-name notr">' + esc(b.name) + (b.title ? '<small>' + esc(b.title) + '</small>' : '') + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>';
     }).join('') + '</ol>';
     h += '<div class="arc-mine"><div><span>Your best this round</span><b>' + fmtN(me.best) + '</b></div><div><span>All-time best</span><b>' + fmtN(me.allBest) + '</b></div></div>';
+    h += '<h3>Score goals</h3><ul class="arc-goals">' + AR.GOALS.map(function (g) {
+      var got = (me.goals || []).indexOf(g[0]) >= 0;
+      return '<li class="' + (got ? 'got' : '') + '"><span>' + (got ? '<svg class="i"><use href="#i-check"/></svg> ' : '') + 'Score ' + fmtN(g[0]) + '</span>' + coinTag(g[1]) + '</li>';
+    }).join('') + '</ul><p class="muted small">Every 100 points also earns 1 coin (up to ' + AR.RUN_COINS + ' a game and ' + AR.DAY_COINS + ' a day). When a round ends, the top 3 win ' + AR.ROUND_PRIZES.join(', ') + ' coins.</p>';
     // trophies (titles earned by score)
     h += '<h3>Arcade titles</h3><ul class="arc-troph">' + A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade; }).map(function (t) {
       var got = me.allBest >= t.unlock.arcade;
@@ -1179,8 +1270,8 @@
     // shop
     if (shop) {
       h += '<section class="card arc-shop"><div class="row between"><h2><svg class="i"><use href="#i-zap"/></svg> Power-up shop</h2><span class="muted small">Each power-up works for one run. Bring up to ' + AR.MAX_POWER + '.</span></div><div class="pu-grid">';
-      h += '<div class="pu-card ticket">' + puIcon('ticket') + '<b>Arcade ticket</b><p>' + a.info.passMin + ' minutes of play. You also get one free for every quest you finish.</p>' +
-        '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span><button class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (a.info.ticketPrice - p.coins) + ' more coins. Earn coins by finishing steps and quests.') + '" data-act="arc-buy" data-item="ticket">' + coinTag(a.info.ticketPrice) + '</button></div></div>';
+      h += '<div class="pu-card ticket">' + puIcon('ticket') + '<b>Arcade ticket</b><p>' + a.info.passMin + ' minutes of play. ' + arcTicketRule() + '</p>' +
+        '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span>' + (a.info.ticketPrice ? '' : '<span class="small muted">Earn only</span>') + '<button' + (a.info.ticketPrice ? '' : ' hidden') + ' class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (a.info.ticketPrice - p.coins) + ' more coins. Earn coins by finishing steps and quests.') + '" data-act="arc-buy" data-item="ticket">' + coinTag(a.info.ticketPrice) + '</button></div></div>';
       AR.POWERUPS.forEach(function (u) {
         var n = me.inv[u.id] || 0, ok = p.coins >= u.price;
         h += '<div class="pu-card">' + puIcon(u.id) + '<b>' + esc(u.name) + '</b><p>' + esc(u.desc) + '</p><div class="pu-foot"><span class="small">' + (n ? 'You have <b>' + n + '</b>' : 'None yet') + '</span>' +
@@ -1190,12 +1281,16 @@
     }
     return h;
   }
+  function arcTicketRule() {
+    var a = S.arc, n = a.info.questsPerTicket || 1;
+    return n === 1 ? 'You earn a ticket for every quest you finish.' : 'You earn a ticket for every ' + n + ' quests you finish (' + a.me.toNext + ' more to go).';
+  }
   function arcPlayPanel() {
     var a = S.arc, me = a.me, m = arcLive();
     if (m === 'off') return '<div class="arc-lock"><svg class="i big-ico"><use href="#i-lock"/></svg><h2>The arcade is locked</h2><p>Your teacher opens it during class. Until then, finish quests to earn tickets' + (shopOn() ? ' and save coins for power-ups' : '') + '.</p><a class="btn primary" href="#/map">Back to my quests</a></div>';
     if (!arcCanPlay()) {
       return '<div class="arc-lock open"><svg class="i big-ico"><use href="#i-gamepad"/></svg><h2>The arcade is open!</h2><p>Use a ticket to play for <b>' + a.info.passMin + ' minutes</b>.</p>' +
-        (me.tickets ? '<button class="btn primary big" data-act="arc-pass">Use a ticket · play ' + a.info.passMin + ' min</button>' : '<p class="muted">You have no tickets yet. Finish a quest to earn one' + (shopOn() ? ', or buy one below' : '') + '.</p>') + '</div>';
+        (me.tickets ? '<button class="btn primary big" data-act="arc-pass">Use a ticket · play ' + a.info.passMin + ' min</button>' : '<p class="muted">You have no tickets yet. ' + arcTicketRule() + (shopOn() && a.info.ticketPrice ? ' You can also buy one below.' : '') + '</p>') + '</div>';
     }
     var sel = S.arcSel || [], inv = me.inv, owned = AR.POWERUPS.filter(function (u) { return inv[u.id]; });
     var h = '<div class="arc-ready"><h2>Ready to play?</h2>';
@@ -1241,10 +1336,13 @@
       S.arcRun = null; S.arc.me = res.me; S.arc.board = res.board; S.me = res.student;
       arcPaint();
       var unlocked = A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade && res.score >= t.unlock.arcade && (before.arcadeBest || 0) < t.unlock.arcade; });
-      if (res.newBest || unlocked.length) { SQ_SOUND.play('badge'); confetti(); }
+      if (res.newBest || unlocked.length || (res.goals || []).length) { SQ_SOUND.play('badge'); confetti(); } else if (res.coins) SQ_SOUND.play('coin');
+      celebrate(before, S.me.profile, null, true);
       modal('<div class="arc-result"><div class="eyebrow">Block Rush</div><div class="arc-big">' + fmtN(res.score) + '</div><p>points</p>' +
         (res.newBest ? '<p class="arc-nb"><svg class="i"><use href="#i-star"/></svg> New personal best!</p>' : '<p class="muted">Your best this round: ' + fmtN(res.me.best) + '</p>') +
         (res.place ? '<p>You are <b>#' + res.place + '</b> on the class leaderboard.</p>' : '') +
+        (res.coins ? '<p class="arc-coins">' + coinTag(res.coins, 'big') + ' coins earned</p>' : '') +
+        (res.goals || []).map(function (g) { return '<p class="arc-nb">Score goal reached: ' + fmtN(g.score) + ' (+' + g.coins + ' coins)</p>'; }).join('') +
         unlocked.map(function (t) { return '<p class="arc-nb">New title unlocked: <b>' + esc(t.name) + '</b></p>'; }).join('') +
         '<div class="row center">' + (arcCanPlay() ? '<button class="btn primary" data-act="arc-again">Play again</button>' : '') + '<button class="btn" data-act="close-modal">Done</button></div></div>', 'arc-modal');
     }).catch(function () { S.arcRun = null; if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; } arcPaint(); });
@@ -1260,8 +1358,9 @@
       }).join('') + '</div>' +
       '<form class="row arc-set" data-form="arc-set" data-id="' + c.id + '"><label>Open for <select name="minutes" id="arc-min-' + c.id + '">' + [15, 30, 45, 60, 90].map(function (n) { return '<option value="' + n + '"' + (n === (S.arcMin || 45) ? ' selected' : '') + '>' + n + ' min</option>'; }).join('') + '</select></label>' +
       '<label>Pass length <select name="passMin">' + [3, 5, 10, 15].map(function (n) { return '<option value="' + n + '"' + (n === a.passMin ? ' selected' : '') + '>' + n + ' min</option>'; }).join('') + '</select></label>' +
-      '<label>Ticket price (coins) <input type="number" name="ticketPrice" min="0" max="500" step="5" value="' + a.ticketPrice + '" class="tiny-input"></label><button class="btn small">Save</button></form>' +
-      '<p class="muted small">It locks itself when the time runs out, so it never stays open after class. Locking ends everyone’s passes right away (a game in progress can finish). Students earn one ticket per finished quest.</p>';
+      '<label>Quests per ticket <select name="questsPerTicket">' + [1, 2, 3, 4, 5].map(function (n) { return '<option value="' + n + '"' + (n === (a.questsPerTicket || 2) ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' +
+      '<label>Ticket price (0 = can’t buy) <input type="number" name="ticketPrice" min="0" max="1000" step="10" value="' + a.ticketPrice + '" class="tiny-input"></label><button class="btn small">Save</button></form>' +
+      '<p class="muted small">It locks itself when the time runs out, so it never stays open after class. Locking ends everyone’s passes right away (a game in progress can finish). Students earn a ticket for every ' + (a.questsPerTicket || 2) + ' finished quest' + ((a.questsPerTicket || 2) === 1 ? '' : 's') + '. Games earn coins (1 per 100 points, up to ' + AR.RUN_COINS + ' a game and ' + AR.DAY_COINS + ' a day), score goals pay one-time prizes, and starting a new round gives the top 3 ' + AR.ROUND_PRIZES.join(', ') + ' coins.</p>';
     h += '<div class="row between"><h3>Top scores this round</h3><button class="btn small ghost" data-act="arc-reset" data-id="' + c.id + '"><svg class="i"><use href="#i-refresh"/></svg> Start a new round</button></div>';
     if (!board) h += '<p class="muted small" id="arc-tboard">Loading…</p>';
     else if (!board.length) h += '<p class="muted small">No scores yet.</p>';
@@ -1560,7 +1659,7 @@
         '<button class="cs-btn" data-act="cs-bell" title="Test the help doorbell (also turns on sound on this computer)" aria-label="Test the doorbell">🔔</button>' +
         '<button class="cs-btn" data-act="cs-setup" title="Set up the screen"><svg class="i"><use href="#i-sliders"/></svg> <span>Set up</span></button><button class="cs-btn" data-act="cs-full" title="Full screen"><svg class="i"><use href="#i-maximize"/></svg> <span>Full screen</span></button><a class="cs-btn" href="#/t/dash" title="Exit"><svg class="i"><use href="#i-x"/></svg> <span>Exit</span></a></div></header>' +
         '<div class="cs-grid"><section class="cs-main">' +
-        '<div class="cs-card cs-racebox"><div class="cs-race-h"><h2 id="cs-race-h"></h2><div class="cs-race-meta" id="cs-race-meta"></div><div class="cs-views" id="cs-views"></div></div>' +
+        '<div class="cs-card cs-racebox"><div class="cs-race-h"><h2 id="cs-race-h"></h2><div class="cs-race-meta" id="cs-race-meta"></div><div class="cs-pick" id="cs-quest-pick"></div><div class="cs-views" id="cs-views"></div></div>' +
         '<div id="cs-race" class="cs-race"></div><div id="cs-others" class="cs-others"></div></div>' +
         '<div class="cs-row2"><div class="cs-card cs-mission"><h2><svg class="i"><use href="#i-target"/></svg> What to work on</h2><div id="cs-mission"></div></div>' +
         '<div class="cs-card cs-helpbox" id="cs-helpbox"><h2><svg class="i"><use href="#i-help"/></svg> Who to ask for help</h2><div id="cs-help"></div></div></div>' +
@@ -1590,6 +1689,8 @@
     csSet('cs-views', [['quest', 'Today\'s quest'], ['map', 'Whole map']].concat(teams.length ? [['teams', 'Teams']] : []).map(function (v) {
       return '<button class="cs-chip' + (v[0] === view ? ' on' : '') + '" data-act="cs-view" data-v="' + v[0] + '">' + v[1] + '</button>';
     }).join(''));
+    csSet('cs-quest-pick', view === 'quest' ? '<label>Showing <select data-act="cs-quest" aria-label="Quest shown on the track"><option value="">Auto (where most students are)</option>' + R.NODES.map(function (n) {
+      return '<option value="' + n.id + '"' + (sc.raceQuest === n.id ? ' selected' : '') + '>Quest ' + n.tier + ': ' + esc(title(n.id)) + '</option>'; }).join('') + '</select></label>' : '');
     // ---- the track ("race to the finish") ----
     var stations, groups = {};
     if (view === 'quest' && race) {
@@ -1878,6 +1979,7 @@
       '<label class="switch"><input type="checkbox" name="autoRead"' + ((s.state.accom || {}).autoRead ? ' checked' : '') + '> Read each card aloud automatically</label>' +
       '<input name="note" maxlength="300" placeholder="Private note (e.g. IEP: extended time, chunked tasks)" value="' + esc(s.accomNote || '') + '">' +
       '<button class="btn">Save accommodations</button></form>' +
+      '<h2><svg class="i"><use href="#i-eye"/></svg> Display</h2><form data-form="stu-display" data-email="' + esc(email) + '" class="stack accom-form">' + displayFields(s.state.display) + '<button class="btn">Save display settings</button></form>' +
       '<button class="btn danger small" data-act="remove-stu" data-email="' + esc(email) + '">Remove student</button></div></div>';
     h += '<div class="card"><h2><svg class="i"><use href="#i-map"/></svg> Quests</h2><table class="qtable"><thead><tr><th>Quest</th><th>Status</th><th>Steps</th><th>Quick check</th><th><svg class="i"><use href="#i-zap"/></svg></th><th>Project / reflection</th><th></th></tr></thead><tbody>';
     R.NODES.forEach(function (n) {
@@ -2068,6 +2170,23 @@
       return;
     }
     if (act === 't-projector') { go('#/t/projector'); return; }
+    if (act === 'display') {
+      modal('<h2><svg class="i"><use href="#i-sliders"/></svg> Display</h2><p class="muted">Make Scratch Quest easier for you to read.</p><form data-form="display" class="stack accom-form">' + displayFields(disp()) +
+        '<button class="btn primary big">Save</button></form>');
+      return;
+    }
+    if (act === 'bug') {
+      modal('<h2><svg class="i"><use href="#i-bug"/></svg> Report a bug</h2><p class="muted">Something not working? Tell us what happened.</p><form data-form="bug" class="stack">' +
+        '<label>What went wrong? What did you click just before? <textarea name="text" rows="4" maxlength="600" required placeholder="e.g. I clicked I did it! and nothing happened"></textarea></label>' +
+        '<p class="small muted">We also send the page you are on (' + esc(bugWhere()) + '), your screen size, and the kind of computer, so the bug can be fixed.</p><button class="btn primary big">Send report</button></form>');
+      return;
+    }
+    if (act === 'bug-copy') { copyText(bugsMarkdown()); return; }
+    if (act === 'bug-status' || act === 'bug-del') {
+      var bargs = { id: t.getAttribute('data-id') }; if (act === 'bug-del') bargs.remove = true; else bargs.status = t.getAttribute('data-status');
+      call('bugUpdate', bargs).then(function (res) { S.bugs = res.bugs; S.teacher.newBugs = res.bugs.filter(function (b) { return b.status === 'new'; }).length; render(); }).catch(function () { });
+      return;
+    }
     if (act === 'ask-help') {
       var hs = t.getAttribute('data-step');
       modal('<h2><span class="hand">✋</span> Ask for help</h2><p class="muted">Your teacher will see where you are. Keep trying while you wait!</p><form data-form="ask-help" data-node="' + t.getAttribute('data-node') + '" data-step="' + esc(hs) + '" class="stack">' +
@@ -2126,8 +2245,8 @@
     }
     if (act === 'arc-reset') {
       var rid = t.getAttribute('data-id');
-      ask('Start a new leaderboard round? Current top scores are cleared from the board (students keep their all-time best and titles).', 'Start new round').then(function (ok) {
-        if (ok) call('setArcade', { classId: rid, resetBoard: true }).then(function (res) { S.tArcBoard[rid] = res.board; toast('New round started'); render(); }).catch(function () { });
+      ask('Start a new leaderboard round? The top 3 win coin prizes, then the board is cleared (students keep their all-time best and titles).', 'Start new round').then(function (ok) {
+        if (ok) call('setArcade', { classId: rid, resetBoard: true }).then(function (res) { S.tArcBoard[rid] = res.board; toast('New round started.' + ((res.winners || []).length ? ' Prizes: ' + res.winners.map(function (w) { return esc(w.name) + ' +' + w.coins; }).join(', ') : '')); render(); }).catch(function () { });
       });
       return;
     }
@@ -2182,6 +2301,9 @@
     var pv = document.getElementById('gc-preview'); if (pv) pv.textContent = gcLabel(gf.elements.word.value, gf.elements.unit.value, 3) + ': ' + title('t3');
     gf.querySelectorAll('.gc-num').forEach(function (el, i) { el.textContent = (gf.elements.unit.value.trim() ? gf.elements.unit.value.trim() + '.' : '') + (i + 1); });
   });
+  document.addEventListener('change', function (e) {
+    if (e.target.getAttribute && e.target.getAttribute('data-act') === 'cs-quest') csSave({ raceQuest: e.target.value }).catch(function () { });
+  });
   ['input', 'change'].forEach(function (ev) {
     document.addEventListener(ev, function (e) { var z = e.target.closest && e.target.closest('.lockzone'); if (z) { if (e.target.type === 'checkbox' && ev === 'change') SQ_SOUND.play('tap'); lockUpdate(z); } });
   });
@@ -2197,7 +2319,10 @@
     var p;
     var lockBtn = f.querySelector('[aria-disabled="true"]');
     if (lockBtn) { if (btn) btn.disabled = false; lockedClick(lockBtn); return; }
-    if (kind === 'ask-help') p = call('askHelp', { node: f.getAttribute('data-node'), step: /^\d+$/.test(f.getAttribute('data-step')) ? +f.getAttribute('data-step') : (f.getAttribute('data-step') || null), note: v.note }).then(function (res) {
+    if (kind === 'display') p = call('setDisplay', { display: displayFrom(v) }).then(function (res) { S.me = res.student; closeModal(); render(); toast('Display settings saved'); });
+    else if (kind === 'stu-display') p = call('updateStudent', { email: f.getAttribute('data-email'), display: displayFrom(v) }).then(function () { return loadTeacher(); }).then(function () { toast('Display settings saved for this student'); render(); });
+    else if (kind === 'bug') p = call('reportBug', { text: v.text, where: bugWhere(), info: bugInfo() }).then(function () { closeModal(); S.bugs = null; toast('<svg class="i"><use href="#i-check"/></svg> Thanks! Your report was sent to your teacher.'); });
+    else if (kind === 'ask-help') p = call('askHelp', { node: f.getAttribute('data-node'), step: /^\d+$/.test(f.getAttribute('data-step')) ? +f.getAttribute('data-step') : (f.getAttribute('data-step') || null), note: v.note }).then(function (res) {
       S.help = res.help; closeModal(); SQ_SOUND.play('pop'); toast('<span class="t-ico">✋</span><div><b>Help is on the way!</b><br>Keep trying while you wait.</div>'); S.keepScroll = true; var y9 = window.scrollY; render(); window.scrollTo(0, y9);
     });
     else if (kind === 'confusing') {
@@ -2220,7 +2345,7 @@
       render();
     });
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
-    else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
+    else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice, questsPerTicket: +v.questsPerTicket }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
     else if (kind === 'class-set') {
       var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });

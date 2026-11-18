@@ -59,6 +59,7 @@ const ctx = {
     openById: (id) => { if (!sheetsById[id]) throw new Error('not found'); return sheetsById[id]; },
     flush: () => {}
   },
+  LanguageApp: { translate: (t, from, to) => '[' + to + '] ' + t },
   PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] || null, setProperty: (k, v) => { props[k] = String(v); }, deleteProperty: k => { delete props[k]; }, getProperties: () => Object.assign({}, props) }) },
   Session: { getActiveUser: () => ({ getEmail: () => currentEmail }), getEffectiveUser: () => ({ getEmail: () => OWNER }) },
   LockService: { getScriptLock: () => ({ waitLock: () => {}, releaseLock: () => {} }) },

@@ -15,7 +15,7 @@ console.log('Apps Script flows (fake Google environment):');
 test('setup creates the data sheet with all tabs', () => {
   ctx.setup();
   const ss = sheetsById[props.DB_ID];
-  assert.deepStrictEqual(ss.sheets.map(s => s.name).sort(), ['Classes', 'Progress', 'Settings', 'Students']);
+  assert.deepStrictEqual(ss.sheets.map(s => s.name).sort(), ['Bugs', 'Classes', 'Progress', 'Settings', 'Students', 'Translations']);
 });
 test('teacher is recognized; a student is not', () => {
   assert.strictEqual(as(T, 'bootstrap').user.isTeacher, true);
@@ -134,6 +134,11 @@ test('arcade: teacher lock, earned passes, power-ups and score checks', () => {
   const M = 'maya.lopez@school.org';
   assert.throws(() => as(M, 'arcadeStart', {}), /locked/);
   as(T, 'setArcade', { classId, mode: 'earned', minutes: 30 });
+  assert.strictEqual(as(M, 'arcade').info.questsPerTicket, 2, 'by default it takes 2 finished quests to earn a ticket');
+  assert.strictEqual(as(M, 'arcade').me.tickets, 0, 'one finished quest is not enough for a ticket');
+  assert.throws(() => as(M, 'arcadePass'), /need a ticket/);
+  as(T, 'setArcade', { classId, questsPerTicket: 1, ticketPrice: 0 });
+  assert.throws(() => as(M, 'arcadeBuy', { item: 'ticket' }), /only be earned/);
   assert.throws(() => as(M, 'arcadeStart', {}), /pass first/);
   let a = as(M, 'arcade');
   assert.strictEqual(a.info.mode, 'earned');
@@ -155,6 +160,13 @@ test('arcade: teacher lock, earned passes, power-ups and score checks', () => {
   const end = as(M, 'arcadeEnd', { runId: run.id, score: 999999 });
   assert.ok(end.score < 1000, 'impossible scores are capped');
   assert.ok(end.newBest && end.place === 1 && end.board[0].name === 'Maya L.');
+  // rewards: coins for the run and for each score goal reached (300 -> 20 coins, 600 -> 40 coins...)
+  const goalCoins = end.goals.reduce((a, g) => a + g.coins, 0);
+  assert.ok(end.goals.length >= 1 && end.goals[0].score === 300, 'score goals are awarded');
+  assert.strictEqual(end.coins, Math.min(25, Math.floor(end.score / 100)) + goalCoins);
+  assert.strictEqual(end.student.profile.coins, bought.student.profile.coins + end.coins, 'arcade coins are added to the balance');
+  assert.strictEqual(end.student.profile.xp, xp, 'the arcade never changes XP');
+  assert.ok(end.student.profile.badges.includes('arcade_rookie'));
   assert.throws(() => as(M, 'arcadeEnd', { runId: run.id, score: 50 }), /not found/);
   assert.ok(!/@/.test(JSON.stringify(as(M, 'arcade').board)), 'leaderboard has no emails');
   as(T, 'setArcade', { classId, mode: 'off' });
@@ -162,7 +174,13 @@ test('arcade: teacher lock, earned passes, power-ups and score checks', () => {
   assert.strictEqual(as(M, 'arcade').me.until, 0, 'locking ends passes');
   as(T, 'setArcade', { classId, mode: 'free', minutes: 15 });
   assert.ok(as(M, 'arcadeStart', {}).run, 'free play needs no ticket');
-  assert.strictEqual(as(T, 'setArcade', { classId, resetBoard: true }).board.length, 0);
+  const coinsBefore = as(M, 'bootstrap').student.profile.coins;
+  const reset = as(T, 'setArcade', { classId, resetBoard: true });
+  assert.strictEqual(reset.board.length, 0);
+  assert.strictEqual(reset.winners[0].name, 'Maya L.'); assert.strictEqual(reset.winners[0].coins, 100);
+  const after = as(M, 'bootstrap').student.profile;
+  assert.strictEqual(after.coins, coinsBefore + 100, 'the round winner gets 100 coins');
+  assert.ok(after.badges.includes('round_champ'));
   assert.ok(as(M, 'arcade').me.allBest > 0, 'all-time best is kept');
   assert.throws(() => as(M, 'setArcade', { classId, mode: 'free' }), /Teachers only/);
 });
@@ -198,6 +216,45 @@ test('lesson feedback: confusing flags and ratings are saved; rating gives +10 X
   assert.strictEqual(fb.help['0'], 1); assert.strictEqual(fb.help.quiz, 1);
   as(T, 'reopen', { email: M, node: 't1' });
   assert.ok(as(T, 'teacherData').students.find(x => x.email === M).state.fb.t1.rating, 'reopening a quest keeps its feedback');
+});
+test('bug reports: anyone in a class can send one; only teachers can read them', () => {
+  const M = 'maya.lopez@school.org';
+  as(M, 'reportBug', { text: 'The I did it button <b>did nothing</b>', where: 'quest/t1 card 3', info: { ua: 'CrOS', screen: '1366x768', errors: ['TypeError: x is undefined'] } });
+  as(M, 'reportBug', { text: 'TypeError: boom', auto: true, where: 'map' });
+  as(M, 'reportBug', { text: 'TypeError: boom', auto: true, where: 'map' });
+  assert.throws(() => as(M, 'bugList'), /Teachers only/);
+  assert.throws(() => as('stranger@school.org', 'reportBug', { text: 'hi' }), /Join a class/);
+  let bugs = as(T, 'bugList').bugs;
+  assert.strictEqual(bugs.length, 2, 'the same automatic report is only saved once');
+  const mine = bugs.find(b => !b.auto);
+  assert.ok(!/[<>]/.test(mine.text) && mine.name === 'Maya L.' && mine.info.ua === 'CrOS' && /TypeError/.test(mine.info.errors));
+  assert.strictEqual(as(T, 'teacherData').newBugs, 2);
+  bugs = as(T, 'bugUpdate', { id: mine.id, status: 'fixed' }).bugs;
+  assert.strictEqual(bugs.find(b => b.id === mine.id).status, 'fixed');
+  assert.strictEqual(as(T, 'bugUpdate', { id: mine.id, remove: true }).bugs.length, 1);
+  const sheet = sheetsById[props.DB_ID].getSheetByName('Bugs');
+  assert.strictEqual(sheet.data.length, 2, 'reports are rows in the Bugs tab (after the header row)');
+});
+test('display settings and translation', () => {
+  const M = 'maya.lopez@school.org';
+  const d = as(M, 'setDisplay', { display: { size: 'xl', font: 'easy', contrast: true, motion: true, lang: 'pt', junk: 1 } }).student.state.display;
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(d)), { size: 'xl', font: 'easy', contrast: true, motion: true, lang: 'pt' });
+  assert.strictEqual(as(M, 'setDisplay', { display: { size: 'huge', lang: 'xx' } }).student.state.display.size, 'm');
+  as(T, 'updateStudent', { email: M, display: { size: 'l', lang: 'pt' } });
+  assert.strictEqual(as(M, 'bootstrap').student.state.display.lang, 'pt', 'a teacher can set it for a student');
+  const out = as(M, 'translate', { lang: 'pt', items: [{ t: 'Quest Map' }, { t: 'Click the <b>green flag</b>.', html: true }] }).out;
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(out)), ['[pt] Quest Map', '[pt] Click the <b>green flag</b>.']);
+  const tr = sheetsById[props.DB_ID].getSheetByName('Translations');
+  assert.strictEqual(tr.data.length, 3, 'translations are remembered in the Translations tab (after the header row)');
+  tr.data[1][3] = 'Mapa de Missões';
+  assert.strictEqual(as(M, 'translate', { lang: 'pt', items: [{ t: 'Quest Map' }] }).out[0], 'Mapa de Missões', 'a teacher correction in the Sheet is used');
+  assert.strictEqual(tr.data.length, 3);
+  assert.throws(() => as(M, 'translate', { lang: 'xx', items: [] }), /not available/);
+  assert.throws(() => as('stranger@school.org', 'translate', { lang: 'pt', items: [] }), /Join a class/);
+});
+test('Class Screen: the teacher can choose which quest the track shows', () => {
+  assert.strictEqual(as(T, 'saveScreen', { classId, screen: { raceQuest: 't3' } }).race.quest, 't3');
+  assert.notStrictEqual(as(T, 'saveScreen', { classId, screen: { raceQuest: '' } }).cls.screen.raceQuest, 't3');
 });
 test('teacher-only settings: accommodations note is not sent to the student', () => {
   as(T, 'updateStudent', { email: 'liam.chen@school.org', accom: { coreOnly: true, note: 'IEP: chunk tasks' } });

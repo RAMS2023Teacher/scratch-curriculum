@@ -65,7 +65,7 @@ function setup() {
 }
 
 var CLASSROOM_ACTIONS_ = { classroomCourses: 1, classroomImport: 1, classroomPost: 1, classroomUnlink: 1 };
-var READ_ONLY_ = { bootstrap: 1, classView: 1, teacherData: 1, classroomCourses: 1, lessons: 1, classScreen: 1, arcade: 1, arcadeBoardFor: 1, myHelp: 1, helpList: 1 };
+var READ_ONLY_ = { bootstrap: 1, classView: 1, teacherData: 1, classroomCourses: 1, lessons: 1, classScreen: 1, arcade: 1, arcadeBoardFor: 1, myHelp: 1, helpList: 1, bugList: 1 };
 
 /** Single entry point used by the web page: google.script.run.api(action, args). */
 function api(action, args) {
@@ -164,6 +164,8 @@ var SHEETS_ = {
   Classes: ['id', 'name', 'code', 'data (do not edit)'],
   Students: ['email', 'name', 'classId', 'xp', 'level', 'quests done', 'current quest', 'last active', 'data (do not edit)'],
   Settings: ['key', 'value'],
+  Bugs: ['id', 'when', 'status', 'name', 'email', 'class', 'where', 'what happened', 'data (do not edit)'],
+  Translations: ['key (do not edit)', 'language', 'English', 'translation (you can edit this)'],
   Progress: null // built from the quest list; a read-only view for you (rewritten as students work)
 };
 var STATUS_MARK_ = { done: '✔', submitted: '📨 turned in', returned: '↩ sent back', started: '… working' };
@@ -197,6 +199,10 @@ function db_() {
   var def = ss.getSheetByName('Sheet1');
   if (def && ss.getSheets().length > 1) ss.deleteSheet(def);
   return ss;
+}
+
+function bugRow_(b) {
+  return [b.id, new Date(b.at), b.status + (b.auto ? ' (auto)' : ''), b.name, b.email, b.cls, b.where, b.text, JSON.stringify(b)];
 }
 
 function sheetStore_() {
@@ -274,6 +280,26 @@ function sheetStore_() {
     },
     saveSettings: function (obj) {
       Object.keys(obj).forEach(function (k) { upsert('Settings', k, [k, JSON.stringify(obj[k])]); });
+    },
+    // ---- bug reports (one row each in the Bugs tab)
+    bugAll: function () { return rows('Bugs').map(function (r) { return parse(r[8], null); }).filter(Boolean); },
+    bugAdd: function (b) { upsert('Bugs', b.id, bugRow_(b)); },
+    bugSave: function (b) { upsert('Bugs', b.id, bugRow_(b)); },
+    bugDelete: function (id) { remove('Bugs', id); },
+    // ---- translation: Google Translate, remembered in the Translations tab (edit column D to correct one)
+    translate: function (list, lang) {
+      var known = {}, sh = ss.getSheetByName('Translations'), add = [];
+      rows('Translations').forEach(function (r) { known[r[0]] = r[3]; });
+      var out = list.map(function (x) {
+        var key = lang + (x.html ? '|h|' : '|t|') + x.t;
+        if (known[key] !== undefined && known[key] !== '') return String(known[key]);
+        var tr = x.t;
+        try { tr = LanguageApp.translate(x.t, 'en', lang, { contentType: x.html ? 'html' : 'text' }); } catch (e) { return x.t; }
+        known[key] = tr; add.push([key, lang, x.t, tr]);
+        return tr;
+      });
+      if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 4).setValues(add);
+      return out;
     },
     // "I'm stuck" requests change every few seconds, so they live in script properties
     // (fast to read), not in the Sheet. Key: help:<short id>. Never holds an email address.

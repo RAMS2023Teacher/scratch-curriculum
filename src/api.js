@@ -29,7 +29,7 @@ var SQ_API = (function () {
   }
 
   // ------------------------------------------------------------------ demo mode
-  var KEY = 'scratchQuestDemo.v4';
+  var KEY = 'scratchQuestDemo.v5';
   var mem = null;
   function load() {
     if (mem) return mem;
@@ -49,6 +49,10 @@ var SQ_API = (function () {
     deleteStudent: function (email) { var d = load(); d.students = d.students.filter(function (s) { return s.email !== email; }); save(); },
     getSettings: function () { return load().settings || {}; },
     saveSettings: function (o) { load().settings = o; save(); },
+    bugAll: function () { return load().bugs || []; },
+    bugAdd: function (b) { var d = load(); d.bugs = d.bugs || []; d.bugs.push(b); save(); },
+    bugSave: function (b) { var d = load(); d.bugs = (d.bugs || []).map(function (x) { return x.id === b.id ? b : x; }); save(); },
+    bugDelete: function (id) { var d = load(); d.bugs = (d.bugs || []).filter(function (x) { return x.id !== id; }); save(); },
     helpAll: function () { return load().help || {}; },
     helpPut: function (id, o) { var d = load(); d.help = d.help || {}; if (o) d.help[id] = o; else delete d.help[id]; save(); }
   };
@@ -58,7 +62,7 @@ var SQ_API = (function () {
     var d = { classes: [], students: [], settings: { videos: {} }, role: 'student' };
     var cls = { id: 'demo1', name: 'Period 3 · Demo Class', code: 'DEMO1', teacher: 'teacher@demo', openThrough: 14,
       requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false,
-      arcade: { mode: 'free', closes: Date.now() + 8 * 3600e3, passMin: 5, ticketPrice: 40, season: 1 } };
+      arcade: { mode: 'free', closes: Date.now() + 8 * 3600e3, passMin: 5, ticketPrice: 100, questsPerTicket: 2, season: 1 } };
     d.classes.push(cls, { id: 'demo2', name: 'Period 5 · Demo Class', code: 'PIXEL', teacher: 'teacher@demo', openThrough: 7,
       requireApproval: true, requireLink: false, showLeaderboard: true, classGoal: 15000, archived: false });
     var names = ['Ava', 'Liam', 'Maya', 'Noah', 'Zoe', 'Ethan', 'Priya', 'Lucas', 'Chloe', 'Mateo', 'Isla', 'Owen', 'Sofia', 'Jayden'];

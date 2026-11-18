@@ -16,7 +16,14 @@ var SQ_ARCADE = (function () {
   ];
   var POWER = {};
   POWERUPS.forEach(function (p) { POWER[p.id] = p; });
-  var DEFAULTS = { mode: 'off', closes: 0, passMin: 5, ticketPrice: 40, season: 1 };
+  // questsPerTicket: finished quests needed for each free ticket. ticketPrice 0 = tickets can't be bought.
+  var DEFAULTS = { mode: 'off', closes: 0, passMin: 5, ticketPrice: 100, questsPerTicket: 2, season: 1 };
+  // Rewards. Coins per run: 1 for every 100 points (up to RUN_COINS a run and DAY_COINS a day).
+  var RUN_COINS = 25, DAY_COINS = 100;
+  // One-time score goals: [score, coin prize]
+  var GOALS = [[300, 20], [600, 40], [1000, 60], [1500, 80], [2000, 100], [3000, 150], [4000, 250]];
+  // Coins for 1st, 2nd and 3rd place when the teacher starts a new leaderboard round
+  var ROUND_PRIZES = [100, 60, 30];
   var MAX_POWER = 2;          // power-ups per run
   var RUN_MAX_MS = 12 * 60e3; // a run longer than this is not accepted
   var GRACE_MS = 3 * 60e3;    // a run started before the pass ended may still finish
@@ -32,17 +39,17 @@ var SQ_ARCADE = (function () {
     if (cfg.closes && now > cfg.closes) return 'off';
     return cfg.mode;
   }
-  function blank() { return { spent: 0, inv: {}, bought: 0, used: 0, until: 0, best: 0, season: 0, allBest: 0, plays: 0, run: null }; }
+  function blank() { return { spent: 0, earned: 0, goals: [], roundWins: 0, day: '', dayCoins: 0, inv: {}, bought: 0, used: 0, until: 0, best: 0, season: 0, allBest: 0, plays: 0, run: null }; }
   function stateOf(state) {
     var a = state.arcade || (state.arcade = blank()), b = blank();
     for (var k in b) if (a[k] === undefined) a[k] = b[k];
     return a;
   }
   // One ticket for every finished quest, plus any bought with coins, minus those used.
-  function tickets(a, doneCount) { return Math.max(0, (doneCount || 0) + (a.bought || 0) - (a.used || 0)); }
+  function tickets(a, doneCount, per) { return Math.max(0, Math.floor((doneCount || 0) / Math.max(1, per || 1)) + (a.bought || 0) - (a.used || 0)); }
   // Most points a fair run could reach in this much time (the game tops out well below this).
   function scoreCap(ms) { return Math.round(500 + Math.max(0, ms) / 1000 * 250); }
 
-  return { GAME: GAME, POWERUPS: POWERUPS, POWER: POWER, DEFAULTS: DEFAULTS, MAX_POWER: MAX_POWER, RUN_MAX_MS: RUN_MAX_MS, GRACE_MS: GRACE_MS,
+  return { RUN_COINS: RUN_COINS, DAY_COINS: DAY_COINS, GOALS: GOALS, ROUND_PRIZES: ROUND_PRIZES, GAME: GAME, POWERUPS: POWERUPS, POWER: POWER, DEFAULTS: DEFAULTS, MAX_POWER: MAX_POWER, RUN_MAX_MS: RUN_MAX_MS, GRACE_MS: GRACE_MS,
     config: config, liveMode: liveMode, stateOf: stateOf, tickets: tickets, scoreCap: scoreCap };
 })();
