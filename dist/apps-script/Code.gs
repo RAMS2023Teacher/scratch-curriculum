@@ -12,6 +12,10 @@
 
 // Extra teacher accounts (co-teachers, aides). The account that deploys the script is ALWAYS a teacher.
 // Note: Classroom actions always run as the deploying account, so co-teachers see YOUR Classroom classes.
+// How often a backup copy of the data sheet is saved to your Google Drive (in days).
+// Backups are named "Scratch Quest Backup <date>"; delete old ones from Drive whenever you like.
+var BACKUP_EVERY_DAYS = 1;
+
 var TEACHER_EMAILS = [
   // 'coteacher@yourschool.org',
 ];
@@ -293,11 +297,11 @@ function dataMerge_(args) {
     return { report: report, done: true, info: dataInfo_() };
   } finally { lock.releaseLock(); }
 }
-// A copy of the data sheet about once a week (made when the teacher opens the app)
+// A copy of the data sheet every BACKUP_EVERY_DAYS days (made when the teacher opens the app)
 function maybeBackup_(ss) {
   try {
     var props = PropertiesService.getScriptProperties(), last = Number(props.getProperty('LAST_BACKUP') || 0);
-    if (Date.now() - last < 6.5 * 864e5) return;
+    if (Date.now() - last < (BACKUP_EVERY_DAYS - 0.3) * 864e5) return;
     var sh = ss.getSheetByName('Students');
     if (!sh || sh.getLastRow() < 2) return; // nothing worth copying yet
     props.setProperty('LAST_BACKUP', String(Date.now()));
@@ -330,8 +334,22 @@ function sheetStore_(other) {
     for (var i = 0; i < r.length; i++) if (String(r[i][0]).toLowerCase() === String(key).toLowerCase()) return i;
     return -1;
   }
+  // Find ONE row by its key without reading the whole tab (the tab can hold hundreds of students).
+  // Returns the sheet row number, or -1.
+  function fastRow(name, key) {
+    var sh = ss.getSheetByName(name), last = sh.getLastRow();
+    if (last < 2) return -1;
+    var cell = sh.getRange(2, 1, last - 1, 1).createTextFinder(String(key)).matchEntireCell(true).matchCase(false).findNext();
+    return cell ? cell.getRow() : -1;
+  }
   function upsert(name, key, values) {
-    var sh = ss.getSheetByName(name), i = findRow(name, key);
+    var sh = ss.getSheetByName(name);
+    if (!cache[name]) { // the tab has not been read in this request: touch only the one row
+      var r = fastRow(name, key);
+      if (r > 0) sh.getRange(r, 1, 1, values.length).setValues([values]); else sh.appendRow(values);
+      return;
+    }
+    var i = findRow(name, key);
     if (i >= 0) {
       sh.getRange(i + 2, 1, 1, values.length).setValues([values]);
       cache[name][i] = values;
@@ -341,8 +359,26 @@ function sheetStore_(other) {
     }
   }
   function remove(name, key) {
+    if (!cache[name]) { var r = fastRow(name, key); if (r > 0) ss.getSheetByName(name).deleteRow(r); return; }
     var i = findRow(name, key);
     if (i >= 0) { ss.getSheetByName(name).deleteRow(i + 2); cache[name].splice(i, 1); }
+  }
+  // A saved record that cannot be read must NEVER be replaced by a blank one. If the data cell has
+  // text that does not parse, single-student actions stop with an error, and list views mark the
+  // record as unreadable; either way it is not saved over.
+  function readRecord(text, what, strict) {
+    if (text === '' || text == null) return {};
+    try { return JSON.parse(text); }
+    catch (e) {
+      if (strict) throw new Error('The saved record for ' + what + ' could not be read, so nothing was changed. Tell your teacher.');
+      return { unreadable: true };
+    }
+  }
+  function studentFromRow(r, strict) {
+    var s = readRecord(r[8], r[1] || r[0], strict);
+    s.email = String(r[0]); s.name = String(r[1]); s.classId = String(r[2]);
+    s.state = s.state || SQ_RULES.newState();
+    return s;
   }
   function parse(s, fallback) { try { return JSON.parse(s); } catch (e) { return fallback; } }
   function className(id) { var r = rows('Classes'); for (var i = 0; i < r.length; i++) if (String(r[i][0]) === String(id)) return String(r[i][1]); return ''; }
@@ -355,27 +391,25 @@ function sheetStore_(other) {
   var store = {
     getClasses: function () {
       return rows('Classes').map(function (r) {
-        var c = parse(r[3], {});
+        var c = readRecord(r[3], r[1], false);
         c.id = String(r[0]); c.name = String(r[1]); c.code = String(r[2]);
         return c;
       });
     },
-    saveClass: function (c) { upsert('Classes', c.id, [c.id, c.name, c.code, JSON.stringify(c)]); },
+    saveClass: function (c) { if (c.unreadable) throw new Error('This class record could not be read, so it was not changed.'); upsert('Classes', c.id, [c.id, c.name, c.code, JSON.stringify(c)]); },
     deleteClass: function (id) { remove('Classes', id); },
-    getStudents: function () {
-      return rows('Students').map(function (r) {
-        var s = parse(r[8], {});
-        s.email = String(r[0]); s.name = String(r[1]); s.classId = String(r[2]);
-        s.state = s.state || SQ_RULES.newState();
-        return s;
-      });
-    },
+    getStudents: function () { return rows('Students').map(function (r) { return studentFromRow(r, false); }); },
     getStudent: function (email) {
-      var i = findRow('Students', email);
-      if (i < 0) return null;
-      return store.getStudents()[i];
+      if (cache.Students) { var i = findRow('Students', email); return i < 0 ? null : studentFromRow(cache.Students[i], true); }
+      var r = fastRow('Students', email);
+      if (r < 0) return null;
+      return studentFromRow(ss.getSheetByName('Students').getRange(r, 1, 1, width('Students')).getValues()[0], true);
     },
+    // short-lived shared memory for answers many students ask for at once (e.g. the class map)
+    cacheGet: function (key) { try { var v = CacheService.getScriptCache().get(key); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+    cachePut: function (key, value, seconds) { try { var t = JSON.stringify(value); if (t.length < 90000) CacheService.getScriptCache().put(key, t, seconds); } catch (e) { } },
     saveStudent: function (s) {
+      if (s.unreadable) throw new Error('This record could not be read, so it was not changed.');
       upsert('Students', s.email, [s.email, s.name, s.classId, s.xp || 0, s.level || 1, s.doneCount || 0,
         s.current || '', new Date(s.updated || Date.now()), JSON.stringify(s)]);
       if (!s.isTeacher) upsert('Progress', s.email, progressRow(s));

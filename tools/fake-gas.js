@@ -11,6 +11,8 @@ let currentEmail = 'teacher@school.org';
 const OWNER = 'teacher@school.org';
 const props = {};
 const flags = { failOpen: false };
+const counters = { cells: 0, finds: 0 };
+const fakeCache = {};
 const sheetsById = {};
 function makeSheet(name) {
   const data = [];
@@ -18,9 +20,10 @@ function makeSheet(name) {
     name, data,
     getLastRow: () => data.length,
     getRange: (r, c, nr, nc) => ({
-      getValues: () => { const out = []; for (let i = 0; i < nr; i++) { const row = data[r - 1 + i] || []; out.push(Array.from({ length: nc }, (_, j) => row[c - 1 + j] === undefined ? '' : row[c - 1 + j])); } return out; },
+      getValues: () => { counters.cells += nr * nc; const out = []; for (let i = 0; i < nr; i++) { const row = data[r - 1 + i] || []; out.push(Array.from({ length: nc }, (_, j) => row[c - 1 + j] === undefined ? '' : row[c - 1 + j])); } return out; },
       setValues: (vals) => { vals.forEach((row, i) => { data[r - 1 + i] = data[r - 1 + i] || []; row.forEach((v, j) => { data[r - 1 + i][c - 1 + j] = v; }); }); return sh.getRange(r, c, nr, nc); },
-      setFontWeight: () => {}
+      setFontWeight: () => {},
+      createTextFinder: (text) => { counters.finds++; const f = { matchEntireCell: () => f, matchCase: () => f, findNext: () => { for (let i = 0; i < nr; i++) { const v = (data[r - 1 + i] || [])[c - 1]; if (String(v).toLowerCase() === String(text).toLowerCase()) return { getRow: () => r + i }; } return null; } }; return f; }
     }),
     appendRow: (row) => { data.push(row.slice()); },
     deleteRow: (r) => { data.splice(r - 1, 1); },
@@ -63,7 +66,7 @@ const ctx = {
     openByUrl: (u) => { const id = String(u).split('/d/')[1]; if (!sheetsById[id]) throw new Error('not found'); return sheetsById[id]; },
     flush: () => {}
   },
-  CacheService: { getScriptCache: () => ({ getAll: () => ({}), get: () => null, put: () => {} }) },
+  CacheService: { getScriptCache: () => ({ getAll: () => ({}), get: (k) => (k in fakeCache ? fakeCache[k] : null), put: (k, v) => { if (flags.cacheOn) fakeCache[k] = v; } }) },
   Utilities: { sleep: () => {}, base64Encode: (b) => Buffer.from(String(b)).toString('base64'), computeDigest: (a, t) => t, DigestAlgorithm: { MD5: 1 }, Charset: { UTF_8: 1 }, formatDate: (d) => d.toISOString().slice(0, 10) },
   LanguageApp: { translate: (t, from, to) => '[' + to + '] ' + t },
   PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] || null, setProperty: (k, v) => { props[k] = String(v); }, deleteProperty: k => { delete props[k]; }, getProperties: () => Object.assign({}, props) }) },
@@ -100,6 +103,6 @@ ctx.HtmlService = {
 vm.createContext(ctx);
 for (const f of ['Shared.gs', 'Code.gs']) vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
 
-  return { ctx, props, flags, sheetsById, created, setUser: (e) => { currentEmail = e; }, api: (email, action, args) => { currentEmail = email; return JSON.parse(JSON.stringify(ctx.api(action, args))); } };
+  return { ctx, props, flags, counters, fakeCache, sheetsById, created, setUser: (e) => { currentEmail = e; }, api: (email, action, args) => { currentEmail = email; return JSON.parse(JSON.stringify(ctx.api(action, args))); } };
 }
 module.exports = { makeEnv };

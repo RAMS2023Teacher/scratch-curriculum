@@ -170,9 +170,15 @@ function SQ_SERVICE(store) {
       else classId = requireStudent(user).classId;
       var c = findClass(classId);
       if (!c) err('Class not found.');
+      // The whole class asks for this at the same moment (every map and class page), and it needs every
+      // student's record, so the answer is shared for 20 seconds instead of being rebuilt for each student.
+      var ck = 'cv:' + classId, hit = store.cacheGet ? store.cacheGet(ck) : null;
+      if (hit) { hit.cls = publicClass(c); return hit; }
       var members = classMembers(classId);
       var total = members.reduce(function (a, m) { return a + m.xp; }, 0);
-      return { cls: publicClass(c), members: members, classXP: total };
+      var out = { cls: publicClass(c), members: members, classXP: total };
+      if (store.cachePut) store.cachePut(ck, out, 20);
+      return out;
     },
 
     joinClass: function (user, args) {

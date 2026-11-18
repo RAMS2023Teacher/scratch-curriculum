@@ -327,6 +327,39 @@ test('data safety: combining two data sheets keeps everyone\'s work (no one goes
   props.DB_ID = oldId; // put the test world back for the checks below (the old sheet was only read, never changed)
   assert.strictEqual(as(T, 'teacherData').students.find(x => x.email === M).profile.xp, mayaOld.profile.xp, 'the sheet that was read from is unchanged');
 });
+test('speed: one student\'s click reads one row, not every student in the school', () => {
+  const M = 'maya.lopez@school.org', sh = sheetsById[props.DB_ID].getSheetByName('Students');
+  const big = JSON.stringify({ state: { avatar: null, avatarSet: false, nodes: {}, awards: [], bonus: [] }, pad: 'x'.repeat(3000) });
+  for (let i = 0; i < 300; i++) sh.data.push(['filler' + i + '@school.org', 'Filler ' + i, 'other-class', 0, 1, 0, '', new Date(), big]);
+  env.counters.cells = 0;
+  as(M, 'toggleStep', { node: 't1', idx: 1, value: true });
+  assert.ok(env.counters.cells < 200, 'cells read for one click with 300 other students in the sheet: ' + env.counters.cells);
+  env.counters.cells = 0;
+  assert.ok(as(M, 'bootstrap').student);
+  assert.ok(env.counters.cells < 200, 'cells read to open the app: ' + env.counters.cells);
+  // the class map: built once, then shared for 20 seconds
+  env.flags.cacheOn = true;
+  const first = as(M, 'classView');
+  env.counters.cells = 0;
+  const second = as(M, 'classView');
+  assert.ok(env.counters.cells < 200, 'second class map request reads almost nothing: ' + env.counters.cells);
+  assert.strictEqual(second.members.length, first.members.length);
+  env.flags.cacheOn = false; Object.keys(env.fakeCache).forEach(k => delete env.fakeCache[k]);
+  sh.data.splice(sh.data.length - 300, 300);
+  assert.ok(as(M, 'bootstrap').student.state.nodes.t1.steps[1], 'and the click was saved to the right row');
+});
+test('data safety: a record that cannot be read is never replaced by a blank one', () => {
+  const L2 = 'liam.chen@school.org', sh = sheetsById[props.DB_ID].getSheetByName('Students');
+  const row = sh.data.find(r => r[0] === L2), good = row[8];
+  row[8] = good.slice(0, good.length - 20); // the saved data is damaged
+  assert.throws(() => as(L2, 'toggleStep', { node: 't1', idx: 0, value: true }), /could not be read/);
+  assert.throws(() => as(L2, 'saveAvatar', { avatar: {} }), /could not be read/);
+  assert.strictEqual(row[8], good.slice(0, good.length - 20), 'the damaged cell was left alone, not overwritten with a blank record');
+  assert.ok(as(T, 'teacherData').students.length >= 3, 'the teacher pages still load');
+  assert.throws(() => as(T, 'bonus', { email: L2, amount: 5, note: 'x' }), /could not be read/);
+  row[8] = good;
+  assert.ok(as(L2, 'bootstrap').student, 'once the cell is repaired the student is fine');
+});
 test('teacher-only settings: accommodations note is not sent to the student', () => {
   as(T, 'updateStudent', { email: 'liam.chen@school.org', accom: { coreOnly: true, note: 'IEP: chunk tasks' } });
   const self = JSON.stringify(as('liam.chen@school.org', 'bootstrap'));
