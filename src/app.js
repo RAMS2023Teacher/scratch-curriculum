@@ -97,29 +97,64 @@
   }
   function prof() { return S.me ? S.me.profile : null; }
 
-  // Celebrate whatever changed between two profiles
-  function celebrate(before, after, el) {
+  // Celebrate whatever changed between two profiles.
+  // away = true when the change happened while the student was gone (e.g. the teacher approved a quest).
+  var BADGE_COLORS = ['#7b2ff7', '#3a86ff', '#ef476f', '#06a77d', '#f77f00', '#118ab2'];
+  function questStars(id) {
+    var ns = (S.me.state.nodes || {})[id] || {}, q = ns.quiz || {}, Lq = L[id], got = ['Finished'], n = 1;
+    var perfect = Lq && Lq.quiz.length && Lq.quiz.every(function (_, i) { return q[i] && q[i].firstTry; });
+    if (perfect) { n++; got.push('perfect Quick Check'); }
+    if (ns.challenge) { n++; got.push('bonus challenge'); }
+    return { n: n, note: 'Stars: ' + got.join(' · ') };
+  }
+  function celebrate(before, after, el, away) {
     if (!before || !after) return;
     var gain = after.xp - before.xp, coinGain = (after.coinsEarned || 0) - (before.coinsEarned || 0);
-    floatXP(gain, el, coinGain);
-    var leveled = after.level > before.level, newBadge = after.badges.some(function (b) { return before.badges.indexOf(b) < 0; });
-    if (leveled) SQ_SOUND.play('levelup'); else if (newBadge) SQ_SOUND.play('badge'); else if (coinGain > 0) setTimeout(function () { SQ_SOUND.play('coin'); }, 160);
-    after.badges.forEach(function (b) {
-      if (before.badges.indexOf(b) < 0) {
-        var B = R.BADGE[b];
-        toast('<span class="t-ico">' + B.icon + '</span><div><b>Badge earned: ' + esc(B.name) + '</b><br>' + esc(B.desc) + '</div>', 't-badge');
-      }
-    });
+    if (!away) floatXP(gain, el, coinGain);
+    var newDone = Object.keys(after.done || {}).filter(function (id) { return !(before.done || {})[id]; });
+    var newBadges = after.badges.filter(function (b) { return before.badges.indexOf(b) < 0; });
+    var leveled = after.level > before.level;
     var newly = A.allUnlockables().filter(function (u) { return !A.isUnlocked(u.unlock, before) && A.isUnlocked(u.unlock, after); });
-    if (after.level > before.level) {
-      confetti();
-      modal('<div class="levelup"><div class="lv-burst">LEVEL ' + after.level + '</div><h2>Level up!</h2><p>You are now a <b>' + esc(after.rank) + '</b>.</p>' +
-        (newly.length ? '<p>New avatar items unlocked:</p><div class="unlock-row">' + newly.map(function (u) { return '<span class="chip"><svg class="i"><use href="#i-unlock"/></svg> ' + esc(u.name) + '</span>'; }).join('') + '</div>' : '') +
-        '<div class="row center"><button class="btn primary" data-act="close-modal">Keep questing!</button>' +
-        (newly.length ? '<a class="btn" href="#/avatar" data-act="close-modal">Try them on</a>' : '') + '</div></div>', 'center');
-    } else if (newly.length) {
-      newly.forEach(function (u) { toast('<span class="t-ico"><svg class="i"><use href="#i-unlock"/></svg></span><div><b>Unlocked: ' + esc(u.name) + '</b><br>Equip it in My Avatar!</div>', 'unlock'); });
+    var shown = 0, MAX = 4;
+    newDone.forEach(function (id) {
+      var st = questStars(id), n = R.NODE[id];
+      if (shown++ >= MAX) return toast('<svg class="i"><use href="#i-check"/></svg> <b>Quest complete:</b> ' + esc(title(id)), 't-badge');
+      SQ_FX.quest({ title: title(id), approved: away, stars: st.n, starNote: st.note, color: n ? R.BRANCHES[n.branch].color : '#7b2ff7',
+        xp: newDone.length === 1 ? Math.max(0, gain) : R.XP.lesson, coins: newDone.length === 1 ? Math.max(0, coinGain) : 0 });
+    });
+    newBadges.forEach(function (b, i) {
+      var B = R.BADGE[b]; if (!B) return;
+      var teacher = R.TEACHER_BADGES.some(function (t) { return t.id === b; });
+      var aw = teacher ? (S.me.state.awards || []).filter(function (a) { return a.id === b; })[0] : null;
+      if (shown++ >= MAX) return toast('<span class="t-ico">' + B.icon + '</span><div><b>Badge earned: ' + esc(B.name) + '</b><br>' + esc(B.desc) + '</div>', 't-badge');
+      SQ_FX.badge({ icon: B.icon, name: B.name, desc: B.desc, teacher: teacher, note: aw && aw.note, xp: teacher ? R.XP.award : 0, color: BADGE_COLORS[(b.length + i) % BADGE_COLORS.length] });
+    });
+    if (leveled) {
+      SQ_FX.level({ from: before.level, to: after.level, rank: after.rank, unlocks: newly.map(function (u) { return u.name; }) });
+      setTimeout(confetti, 300);
+    } else newly.forEach(function (u) { toast('<span class="t-ico"><svg class="i"><use href="#i-unlock"/></svg></span><div><b>Unlocked: ' + esc(u.name) + '</b><br>Equip it in My Avatar!</div>', 'unlock'); });
+    if (!newDone.length && !newBadges.length && !leveled && coinGain > 0 && !away) {
+      setTimeout(function () { SQ_SOUND.play('coin'); }, 160);
+      var mc = document.querySelector('.me-card'); if (el && mc) SQ_FX.coinFly(el, mc, Math.min(6, coinGain));
     }
+    saveSeen(after);
+  }
+  // Remember what this student has already celebrated, so things that happen while they're away
+  // (a teacher approving a quest or giving a badge) still get their moment next time.
+  function seenKey() { return 'sq-seen:' + (S.me && S.me.email); }
+  function saveSeen(p) {
+    if (!S.me || !p) return;
+    try { localStorage.setItem(seenKey(), JSON.stringify({ xp: p.xp, level: p.level, badges: p.badges, done: Object.keys(p.done || {}), ce: p.coinsEarned, owned: p.owned, ab: p.arcadeBest || 0 })); } catch (e) { }
+  }
+  function checkAway() {
+    if (!S.me || isTeacher() && !S.me) return;
+    var p = prof(), old = null;
+    try { old = JSON.parse(localStorage.getItem(seenKey()) || 'null'); } catch (e) { }
+    if (!old) return saveSeen(p);
+    var done = {}; (old.done || []).forEach(function (id) { done[id] = 1; });
+    var before = { xp: old.xp, level: old.level, badges: old.badges || [], done: done, coinsEarned: old.ce, owned: old.owned || p.owned, arcadeBest: old.ab || 0, rank: '' };
+    if (old.level > p.level || old.xp > p.xp) return saveSeen(p); // progress went down (e.g. reopened): nothing to celebrate
+    setTimeout(function () { celebrate(before, p, null, true); }, 600);
   }
   function updateMe(res, el) {
     if (!res || !res.student) return;
@@ -135,6 +170,7 @@
     $app.innerHTML = '<div class="loading"><div class="spinner"></div>Loading your quest…</div>';
     API.call('bootstrap').then(function (b) {
       S.boot = b; S.me = b.student; S.cls = b.cls;
+      if (S.me) checkAway();
       SQ_SOUND.setClassOff(!!(b.cls && b.cls.sounds === false));
       var started = false;
       var go2 = function (q) {
@@ -179,8 +215,12 @@
     }
     if (p && r !== 't') {
       var pct = Math.min(100, Math.round((p.xp - p.levelStart) / (p.levelNext - p.levelStart) * 100));
-      html += '<a class="me-card" href="#/badges" title="' + fmtN(p.xp) + ' XP"><span class="me-av">' + A.svg(S.me.state.avatar, 40) + '</span>' +
-        '<span class="me-info"><span class="me-lv">Lv ' + p.level + ' · ' + esc(p.rank) + '</span><span class="xpbar"><i style="width:' + pct + '%"></i></span>' +
+      var from = pct, bump = false;
+      if (S.barXP != null && S.barXP !== p.xp) { from = S.barLv === p.level ? S.barPct : 0; bump = true; }
+      S.barXP = p.xp; S.barLv = p.level; S.barPct = pct;
+      if (from !== pct) setTimeout(function () { document.querySelectorAll('.me-card .xpbar i[data-to]').forEach(function (i) { i.style.width = i.getAttribute('data-to') + '%'; }); }, 80);
+      html += '<a class="me-card' + (bump ? ' fx-bump' : '') + '" href="#/badges" title="' + fmtN(p.xp) + ' XP"><span class="me-av">' + A.svg(S.me.state.avatar, 40) + '</span>' +
+        '<span class="me-info"><span class="me-lv">Lv ' + p.level + ' · ' + esc(p.rank) + '</span><span class="xpbar"><i style="width:' + from + '%" data-to="' + pct + '"></i></span>' +
         '<span class="me-xp">' + fmtN(p.xp) + ' XP' + (shopOn() ? ' · <span class="coin"></span> ' + fmtN(Math.max(0, p.coins)) : '') + '</span></span></a>';
     }
     html += '</div></header>';
@@ -1639,7 +1679,7 @@
     if (act === 'quiz') {
       var node = t.getAttribute('data-node'), q = +t.getAttribute('data-q'), c = +t.getAttribute('data-c');
       call('answerQuiz', { node: node, q: q, choice: c }).then(function (res) {
-        if (res.correct) { SQ_SOUND.play('correct'); updateMe(res, t); S.keepScroll = true; render(); }
+        if (res.correct) { SQ_SOUND.play('correct'); SQ_FX.burst(t, { colors: ['#22c55e', '#facc15', '#fff'], n: 16, spread: 90 }); updateMe(res, t); S.keepScroll = true; render(); }
         else {
           SQ_SOUND.play('wrong'); t.classList.add('wrong'); t.disabled = true;
           var box = t.closest('.quiz').querySelector('.explain');
@@ -1666,7 +1706,7 @@
       var a2 = { node: nd, value: did };
       if (isStep) a2.idx = +t.getAttribute('data-idx');
       t.disabled = true;
-      if (did) SQ_SOUND.play(isStep ? 'step' : 'badge');
+      if (did) { SQ_SOUND.play(isStep ? 'step' : 'badge'); SQ_FX.burst(t, isStep ? { colors: ['#22c55e', '#86efac', '#facc15'], n: 12, spread: 60 } : { colors: ['#facc15', '#f97316', '#a855f7', '#fff'], n: 22, spread: 110 }); }
       call(isStep ? 'toggleStep' : 'setChallenge', a2).then(function (res) {
         updateMe(res, t);
         if (did) { S.card = S.card || {}; S.card[nd] = (S.card[nd] || 0) + 1; }
@@ -1686,9 +1726,18 @@
       var bc = t.getAttribute('data-cat'), bid = t.getAttribute('data-id');
       t.disabled = true;
       call('buyItem', { cat: bc, id: bid }).then(function (res) {
-        S.me = res.student; SQ_SOUND.play('buy'); confetti();
+        var pill = document.querySelector('.coin-pill') || document.querySelector('.me-card');
+        if (pill) SQ_FX.coinFly(pill, t, 6);
+        S.me = res.student; saveSeen(prof());
         S.avatarDraft[bc] = bid; S.studioBurst = true;
-        toast('<span class="coin" aria-hidden="true"></span> <b>You got ' + esc(A.itemOf(bc, bid).name) + '!</b> Tap Save my look to wear it.', 't-badge');
+        var it = A.itemOf(bc, bid), prevAv = Object.assign({}, S.avatarDraft);
+        setTimeout(function () {
+          SQ_FX.item({ name: it.name, rarity: it.rarity, rarityName: A.RARITY[it.rarity].name, color: A.RARITY[it.rarity].color,
+            art: bc === 'title' ? '<span class="title-prev">' + esc(it.name) + '</span>' : A.svg(prevAv, 180),
+            sub: 'It is yours to keep. Wear it now, or save it for later.', ok: 'Later', okClass: 'ghost',
+            extra: '<button class="btn primary big" data-fx-close data-act="av-save">Wear it now</button>' });
+          if (it.rarity === 'legendary') setTimeout(confetti, 500);
+        }, SQ_FX.reduced() ? 0 : 650);
         var y3 = window.scrollY; render(); window.scrollTo(0, y3);
         setTimeout(function () { S.studioBurst = false; var pd = document.querySelector('.pedestal'); if (pd) pd.classList.remove('burst'); }, 1200);
       }).catch(function () { t.disabled = false; });
@@ -1792,13 +1841,15 @@
     if (act === 'arc-again') { closeModal(); arcStartGame(); return; }
     if (act === 'arc-pass') {
       t.disabled = true;
-      call('arcadePass', {}).then(function (res) { S.arc.me = res.me; SQ_SOUND.play('levelup'); toast('<svg class="i"><use href="#i-clock"/></svg> Your ' + S.arc.info.passMin + '-minute pass has started. Have fun!'); arcPaint(); }).catch(function () { t.disabled = false; });
+      call('arcadePass', {}).then(function (res) { S.arc.me = res.me; SQ_SOUND.play('levelup'); SQ_FX.burst(t, { colors: ['#7b2ff7', '#f72585', '#ffd60a', '#fff'], n: 24, spread: 130 }); toast('<svg class="i"><use href="#i-clock"/></svg> Your ' + S.arc.info.passMin + '-minute pass has started. Have fun!'); arcPaint(); }).catch(function () { t.disabled = false; });
       return;
     }
     if (act === 'arc-buy') {
       var it = t.getAttribute('data-item'); t.disabled = true;
       call('arcadeBuy', { item: it }).then(function (res) {
-        S.arc.me = res.me; S.me = res.student; SQ_SOUND.play('buy');
+        var cpill = document.querySelector('.arc-wallet .coin-tag') || document.querySelector('.me-card'); if (cpill) SQ_FX.coinFly(cpill, t, 4);
+        SQ_FX.burst(t, { colors: [it === 'ticket' ? '#7b2ff7' : AR.POWER[it].color, '#facc15', '#fff'], n: 16, spread: 80 });
+        S.arc.me = res.me; S.me = res.student; SQ_SOUND.play('buy'); saveSeen(prof());
         toast('<span class="coin" aria-hidden="true"></span> <b>' + (it === 'ticket' ? 'Ticket' : esc(AR.POWER[it].name)) + '</b> added!', 't-badge');
         var y = window.scrollY; render(); window.scrollTo(0, y);
       }).catch(function () { t.disabled = false; });
@@ -1876,8 +1927,7 @@
     else if (kind === 'submit') p = call('submitLesson', { node: f.getAttribute('data-node'), link: v.link, reflection: v.reflection }).then(function (res) {
       updateMe(res, btn);
       var st = res.student.state.nodes[f.getAttribute('data-node')].status;
-      if (st === 'submitted') toast('<svg class="i"><use href="#i-send"/></svg> Turned in! Your teacher will check it soon.');
-      else confetti();
+      if (st === 'submitted') SQ_FX.sent({ title: title(f.getAttribute('data-node')) });
       render();
     });
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
@@ -1923,7 +1973,7 @@
     if (r[0] === 'map' || r[0] === '') S.scrolled = false;
     // refresh the student's own data occasionally so teacher approvals show up
     if (S.me && !isTeacher() && (r[0] === 'map' || r[0] === '')) {
-      API.call('bootstrap').then(function (b) { var before = prof(); S.boot = b; if (b.student) { S.me = b.student; S.cls = b.cls; celebrate(before, S.me.profile); } render(); }).catch(render);
+      API.call('bootstrap').then(function (b) { var before = prof(); S.boot = b; if (b.student) { S.me = b.student; S.cls = b.cls; celebrate(before, S.me.profile, null, true); } render(); }).catch(render);
       return;
     }
     if (r[0] === 't' && (r[1] === 'dash' || r[1] === 'review') && S.teacher) { loadTeacher().then(render); return; }

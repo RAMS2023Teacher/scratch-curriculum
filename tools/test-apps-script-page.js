@@ -86,6 +86,9 @@ const { makeEnv } = require('./fake-gas');
   assert.ok(/Lights, Camera/.test(await s.page.locator('.p-title').textContent()));
   ok('…then goes straight to the quest from the Classroom link (?quest=t2)');
   assert.ok(await s.page.locator('.banner.lock').count()); ok('…and it is shown as locked (quest 1 comes first)');
+  // the "Looking Sharp" badge celebration appears after saving the avatar; dismiss it like a student would
+  await s.page.waitForSelector('.fx-wrap.fx-badge', { timeout: 5000 }); ok('saving the avatar shows the badge celebration');
+  await s.page.click('.fx-wrap .fx-ok'); await s.page.waitForTimeout(400);
   await s.page.evaluate(() => { location.hash = '#/quest/t1'; }); await s.page.waitForSelector('.pcard');
   await s.page.click('.pcard [data-to="1"]'); await s.page.click('[data-act=did-step]');
   await s.page.waitForTimeout(400);
@@ -100,6 +103,7 @@ const { makeEnv } = require('./fake-gas');
   ok('no browser errors');
   const f = await open('liam.chen@school.org', { quest: 't1' }, true);
   await f.page.waitForSelector('[data-act=av-save]', { timeout: 15000 }); await f.page.click('[data-act=av-save]');
+  await f.page.waitForSelector('.fx-wrap .fx-ok'); await f.page.click('.fx-wrap .fx-ok'); await f.page.waitForTimeout(400);
   await f.page.waitForSelector('.pcard'); await f.page.click('.dot[data-to="3"]'); await f.page.waitForTimeout(300);
   assert.ok(await f.page.locator('.pcard pre.blocks').count()); assert.deepStrictEqual(f.errors, []);
   ok('if a school filter blocks the CDN, blocks show as text and nothing breaks');
