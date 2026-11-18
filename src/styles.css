@@ -1136,3 +1136,74 @@ body.cs-on { background: #5b2bd6; }
   .fx-rays, .fx-parts, .fx-burst, .fx-coin, .fx-lv-ring, .fx-shine { display: none !important; }
   .fx-back { display: none; } .fx-front { animation: none; }
 }
+
+/* ===================== Help requests, feedback, locked buttons ===================== */
+.hand { display: inline-block; animation: wave 1.2s ease-in-out infinite; transform-origin: 70% 80%; }
+@keyframes wave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-16deg); } 75% { transform: rotate(14deg); } }
+.help-btn { background: #fff3c4; border-color: #f2c94c; color: #6b4a00; box-shadow: 0 3px 0 #e0b02a; }
+.help-btn.on { background: #ffd60a; }
+.banner.helpwait { background: #fff3c4; border: 2px solid #f2c94c; color: #5c3d00; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.banner.helpwait .btn { margin-left: auto; }
+.conf-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 5px 12px; border-radius: 999px; border: 2px dashed var(--line); background: transparent; color: var(--muted); font: 800 .85rem Nunito, sans-serif; cursor: pointer; }
+.conf-btn:hover { border-color: var(--accent); color: var(--ink); }
+.conf-btn.has { border-style: solid; border-color: #22a559; color: #17803f; }
+.conf-btn .i { width: 1em; height: 1em; }
+.conf-row { margin-top: 6px; }
+.reasons { display: grid; gap: 8px; }
+.reason { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg2); font-weight: 800; cursor: pointer; box-shadow: 0 3px 0 var(--line); }
+.reason input { position: absolute; opacity: 0; }
+.reason span { font-size: 1.4rem; }
+.reason:has(input:checked) { border-color: var(--accent); box-shadow: 0 3px 0 var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+.reason:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.rate-box { margin-top: 18px; padding: 14px 16px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg2); display: grid; gap: 10px; }
+.faces { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.face { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); cursor: pointer; box-shadow: 0 3px 0 var(--line); }
+.face input { position: absolute; opacity: 0; }
+.face span { font-size: 1.9rem; line-height: 1; filter: grayscale(.7); transition: transform .15s; }
+.face small { font-weight: 800; color: var(--muted); font-size: .72rem; }
+.face:has(input:checked) { border-color: #ffb703; box-shadow: 0 3px 0 #ffb703; background: #fff8e1; }
+.face:has(input:checked) span { filter: none; transform: scale(1.25); }
+.face:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.rate-box label:not(.face) { display: grid; gap: 4px; font-weight: 700; font-size: .92rem; }
+/* locked: grey but clickable */
+.btn.locked, .btn.primary.locked { background: #d9d6e3; color: #6e6a7c; border-color: #c4c0d1; box-shadow: 0 4px 0 #b9b5c7; cursor: not-allowed; filter: none; }
+.btn.locked .coin-tag { opacity: .7; }
+.shake-red { animation: shakeRed .6s; }
+@keyframes shakeRed { 0%, 100% { transform: translateX(0); } 15%, 45%, 75% { transform: translateX(-6px); background: #ef4444; color: #fff; } 30%, 60%, 90% { transform: translateX(6px); background: #ef4444; color: #fff; } }
+.ready-pop { animation: readyPop .5s cubic-bezier(.3, 1.8, .5, 1); }
+@keyframes readyPop { 0% { transform: scale(.9); } 60% { transform: scale(1.1); } }
+.lock-note { margin: 8px 0 0; font-weight: 800; color: var(--muted); font-size: .92rem; }
+.flash-red { animation: flashRed .9s; }
+@keyframes flashRed { 0%, 60% { color: #dc2626; box-shadow: 0 0 0 4px rgba(220, 38, 38, .35); } }
+.need-miss { outline: 3px solid #ef4444 !important; outline-offset: 2px; border-radius: 8px; }
+/* sound toggle in the top bar */
+.snd-btn { position: relative; width: 38px; height: 38px; border-radius: 10px; border: 0; background: rgba(255, 255, 255, .16); color: inherit; cursor: pointer; display: inline-grid; place-items: center; flex: none; }
+.snd-btn .i { width: 20px; height: 20px; }
+.snd-btn.off { opacity: .6; }
+.snd-btn.off::after { content: ""; position: absolute; left: 8px; right: 8px; top: 50%; height: 3px; background: currentColor; border-radius: 2px; transform: rotate(-45deg); }
+.fx-star-fly { background: #ffd60a; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+/* teacher: needs help */
+.needhelp { border: 3px solid #ef4444; }
+.help-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.help-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: #fff1f1; border: 2px solid #fecaca; color: #3b0d0d; }
+.hl-av { width: 44px; height: 44px; border-radius: 10px; flex: none; }
+.hl-note { font-style: italic; font-weight: 700; }
+.cs-helpbtn { background: #ef4444 !important; color: #fff !important; animation: helpPulse 1.2s ease-in-out infinite; }
+@keyframes helpPulse { 50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, .35); } }
+.cs-btn.on { background: #22c55e; color: #fff; }
+.cs-needhelp { border: 3px solid #ef4444; }
+.cs-needhelp .help-list li { font-size: .9em; }
+.cs-kid { position: relative; }
+.cs-kid.needs-help .cs-kid-av { outline: 4px solid #ef4444; outline-offset: 1px; border-radius: 12px; background: #fecaca; }
+.cs-hand { position: absolute; top: -10px; right: -6px; font-style: normal; font-size: 1.2em; animation: wave 1s ease-in-out infinite; }
+/* teacher: feedback page */
+.fb-stats { display: flex; gap: 18px; flex-wrap: wrap; margin: 4px 0 10px; }
+.fb-stats b { font-size: 1.25rem; }
+.fb-list, .fb-quotes { margin: 0 0 10px; padding-left: 20px; display: grid; gap: 6px; }
+.fb-card h3 { margin: 12px 0 6px; font-size: 1rem; }
+.report-box { width: 100%; font: 13px/1.4 ui-monospace, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .face:has(input:checked) { background: #3d3200; } :root:not([data-theme="light"]) .help-list li { background: #3b1414; color: #ffe1e1; border-color: #7f1d1d; } }
+:root[data-theme="dark"] .face:has(input:checked) { background: #3d3200; }
+:root[data-theme="dark"] .help-list li { background: #3b1414; color: #ffe1e1; border-color: #7f1d1d; }
+
+.cs-other.needs-help { background: #ef4444; color: #fff; border-radius: 999px; padding: 2px 10px 2px 2px; font-weight: 800; }

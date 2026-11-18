@@ -16,6 +16,8 @@ Plain-language summary for teachers, administrators, and families. This describe
 | Avatar choices (cartoon parts, no photos) | Game feature | Teacher's Google Sheet |
 | Quest progress: steps checked, quiz answers, XP, badges | Progress tracking | Teacher's Google Sheet |
 | Arcade data: best scores, tickets used, power-ups owned, pass end time | Block Rush mini-game | Teacher's Google Sheet (inside the student's progress record) |
+| Help requests: first name + initial, avatar, which step, optional short note | So the teacher can see who is stuck | Apps Script project properties, for up to one hour. **No email address is stored with them.** |
+| Lesson feedback: confusing flags, quest ratings, short typed comments | To improve the lessons | Teacher's Google Sheet (inside the student's progress record) |
 | Scratch project links and short reflections the student types | Turning in work | Teacher's Google Sheet |
 | Teacher feedback, teacher badges, accommodation settings | Teaching | Teacher's Google Sheet |
 | Private accommodation notes | Teacher reminders | Teacher's Google Sheet. **Never sent to students.** |
@@ -56,3 +58,6 @@ The app **doesn't** change rosters, grades, other assignments, or any student's 
 1. Is Google Apps Script allowed for student-facing apps in our Workspace, and can it use the Classroom API?
 2. Are our Scratch accounts set up through teacher accounts (needed for students under 13)?
 3. Does showing first name + last initial on a class map fit our directory-information policy? (A first-name-only option is available at import.)
+
+## Feedback reports and AI tools
+The Feedback tab can copy a report to paste into an AI tool such as Claude. The report has **no names or email addresses**: only counts, lesson and step titles, and the short notes students typed. Students could type a name into a note, so skim the notes before sharing the report outside your district's approved tools.

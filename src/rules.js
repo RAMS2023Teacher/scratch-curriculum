@@ -49,7 +49,7 @@ var SQ_RULES = (function () {
   NODES.forEach(function (n) { NODE[n.id] = n; });
 
   // ---- XP ---------------------------------------------------------------
-  var XP = { step: 10, quiz: 20, quizFirstTry: 10, challenge: 50, lesson: 100, award: 50 };
+  var XP = { step: 10, quiz: 20, quizFirstTry: 10, challenge: 50, lesson: 100, award: 50, rate: 10 };
 
   function xpForLevel(level) { return 20 * (level - 1) * (level + 4); } // L2=120, L5=720, L10=2520, L13=4080
   function levelFor(xp) {
@@ -160,6 +160,8 @@ var SQ_RULES = (function () {
     });
     (state.awards || []).forEach(function () { xp += XP.award; });
     (state.bonus || []).forEach(function (b) { xp += Number(b.amount) || 0; });
+    // rating a quest (feedback for the teacher) earns a little XP, once per quest
+    Object.keys(state.fb || {}).forEach(function (k) { if (state.fb[k] && state.fb[k].rating) xp += XP.rate; });
 
     var ctx = { done: done, challenges: challenges, firstTry: firstTry, perfect: perfect, xp: xp, state: state };
     var badges = [];

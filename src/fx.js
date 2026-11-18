@@ -31,13 +31,13 @@ var SQ_FX = (function () {
     setTimeout(function () { b.remove(); }, 900);
   }
   // coins arcing from one element to another (e.g. into the coin counter)
-  function coinFly(fromEl, toEl, n) {
+  function coinFly(fromEl, toEl, n, cls) {
     if (!fromEl || !toEl || reduced()) return;
     var a = fromEl.getBoundingClientRect(), z = toEl.getBoundingClientRect();
     n = Math.max(1, Math.min(8, n || 4));
     for (var i = 0; i < n; i++) (function (i) {
       var c = document.createElement('span');
-      c.className = 'fx-coin coin';
+      c.className = cls === 'star' ? 'fx-coin fx-star-fly' : 'fx-coin coin';
       var x0 = a.left + a.width / 2 + rnd(-14, 14), y0 = a.top + a.height / 2 + rnd(-8, 8);
       c.style.left = x0 + 'px'; c.style.top = y0 + 'px';
       c.style.setProperty('--tx', (z.left + z.width / 2 - x0) + 'px');

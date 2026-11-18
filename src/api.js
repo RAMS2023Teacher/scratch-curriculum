@@ -48,7 +48,9 @@ var SQ_API = (function () {
     deleteClass: function (id) { var d = load(); d.classes = d.classes.filter(function (c) { return c.id !== id; }); save(); },
     deleteStudent: function (email) { var d = load(); d.students = d.students.filter(function (s) { return s.email !== email; }); save(); },
     getSettings: function () { return load().settings || {}; },
-    saveSettings: function (o) { load().settings = o; save(); }
+    saveSettings: function (o) { load().settings = o; save(); },
+    helpAll: function () { return load().help || {}; },
+    helpPut: function (id, o) { var d = load(); d.help = d.help || {}; if (o) d.help[id] = o; else delete d.help[id]; save(); }
   };
 
   function seed() {

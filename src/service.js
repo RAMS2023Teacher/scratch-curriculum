@@ -112,6 +112,21 @@ function SQ_SERVICE(store) {
     });
   }
 
+  var HELP_TTL = 60 * 60e3; // a help request expires after an hour
+  var FB_REASONS = ['unclear', 'broken', 'hard', 'easy', 'other'];
+  // Feedback lives on the student record OUTSIDE quest progress (state.nodes), so reopening
+  // or resetting a quest never wipes it.
+  function fbOf(st, node) {
+    var fb = st.state.fb || (st.state.fb = {});
+    var f = fb[node] || (fb[node] = {});
+    f.flags = f.flags || {}; f.help = f.help || {};
+    return f;
+  }
+  // Step names as students see them: core steps are "Step N", optional ones "Stretch step"
+  function stepLabel(Lx, i) {
+    var core = R.coreSteps(Lx), j = core.indexOf(i);
+    return j >= 0 ? 'Step ' + (j + 1) : 'Stretch step';
+  }
   function memberId(email) {
     var h = 7;
     for (var i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) % 2147483647;
@@ -246,6 +261,64 @@ function SQ_SERVICE(store) {
       ns.submittedAt = now(); touch(ns);
       ns.status = w.cls.requireApproval ? 'submitted' : 'done';
       if (ns.status === 'done') ns.doneAt = now();
+      return { student: persist(st) };
+    },
+
+    // ---------------------------------------------------------- "I'm stuck" help requests
+    askHelp: function (user, args) {
+      var st = requireStudent(user), node = String(args.node || '');
+      var Lh = lesson(node), step = args.step, where = Lh.title;
+      if (typeof step === 'number' && Lh.steps[step]) where += ' · ' + stepLabel(Lh, step) + ': ' + Lh.steps[step].title;
+      else if (step === 'quiz') where += ' · Quick check';
+      else if (step === 'turnin') where += ' · Turning in';
+      else if (step === 'challenge') where += ' · Expert challenge';
+      var id = memberId(st.email);
+      store.helpPut(id, { who: id, name: st.name, classId: st.classId, at: now(), node: node, where: where, note: clean(args.note, 140), avatar: st.state.avatar || A.DEFAULT });
+      var fb = fbOf(st, node), sk = String(step == null ? 'other' : step);
+      fb.help[sk] = (fb.help[sk] || 0) + 1;
+      persist(st);
+      return { help: { open: true, at: now() } };
+    },
+    cancelHelp: function (user) {
+      var st = requireStudent(user);
+      store.helpPut(memberId(st.email), null);
+      return { help: { open: false } };
+    },
+    myHelp: function (user) {
+      var st = requireStudent(user), h = store.helpAll()[memberId(st.email)];
+      return { help: h && now() - h.at < HELP_TTL ? { open: true, at: h.at } : { open: false } };
+    },
+    helpList: function (user, args) {
+      requireTeacher(user);
+      var all = store.helpAll();
+      return { list: Object.keys(all).map(function (k) { return all[k]; }).filter(function (h) {
+        return h && h.classId === args.classId && now() - h.at < HELP_TTL;
+      }).sort(function (a, b) { return a.at - b.at; }), serverNow: now() };
+    },
+    helpDone: function (user, args) {
+      requireTeacher(user);
+      var h = store.helpAll()[String(args.who || '')];
+      if (h) store.helpPut(h.who, null);
+      return api.helpList(user, { classId: args.classId });
+    },
+
+    // ---------------------------------------------------------- lesson feedback (for improving the lessons)
+    flagConfusing: function (user, args) {
+      var st = requireStudent(user), node = String(args.node || ''), Lf = lesson(node);
+      var kind = args.kind === 'quiz' ? 'quiz' : 'step', idx = Math.floor(Number(args.idx));
+      if (!((kind === 'quiz' ? Lf.quiz : Lf.steps)[idx])) err('Unknown step.');
+      var reason = FB_REASONS.indexOf(args.reason) >= 0 ? args.reason : 'other';
+      fbOf(st, node).flags[kind + ':' + idx] = { reason: reason, note: clean(args.note, 200), at: now() };
+      return { student: persist(st) };
+    },
+    rateLesson: function (user, args) {
+      var st = requireStudent(user), node = String(args.node || '');
+      lesson(node);
+      if (!st.state.nodes[node]) err('Start this quest before rating it.');
+      var r = Math.round(Number(args.rating));
+      if (!(r >= 1 && r <= 5)) err('Pick a face from 1 to 5.');
+      var fb = fbOf(st, node);
+      fb.rating = r; fb.hardest = clean(args.hardest, 200); fb.change = clean(args.change, 200); fb.ratedAt = now();
       return { student: persist(st) };
     },
 
@@ -441,7 +514,7 @@ function SQ_SERVICE(store) {
       var members = studs.map(function (s) {
         var p = R.profile(s.state);
         return { key: s.email, name: s.name, avatar: s.state.avatar || A.DEFAULT, level: p.level, current: p.current, done: Object.keys(p.done),
-          doneCount: p.doneCount, team: teamOf[s.email] || null, helper: p.badges.indexOf('helper') >= 0, xp: p.xp };
+          doneCount: p.doneCount, hid: memberId(s.email), team: teamOf[s.email] || null, helper: p.badges.indexOf('helper') >= 0, xp: p.xp };
       });
       // recent wins across the class (newest first, last 7 days)
       var since = now() - 7 * 864e5, wins = [];
@@ -488,7 +561,7 @@ function SQ_SERVICE(store) {
           }
         }
         if (stage) m.stage = stage;
-        else if (R.NODE[m.current]) others.push({ name: m.name, avatar: m.avatar, quest: m.current, tier: R.NODE[m.current].tier });
+        else if (R.NODE[m.current]) others.push({ name: m.name, avatar: m.avatar, quest: m.current, tier: R.NODE[m.current].tier, hid: m.hid });
       });
       var race = { quest: raceQ, tier: R.NODE[raceQ].tier, title: RL.title, stations: stations, others: others };
       members.forEach(function (m) { delete m.xp; });

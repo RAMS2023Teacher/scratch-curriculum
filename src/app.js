@@ -133,6 +133,7 @@
       SQ_FX.level({ from: before.level, to: after.level, rank: after.rank, unlocks: newly.map(function (u) { return u.name; }) });
       setTimeout(confetti, 300);
     } else newly.forEach(function (u) { toast('<span class="t-ico"><svg class="i"><use href="#i-unlock"/></svg></span><div><b>Unlocked: ' + esc(u.name) + '</b><br>Equip it in My Avatar!</div>', 'unlock'); });
+    if (gain > 0 && el && !away && !newDone.length) { var xb = document.querySelector('.me-card .xpbar'); if (xb) SQ_FX.coinFly(el, xb, Math.min(8, Math.max(3, Math.round(gain / 10))), 'star'); }
     if (!newDone.length && !newBadges.length && !leveled && coinGain > 0 && !away) {
       setTimeout(function () { SQ_SOUND.play('coin'); }, 160);
       var mc = document.querySelector('.me-card'); if (el && mc) SQ_FX.coinFly(el, mc, Math.min(6, coinGain));
@@ -197,7 +198,7 @@
     if (isTeacher() && route()[0] === 't') {
       var pending = S.teacher ? pendingList().length : 0;
       tabs = [['#/t/dash', '<svg class="i"><use href="#i-chart"/></svg>', 'Dashboard'], ['#/t/review', '<svg class="i"><use href="#i-inbox"/></svg>', 'Review' + (pending ? ' <span class="pill">' + pending + '</span>' : '')],
-        ['#/t/map', '<svg class="i"><use href="#i-map"/></svg>', 'Class Map'], ['#/t/lessons', '<svg class="i"><use href="#i-library"/></svg>', 'Lessons'], ['#/t/standards', '<svg class="i"><use href="#i-ruler"/></svg>', 'Standards'], ['#/t/classroom', '<svg class="i"><use href="#i-school"/></svg>', 'Classroom'], ['#/t/classes', '<svg class="i"><use href="#i-sliders"/></svg>', 'Classes']];
+        ['#/t/map', '<svg class="i"><use href="#i-map"/></svg>', 'Class Map'], ['#/t/lessons', '<svg class="i"><use href="#i-library"/></svg>', 'Lessons'], ['#/t/standards', '<svg class="i"><use href="#i-ruler"/></svg>', 'Standards'], ['#/t/feedback', '<svg class="i"><use href="#i-message"/></svg>', 'Feedback'], ['#/t/classroom', '<svg class="i"><use href="#i-school"/></svg>', 'Classroom'], ['#/t/classes', '<svg class="i"><use href="#i-sliders"/></svg>', 'Classes']];
     } else {
       tabs = [['#/map', '<svg class="i"><use href="#i-map"/></svg>', 'Quest Map'], ['#/avatar', '<svg class="i"><use href="#i-palette"/></svg>', 'My Avatar'], ['#/badges', '<svg class="i"><use href="#i-award"/></svg>', 'Badges'], ['#/arcade', '<svg class="i"><use href="#i-gamepad"/></svg>', 'Arcade'], ['#/class', '<svg class="i"><use href="#i-users"/></svg>', 'My Class']];
     }
@@ -207,7 +208,7 @@
       var active = cur.indexOf(t[0]) === 0 || (t[0] === '#/map' && cur.indexOf('#/quest') === 0);
       html += '<a href="' + t[0] + '" class="' + (active ? 'on' : '') + '"><span aria-hidden="true">' + t[1] + '</span> <span class="tl">' + t[2] + '</span></a>';
     });
-    html += '</nav><div class="me">';
+    html += '</nav><div class="me"><button class="snd-btn' + (SQ_SOUND.muted() ? ' off' : '') + '" data-act="sound-toggle" title="' + (SQ_SOUND.muted() ? 'Sound is off' : 'Sound is on') + '" aria-label="' + (SQ_SOUND.muted() ? 'Turn sound on' : 'Turn sound off') + '"><svg class="i"><use href="#i-volume"/></svg></button>';
     if (isTeacher()) {
       html += r === 't'
         ? (S.me ? '<a class="btn small ghost" href="#/map"><svg class="i"><use href="#i-eye"/></svg> Student view</a>' : '<button class="btn small ghost" data-act="teacher-try"><svg class="i"><use href="#i-eye"/></svg> Try as student</button>')
@@ -238,6 +239,7 @@
     stopSpeaking();
     csStop(); document.body.classList.remove('cs-on', 'cs-dark');
     arcStop();
+    (S.polls || []).forEach(clearInterval); S.polls = [];
     var r = route();
     if (!S.boot) return;
     if (r[0] === 't') {
@@ -262,6 +264,11 @@
   function afterRender(r) {
     renderBlocks();
     if (r[0] === 'arcade') { loadArcade(); S.arcTimer = setInterval(arcTick, 1000); }
+    document.querySelectorAll('.lockzone').forEach(function (z) { lockUpdate(z, true); });
+    if (r[0] === 'quest' && S.me) {
+      if (S.help === undefined) { S.help = null; helpLoadMine(); }
+      S.polls.push(setInterval(function () { if (S.help && S.help.open) helpLoadMine(); }, 20000));
+    }
     if (r[0] === 'map' || r[0] === '' || r[0] === 'class' || (r[0] === 't' && (r[1] === 'map' || r[1] === 'projector'))) loadClassView(r);
     if (r[0] === 'map' || r[0] === '' || (r[0] === 't' && r[1] === 'map')) {
       var you = document.querySelector('.node.current');
@@ -521,7 +528,7 @@
         var isAns = right && ci === q.answer;
         h += '<button class="choice' + (isAns ? ' correct' : '') + '" data-act="quiz" data-node="' + id + '" data-q="' + qi + '" data-c="' + ci + '"' + (right || lockedUI ? ' disabled' : '') + '>' + esc(c) + '</button>';
       });
-      h += '</div>' + (right ? '<p class="explain say"><svg class="i"><use href="#i-check-circle"/></svg> ' + esc(q.explain) + (r.firstTry ? ' <span class="chip gold">First try!</span>' : '') + '</p>' : '<p class="explain" hidden></p>') + '</div>';
+      h += '</div>' + (right ? '<p class="explain say"><svg class="i"><use href="#i-check-circle"/></svg> ' + esc(q.explain) + (r.firstTry ? ' <span class="chip gold">First try!</span>' : '') + '</p>' : '<p class="explain" hidden></p>') + (readOnly ? '' : '<div class="conf-row">' + confBtn(id, 'quiz', c.i) + '</div>') + '</div>';
     });
     h += '</section>';
 
@@ -689,7 +696,8 @@
     h += '<div class="p-top"><a class="p-back" href="#/map" aria-label="Back to map"><svg class="i"><use href="#i-arrow-left"/></svg> Map</a><div class="p-title"><span class="p-ico">' + SQ_ICONS.branch(n.branch) + '</span>' + esc(Ls.title) + '</div>' +
       '<div class="p-tools"><button class="btn small ghost" data-act="words" data-node="' + id + '" title="Word bank"><svg class="i"><use href="#i-book"/></svg> Words</button>' +
       '<a class="btn small" href="https://scratch.mit.edu/projects/editor/" target="scratchwin" rel="noopener"><svg class="i"><use href="#i-external"/></svg> Scratch <svg class="i"><use href="#i-external"/></svg></a>' +
-      '<button class="btn small ghost" data-act="split-help" title="Put Scratch and this side by side"><svg class="i"><use href="#i-columns"/></svg></button></div></div>';
+      '<button class="btn small ghost" data-act="split-help" title="Put Scratch and this side by side"><svg class="i"><use href="#i-columns"/></svg></button>' +
+      (readOnly ? '' : '<button class="btn small help-btn' + (S.help && S.help.open ? ' on' : '') + '" data-act="ask-help" data-node="' + id + '" data-step="' + (helpWhere(c) == null ? '' : helpWhere(c)) + '">✋ I’m stuck</button>') + '</div></div>';
     h += '<div class="dots" role="tablist">';
     cards.forEach(function (cc, j) {
       var stretch = cc.type === 'step' && Ls.steps[cc.i].stretch;
@@ -698,6 +706,7 @@
     });
     h += '</div>';
     if (readOnly) h += '<div class="banner lock small">' + (status === 'locked' ? '<svg class="i"><use href="#i-lock"/></svg> Locked. ' + esc(lockedReason(id)) : '<svg class="i"><use href="#i-clock"/></svg> Your teacher hasn\'t opened this yet.') + ' You can peek!</div>';
+    h += helpBanner();
     if (status === 'returned' && c.type !== 'turnin') h += '<div class="banner ret small"><svg class="i"><use href="#i-undo"/></svg> Teacher feedback: ' + esc(ns.feedback || 'See your teacher.') + '</div>';
 
     h += '<section class="pcard t-' + c.type + '"><button class="say-btn" data-act="speak" aria-label="Read this card out loud"><svg class="i"><use href="#i-volume"/></svg> <span>Read to me</span></button>';
@@ -727,7 +736,7 @@
         '<p class="p-say say">' + (s.short || s.text) + '</p>' + stepBody(id, c.i) +
         '<div class="p-extras">' + (s.short ? '<details class="p-more"><summary><svg class="i"><use href="#i-book"/></svg> Tell me more</summary><div class="p-text say">' + s.text + '</div></details>' : '') +
         (s.tip ? '<details class="p-more hint"><summary><svg class="i"><use href="#i-bulb"/></svg> Need a hint?</summary><p class="say">' + s.tip + '</p></details>' : '') +
-        (s.solo ? '<details class="p-more solo"><summary><svg class="i"><use href="#i-user"/></svg> No partner free right now?</summary><p class="say">' + s.solo + '</p></details>' : '') + '</div>';
+        (s.solo ? '<details class="p-more solo"><summary><svg class="i"><use href="#i-user"/></svg> No partner free right now?</summary><p class="say">' + s.solo + '</p></details>' : '') + (readOnly ? '' : confBtn(id, 'step', c.i)) + '</div>';
       if (readOnly || frozen) h += '<div class="p-nav">' + backBtn + (nextBtn || '<span></span>') + '</div>';
       else if (on) h += '<div class="p-done"><svg class="i"><use href="#i-check-circle"/></svg> Done! <button class="linklike" data-act="undo-step" data-node="' + id + '" data-idx="' + c.i + '">undo</button></div><div class="p-nav">' + backBtn + nextBtn + '</div>';
       else h += '<div class="p-nav">' + backBtn + '<span class="row">' + (s.stretch ? '<button class="btn ghost" data-act="card" data-node="' + id + '" data-to="' + (k + 1) + '">Skip</button>' : '') +
@@ -755,8 +764,9 @@
       var quizLeft = Ls.quiz.filter(function (_, i) { return !(ns.quiz[i] && ns.quiz[i].correct); }).length;
       if (status === 'done') {
         h += '<div class="p-celebrate">🏆</div><h2 class="p-h center say">Quest complete!</h2>' + (ns.feedback ? '<div class="p-goal"><b>Teacher says:</b><p>' + esc(ns.feedback) + '</p></div>' : '') +
-          '<div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
+          rateBox(id) + '<div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
       } else if (status === 'submitted') {
+        h += rateBox(id);
         h += '<div class="p-celebrate"><svg class="i"><use href="#i-send"/></svg></div><h2 class="p-h center say">Turned in!</h2><p class="p-big center say">Your teacher will check it soon. You can start another quest.</p><div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
       } else if (readOnly) {
         h += '<h2 class="p-h">Turn it in</h2><p class="p-big">You can turn this in once the quest is open.</p><div class="p-nav">' + backBtn + '<span></span></div>';
@@ -764,12 +774,12 @@
         h += '<h2 class="p-h say">Almost there!</h2><p class="p-big say">Finish ' + (stepsLeft ? stepsLeft + ' more step' + (stepsLeft > 1 ? 's' : '') : '') + (stepsLeft && quizLeft ? ' and ' : '') + (quizLeft ? quizLeft + ' quick check' + (quizLeft > 1 ? 's' : '') : '') + ' first.</p>' +
           '<div class="p-nav">' + backBtn + '<button class="btn primary big" data-act="card" data-node="' + id + '" data-to="' + firstOpenCard(id) + '">Show me <svg class="i"><use href="#i-arrow-right"/></svg></button></div>';
       } else {
-        h += '<div class="p-kicker">Last step!</div><h2 class="p-h say"><svg class="i"><use href="#i-send"/></svg> Turn in your quest</h2>' +
-          (Ls.checklist ? '<div class="checklist"><b class="say">Check your project has:</b>' + Ls.checklist.map(function (x, j) { return '<label class="check small-check"><input type="checkbox"><span class="box"></span><span class="say">' + esc(x) + '</span></label>'; }).join('') + '</div>' : '') +
+        h += '<div class="lockzone"><div class="p-kicker">Last step!</div><h2 class="p-h say"><svg class="i"><use href="#i-send"/></svg> Turn in your quest</h2>' +
+          (Ls.checklist ? '<div class="checklist"><b class="say">Check your project has:</b>' + Ls.checklist.map(function (x, j) { return '<label class="check small-check"><input type="checkbox" data-need="checklist"' + (ns.link ? ' checked' : '') + '><span class="box"></span><span class="say">' + esc(x) + '</span></label>'; }).join('') + '</div>' : '') +
           '<p class="p-text say">' + esc(Ls.submit) + '</p>' +
-          '<form data-form="submit" data-node="' + id + '"><label>Paste your Scratch link ' + (S.cls.requireLink ? '' : '<span class="muted">(or just show your teacher)</span>') + '<input name="link" type="url" placeholder="https://scratch.mit.edu/projects/…" value="' + esc(ns.link || '') + '"></label>' +
+          '<form data-form="submit" data-node="' + id + '"><label>Paste your Scratch link ' + (S.cls.requireLink ? '' : '<span class="muted">(or just show your teacher)</span>') + '<input name="link" type="url" placeholder="https://scratch.mit.edu/projects/…" value="' + esc(ns.link || '') + '"' + (S.cls.requireLink ? ' data-need="paste your Scratch link"' : '') + '></label>' +
           '<label>One thing you\'re proud of <span class="muted">(optional)</span><input name="reflection" maxlength="300" value="' + esc(ns.reflection || '') + '"></label>' +
-          '<div class="p-nav">' + backBtn + '<button class="btn primary big">' + (status === 'returned' ? 'Turn in again' : 'Turn it in!') + ' <small>+' + R.XP.lesson + ' XP</small></button></div></form>';
+          '<p class="lock-note" hidden></p><div class="p-nav">' + backBtn + '<button class="btn primary big" data-lock-btn>' + (status === 'returned' ? 'Turn in again' : 'Turn it in!') + ' <small>+' + R.XP.lesson + ' XP</small></button></div></form></div>' + rateBox(id);
       }
     }
     h += '</section></div>';
@@ -920,6 +930,191 @@
     var bg = c === 'neon' ? 'linear-gradient(135deg,#ff3cac,#784ba0,#2b86c5)' : c;
     return '<button class="sw' + (on ? ' on' : '') + (ok ? '' : ' locked') + '" style="background:' + bg + '" data-act="av-color" data-key="' + key + '" data-c="' + c + '" title="' + (ok ? c : esc(A.unlockText(A.COLOR_UNLOCK[c]))) + '" aria-label="color ' + c + '">' + (ok ? '' : '<svg class="i"><use href="#i-lock"/></svg>') + '</button>';
   }
+  // ------------------------------------------------------------ help requests, feedback, locked buttons
+  var FB_REASONS = [['unclear', '😵', 'The instructions were unclear'], ['broken', '🐞', 'My code didn’t work'], ['hard', '🧗', 'Too hard'], ['easy', '😴', 'Too easy'], ['other', '💬', 'Something else']];
+  var FACES = ['😣', '😕', '😐', '🙂', '🤩'], FACE_WORDS = ['Not fun', 'Meh', 'OK', 'Good', 'Awesome'];
+  function fbFor(id) { return ((S.me && S.me.state.fb) || {})[id] || {}; }
+  function confBtn(id, kind, i) {
+    var has = (fbFor(id).flags || {})[kind + ':' + i];
+    return '<button class="conf-btn' + (has ? ' has' : '') + '" data-act="confusing" data-node="' + id + '" data-kind="' + kind + '" data-idx="' + i + '">' +
+      (has ? '<svg class="i"><use href="#i-check"/></svg> You flagged this. Thanks!' : '🤔 Confusing?') + '</button>';
+  }
+  function rateBox(id) {
+    var fb = fbFor(id);
+    return '<form class="rate-box" data-form="rate" data-node="' + id + '"><div class="row between"><b>Rate this quest</b>' + (fb.rating ? '<span class="muted small">You can change it</span>' : '<span class="chip gold">+' + R.XP.rate + ' XP</span>') + '</div>' +
+      '<div class="faces" role="radiogroup" aria-label="Rating">' + FACES.map(function (f, i) {
+        return '<label class="face"><input type="radio" name="rating" value="' + (i + 1) + '"' + (fb.rating === i + 1 ? ' checked' : '') + '><span>' + f + '</span><small>' + FACE_WORDS[i] + '</small></label>';
+      }).join('') + '</div>' +
+      '<label>What was the hardest part? <span class="muted">(optional)</span><input name="hardest" maxlength="200" value="' + esc(fb.hardest || '') + '"></label>' +
+      '<label>What would make this quest better? <span class="muted">(optional)</span><input name="change" maxlength="200" value="' + esc(fb.change || '') + '"></label>' +
+      '<button class="btn">' + (fb.rating ? 'Update my rating' : 'Send my rating') + '</button></form>';
+  }
+  function helpWhere(c) { return c.type === 'step' ? c.i : (c.type === 'quiz' || c.type === 'turnin' || c.type === 'challenge') ? c.type : null; }
+  function helpBanner() {
+    return S.help && S.help.open ? '<div class="banner helpwait" role="status"><span class="hand">✋</span> <b>Help is on the way!</b> Keep trying while you wait… <button class="btn small" data-act="cancel-help">I figured it out 👍</button></div>' : '';
+  }
+  function helpLoadMine() {
+    API.call('myHelp', {}).then(function (res) {
+      var was = S.help && S.help.open;
+      S.help = res.help;
+      if (was && !res.help.open) toast('<span class="t-ico">✋</span><div><b>Your teacher marked your help request as done.</b></div>');
+      if (was !== res.help.open && route()[0] === 'quest') { S.keepScroll = true; var y = window.scrollY; render(); window.scrollTo(0, y); }
+    }).catch(function () { });
+  }
+  function agoShort(t, nowT) { var m = Math.max(0, Math.round(((nowT || Date.now()) - t) / 60000)); return m < 1 ? 'just now' : m + ' min ago'; }
+  function helpListHTML(list, classId, nowT) {
+    return '<ul class="help-list">' + list.map(function (h) {
+      return '<li>' + avatarImgTag(h.avatar, 'hl-av') + '<div class="grow"><b>' + esc(h.name) + '</b> <span class="muted small">' + agoShort(h.at, nowT) + '</span><div class="small">' + esc(h.where) + '</div>' +
+        (h.note ? '<div class="hl-note">“' + esc(h.note) + '”</div>' : '') + '</div><button class="btn small primary" data-act="help-done" data-who="' + h.who + '" data-class="' + classId + '"><svg class="i"><use href="#i-check"/></svg> Helped</button></li>';
+    }).join('') + '</ul>';
+  }
+  // Teacher Dashboard: the "needs help" card, refreshed every 10 seconds while the Dashboard is open
+  function tHelpStart() {
+    if (S.tHelpTimer) clearInterval(S.tHelpTimer);
+    var tick = function () {
+      var box = document.getElementById('t-helpbox'), c = tc();
+      if (!box || !c) { clearInterval(S.tHelpTimer); S.tHelpTimer = null; return; }
+      API.call('helpList', { classId: c.id }).then(function (res) { tHelpPaint(res, c.id); }).catch(function () { });
+    };
+    tick(); S.tHelpTimer = setInterval(tick, 10000);
+  }
+  function tHelpPaint(res, classId) {
+    var box = document.getElementById('t-helpbox'); if (!box) return;
+    var seen = S.tHelpSeen || (S.tHelpSeen = {}), fresh = res.list.filter(function (h) { return !seen[h.who + h.at]; });
+    if (S.tHelpLoaded && fresh.length) SQ_SOUND.play('doorbell');
+    res.list.forEach(function (h) { seen[h.who + h.at] = 1; }); S.tHelpLoaded = true;
+    box.innerHTML = res.list.length ? '<div class="card needhelp"><h2><span class="hand">✋</span> ' + res.list.length + ' need' + (res.list.length === 1 ? 's' : '') + ' help</h2>' + helpListHTML(res.list, classId, res.serverNow) + '</div>' : '';
+  }
+
+  // Locked buttons: grey but still clickable, so a click can explain what's missing.
+  function lockUpdate(zone, quiet) {
+    var btn = zone.querySelector('[data-lock-btn]'); if (!btn) return;
+    var missing = [].filter.call(zone.querySelectorAll('[data-need]'), function (el) { return el.type === 'checkbox' ? !el.checked : !String(el.value || '').trim(); });
+    var note = zone.querySelector('.lock-note');
+    if (missing.length) {
+      btn.classList.add('locked'); btn.setAttribute('aria-disabled', 'true');
+      var boxes = missing.filter(function (el) { return el.type === 'checkbox'; }).length, other = missing.filter(function (el) { return el.type !== 'checkbox'; });
+      var bits = []; if (boxes) bits.push('tick ' + boxes + ' more checklist item' + (boxes > 1 ? 's' : '')); other.forEach(function (el) { bits.push(el.getAttribute('data-need')); });
+      if (note) { note.hidden = false; note.textContent = 'To go on: ' + bits.join(', ') + '.'; }
+    } else if (btn.classList.contains('locked')) {
+      btn.classList.remove('locked'); btn.removeAttribute('aria-disabled');
+      if (note) note.hidden = true;
+      if (!quiet) { btn.classList.remove('ready-pop'); void btn.offsetWidth; btn.classList.add('ready-pop'); SQ_SOUND.play('ready'); }
+    }
+  }
+  function lockedClick(btn) {
+    SQ_SOUND.play('buzz');
+    btn.classList.remove('shake-red'); void btn.offsetWidth; btn.classList.add('shake-red');
+    var zone = btn.closest('.lockzone');
+    if (zone) {
+      var note = zone.querySelector('.lock-note'); if (note) { note.classList.remove('flash-red'); void note.offsetWidth; note.classList.add('flash-red'); }
+      var missing = [].filter.call(zone.querySelectorAll('[data-need]'), function (el) { return el.type === 'checkbox' ? !el.checked : !String(el.value || '').trim(); });
+      missing.forEach(function (el) { var t = el.type === 'checkbox' ? el.closest('label') : el; t.classList.add('need-miss'); setTimeout(function () { t.classList.remove('need-miss'); }, 1800); });
+      if (missing[0]) (missing[0].type === 'checkbox' ? missing[0].closest('label') : missing[0]).scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+    var why = btn.getAttribute('data-why'); if (why) toast('<svg class="i"><use href="#i-lock"/></svg> ' + esc(why));
+  }
+  function copyText(text) {
+    var ok = function () { toast('<svg class="i"><use href="#i-clipboard"/></svg> Copied! Paste it to Claude.'); };
+    var fallback = function () {
+      var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+      var done = false; try { done = document.execCommand('copy'); } catch (e) { }
+      ta.remove();
+      if (done) ok(); else modal('<h2>Copy the report</h2><p class="muted">Press Ctrl+C (or ⌘C) to copy.</p><textarea class="report-box" rows="16">' + esc(text) + '</textarea>', 'wide');
+      var box = document.querySelector('.report-box'); if (box) box.select();
+    };
+    try { navigator.clipboard.writeText(text).then(ok, fallback); } catch (e) { fallback(); }
+  }
+
+  // ------------------------------------------------------------ teacher: lesson feedback report
+  function fbStepLabel(Lx, i) { var core = R.coreSteps(Lx), j = core.indexOf(i); return j >= 0 ? String(j + 1) : 'Stretch (' + (i + 1) + ')'; }
+  function fbScope() {
+    var c = tc(), all = S.fbAll;
+    return S.teacher.students.filter(function (s) { return !s.isTeacher && (all || !c || s.classId === c.id); });
+  }
+  function fbStats(id, ss) {
+    var Lx = L[id], o = { id: id, started: 0, finished: 0, ratings: [], steps: [], quiz: [], hardest: [], change: [] };
+    Lx.steps.forEach(function (st, i) { o.steps.push({ i: i, title: st.title, flags: 0, reasons: {}, notes: [], help: 0 }); });
+    Lx.quiz.forEach(function (q, i) { o.quiz.push({ i: i, q: q.q, answered: 0, missed: 0, flags: 0 }); });
+    var other = 0;
+    ss.forEach(function (s) {
+      var ns = s.state.nodes[id], fb = (s.state.fb || {})[id];
+      if (ns && (ns.touched || ns.steps.some(Boolean) || Object.keys(ns.quiz || {}).length)) o.started++;
+      if (ns && (ns.status === 'done' || ns.status === 'submitted')) o.finished++;
+      if (ns) Object.keys(ns.quiz || {}).forEach(function (k) { var r = ns.quiz[k], Q = o.quiz[k]; if (!Q || !r || !r.tries) return; Q.answered++; if (!r.firstTry) Q.missed++; });
+      if (!fb) return;
+      if (fb.rating) o.ratings.push(fb.rating);
+      if (fb.hardest) o.hardest.push(fb.hardest);
+      if (fb.change) o.change.push(fb.change);
+      Object.keys(fb.flags || {}).forEach(function (k) {
+        var f = fb.flags[k], parts = k.split(':'), arr = parts[0] === 'quiz' ? o.quiz : o.steps, x = arr[+parts[1]];
+        if (!x) return;
+        x.flags++;
+        if (parts[0] === 'step') { x.reasons[f.reason] = (x.reasons[f.reason] || 0) + 1; if (f.note) x.notes.push(f.note); }
+      });
+      Object.keys(fb.help || {}).forEach(function (k) { if (o.steps[+k] && /^\d+$/.test(k)) o.steps[+k].help += fb.help[k]; else other += fb.help[k]; });
+    });
+    o.otherHelp = other;
+    o.avg = o.ratings.length ? o.ratings.reduce(function (a, b) { return a + b; }, 0) / o.ratings.length : 0;
+    o.hot = o.steps.filter(function (x) { return x.flags || x.help; }).sort(function (a, b) { return (b.flags * 2 + b.help) - (a.flags * 2 + a.help); });
+    o.hardQ = o.quiz.filter(function (q) { return q.answered && q.missed / q.answered >= 0.3; });
+    o.any = o.started || o.ratings.length || o.hot.length;
+    return o;
+  }
+  function reasonText(r) { var x = FB_REASONS.filter(function (z) { return z[0] === r; })[0]; return x ? x[2].toLowerCase().replace('my code', 'the code').replace('’', '\'') : r; }
+  function fbMarkdown(ids) {
+    var ss = fbScope(), c = tc(), d = new Date();
+    var date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    var md = '# Scratch Quest lesson feedback\n\n6th grade: Scratch · ' + date + ' · ' + ss.length + ' students in ' + (S.fbAll || !c ? 'all classes' : c.name) + ' · student names removed\n\n' +
+      'Please use this to improve the lessons in the Scratch Quest repository. Each lesson is a JavaScript file (path given) in the `SQ_LESSONS.<id> = {...}` format described in `docs/LESSON_SPEC.md`; run `node tools/validate.js` after editing. ' +
+      'Steps are numbered the way students see them (Step 1 = the first build step; optional "stretch" steps are marked). Quiz "missed" counts first tries only. ' +
+      'Saved progress is stored by step position, so change a step\'s content in place rather than inserting or removing steps.\n';
+    ids.forEach(function (id) {
+      var o = fbStats(id, ss), Lx = L[id];
+      var dist = [1, 2, 3, 4, 5].map(function (n) { return n + '★ ' + o.ratings.filter(function (r) { return r === n; }).length; }).join(', ');
+      md += '\n## Quest ' + id + ': ' + Lx.title + '\n\nFile: `src/lessons/' + id + '.js`\n\n- Students started: ' + o.started + ', finished: ' + o.finished + '\n' +
+        '- Rating: ' + (o.ratings.length ? (Math.round(o.avg * 10) / 10) + ' / 5 from ' + o.ratings.length + ' student' + (o.ratings.length > 1 ? 's' : '') + ' (' + dist + ')' : 'no ratings yet') + '\n';
+      md += '\n### Build steps students found confusing or needed help with\n\n';
+      if (!o.hot.length) md += 'None flagged.\n';
+      else {
+        md += '| Step | Title | Confusing flags | Reasons | Help requests |\n|---|---|---|---|---|\n';
+        o.hot.forEach(function (x) { md += '| ' + fbStepLabel(Lx, x.i) + ' | ' + x.title.replace(/\|/g, '/') + ' | ' + x.flags + ' | ' + (Object.keys(x.reasons).map(function (r) { return reasonText(r) + ' ' + x.reasons[r]; }).join(', ') || '') + ' | ' + x.help + ' |\n'; });
+        var notes = []; o.hot.forEach(function (x) { x.notes.forEach(function (n) { notes.push('- Step ' + fbStepLabel(Lx, x.i) + ': "' + n.replace(/"/g, '\'') + '"'); }); });
+        if (notes.length) md += '\n' + notes.join('\n') + '\n';
+      }
+      if (o.otherHelp) md += '\nOther help requests (quick check, turning in, challenge): ' + o.otherHelp + '\n';
+      md += '\n### Quiz\n\n| Q | Question | Missed on first try | Confusing flags |\n|---|---|---|---|\n';
+      o.quiz.forEach(function (q, i) { md += '| ' + (i + 1) + ' | ' + q.q.replace(/\|/g, '/').replace(/\n/g, ' ') + ' | ' + (q.answered ? Math.round(q.missed / q.answered * 100) + '% (' + q.missed + '/' + q.answered + ')' : 'no answers yet') + ' | ' + q.flags + ' |\n'; });
+      md += '\n### "What was the hardest part?"\n\n' + (o.hardest.length ? o.hardest.map(function (x) { return '- ' + x; }).join('\n') : '(no answers)') + '\n';
+      md += '\n### "What would make this quest better?"\n\n' + (o.change.length ? o.change.map(function (x) { return '- ' + x; }).join('\n') : '(no answers)') + '\n';
+    });
+    return md;
+  }
+  function fbIds() { var ss = fbScope(); return R.NODES.map(function (n) { return n.id; }).filter(function (id) { return fbStats(id, ss).any; }); }
+  function tFeedback() {
+    var ss = fbScope(), c = tc(), ids = fbIds();
+    var h = '<div class="t-head"><div><h1><svg class="i"><use href="#i-message"/></svg> Lesson feedback</h1>' + classPicker() +
+      '<label class="switch small"><input type="checkbox" data-act="fb-all"' + (S.fbAll ? ' checked' : '') + '> All my classes</label></div>' +
+      '<div class="t-actions"><button class="btn primary" data-act="fb-copy"' + (ids.length ? '' : ' disabled') + '><svg class="i"><use href="#i-clipboard"/></svg> Copy report for Claude</button><button class="btn" data-act="fb-download"' + (ids.length ? '' : ' disabled') + '><svg class="i"><use href="#i-save"/></svg> Download .md</button></div></div>';
+    h += '<div class="banner small"><svg class="i"><use href="#i-alert"/></svg> The report leaves out student names, but students type their own notes. Skim them for names before you paste the report into an AI tool.</div>';
+    if (!ids.length) return h + '<div class="card"><h2>No feedback yet</h2><p>Students can tap <b>🤔 Confusing?</b> under any step or quick check, ask for help with <b>✋ I’m stuck</b>, and rate each quest when they turn it in (+' + R.XP.rate + ' XP).</p></div>';
+    ids.forEach(function (id) {
+      var o = fbStats(id, ss), Lx = L[id];
+      h += '<div class="card fb-card"><div class="row between"><h2>' + SQ_ICONS.branch(R.NODE[id].branch) + ' ' + esc(Lx.title) + ' <span class="muted small">' + id + '</span></h2><button class="btn small ghost" data-act="fb-copy" data-node="' + id + '"><svg class="i"><use href="#i-clipboard"/></svg> Copy this lesson</button></div>' +
+        '<div class="fb-stats"><span><b>' + (o.ratings.length ? (Math.round(o.avg * 10) / 10) + '</b> / 5 ' + FACES[Math.max(0, Math.round(o.avg) - 1)] + ' <span class="muted">(' + o.ratings.length + ')</span>' : '—</b> no ratings') + '</span><span><b>' + o.started + '</b> started</span><span><b>' + o.finished + '</b> finished</span></div>';
+      if (o.hot.length) h += '<h3>Most flagged steps</h3><ul class="fb-list">' + o.hot.slice(0, 4).map(function (x) {
+        return '<li><b>Step ' + fbStepLabel(Lx, x.i) + ': ' + esc(x.title) + '</b> · ' + x.flags + ' flag' + (x.flags === 1 ? '' : 's') + ', ' + x.help + ' help request' + (x.help === 1 ? '' : 's') +
+          (Object.keys(x.reasons).length ? '<div class="small muted">' + Object.keys(x.reasons).map(function (r) { return esc(reasonText(r)) + ' ×' + x.reasons[r]; }).join(' · ') + '</div>' : '') +
+          (x.notes.length ? '<div class="small">' + x.notes.slice(0, 3).map(function (n) { return '“' + esc(n) + '”'; }).join(' ') + '</div>' : '') + '</li>';
+      }).join('') + '</ul>';
+      if (o.hardQ.length) h += '<h3>Quick checks missed by 30% or more on the first try</h3><ul class="fb-list">' + o.hardQ.map(function (q) { return '<li>Q' + (q.i + 1) + ': ' + esc(q.q) + ' · <b>' + Math.round(q.missed / q.answered * 100) + '%</b> (' + q.missed + '/' + q.answered + ')</li>'; }).join('') + '</ul>';
+      var quotes = o.hardest.map(function (x) { return ['Hardest', x]; }).concat(o.change.map(function (x) { return ['Better if', x]; }));
+      if (quotes.length) h += '<h3>Students said</h3><ul class="fb-quotes">' + quotes.slice(0, 6).map(function (q) { return '<li><span class="muted small">' + q[0] + ':</span> “' + esc(q[1]) + '”</li>'; }).join('') + '</ul>';
+      h += '</div>';
+    });
+    return h;
+  }
+
   // ------------------------------------------------------------ arcade
   var AR = SQ_ARCADE;
   var PU_ICON = {
@@ -985,11 +1180,11 @@
     if (shop) {
       h += '<section class="card arc-shop"><div class="row between"><h2><svg class="i"><use href="#i-zap"/></svg> Power-up shop</h2><span class="muted small">Each power-up works for one run. Bring up to ' + AR.MAX_POWER + '.</span></div><div class="pu-grid">';
       h += '<div class="pu-card ticket">' + puIcon('ticket') + '<b>Arcade ticket</b><p>' + a.info.passMin + ' minutes of play. You also get one free for every quest you finish.</p>' +
-        '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span><button class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : '') + '" data-act="arc-buy" data-item="ticket"' + (p.coins >= a.info.ticketPrice ? '' : ' disabled') + '>' + coinTag(a.info.ticketPrice) + '</button></div></div>';
+        '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span><button class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (a.info.ticketPrice - p.coins) + ' more coins. Earn coins by finishing steps and quests.') + '" data-act="arc-buy" data-item="ticket">' + coinTag(a.info.ticketPrice) + '</button></div></div>';
       AR.POWERUPS.forEach(function (u) {
         var n = me.inv[u.id] || 0, ok = p.coins >= u.price;
         h += '<div class="pu-card">' + puIcon(u.id) + '<b>' + esc(u.name) + '</b><p>' + esc(u.desc) + '</p><div class="pu-foot"><span class="small">' + (n ? 'You have <b>' + n + '</b>' : 'None yet') + '</span>' +
-          '<button class="btn small' + (ok ? ' primary' : '') + '" data-act="arc-buy" data-item="' + u.id + '"' + (ok ? '' : ' disabled') + '>' + coinTag(u.price) + '</button></div></div>';
+          '<button class="btn small' + (ok ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (u.price - p.coins) + ' more coins for ' + esc(u.name) + '.') + '" data-act="arc-buy" data-item="' + u.id + '">' + coinTag(u.price) + '</button></div></div>';
       });
       h += '</div><p class="muted small">Coins come from XP (1 coin for every 5 XP). Spending coins never lowers your XP or level.</p></section>';
     }
@@ -1157,13 +1352,14 @@
       return;
     }
     var page = r[1] || 'dash', body;
-    if (!S.teacher.classes.length && ['lessons', 'lesson', 'classroom', 'standards'].indexOf(page) < 0) body = tWelcome();
+    if (!S.teacher.classes.length && ['lessons', 'lesson', 'classroom', 'standards', 'feedback'].indexOf(page) < 0) body = tWelcome();
     else if (page === 'review') body = tReview();
     else if (page === 'map') body = tMap();
     else if (page === 'lessons') body = tLessons();
     else if (page === 'lesson' && L[r[2]]) body = viewQuest(r[2], true);
     else if (page === 'classes') body = tClasses();
     else if (page === 'standards') body = tStandards();
+    else if (page === 'feedback') body = tFeedback();
     else if (page === 'classroom') body = tClassroom();
     else if (page === 'student') body = tStudent(decodeURIComponent(r[2] || ''));
     else if (page === 'projector') body = tProjector();
@@ -1195,6 +1391,7 @@
       '<div class="stat"><b>' + active + '</b><span>active this week</span></div>' +
       '<a class="stat link" href="#/t/review"><b>' + pend.length + '</b><span>waiting for review <svg class="i"><use href="#i-arrow-right"/></svg></span></a></div>';
     if (c.openThrough < R.MAX_TIER) h += '<div class="banner lock"><svg class="i"><use href="#i-clock"/></svg> Pacing gate: students can work through quest tier <b>' + c.openThrough + '</b> (' + esc(tierName(c.openThrough)) + '). <a href="#/t/classes">Change</a></div>';
+    h = h.replace('<div class="stats">', '<div id="t-helpbox"></div><div class="stats">'); setTimeout(tHelpStart, 0);
     h += tArcadeCard(c); tArcadeLoad(c);
     if (!ss.length) return h + '<div class="card"><h2>No students yet</h2><p>Have students open this web app and enter code <b class="code">' + esc(c.code) + '</b>.</p></div>';
     // progress grid
@@ -1358,19 +1555,32 @@
       root.innerHTML =
         '<header class="cs-head"><div class="cs-brand"><span class="cs-logo"><svg class="i"><use href="#i-compass"/></svg></span><div class="cs-brand-t"><div class="cs-class" id="cs-class"></div><div class="cs-today" id="cs-today"></div></div></div>' +
         '<div class="cs-xp" id="cs-xp"></div>' +
-        '<div class="cs-ctrl"><button class="cs-btn" data-act="cs-setup" title="Set up the screen"><svg class="i"><use href="#i-sliders"/></svg> <span>Set up</span></button><button class="cs-btn" data-act="cs-full" title="Full screen"><svg class="i"><use href="#i-maximize"/></svg> <span>Full screen</span></button><a class="cs-btn" href="#/t/dash" title="Exit"><svg class="i"><use href="#i-x"/></svg> <span>Exit</span></a></div></header>' +
+        '<div class="cs-ctrl"><button class="cs-btn cs-helpbtn" id="cs-helpbtn" data-act="cs-help-jump" hidden></button>' +
+        '<button class="cs-btn" id="cs-arcbtn" data-act="cs-arcade" title="Open or lock the arcade for this class"></button>' +
+        '<button class="cs-btn" data-act="cs-bell" title="Test the help doorbell (also turns on sound on this computer)" aria-label="Test the doorbell">🔔</button>' +
+        '<button class="cs-btn" data-act="cs-setup" title="Set up the screen"><svg class="i"><use href="#i-sliders"/></svg> <span>Set up</span></button><button class="cs-btn" data-act="cs-full" title="Full screen"><svg class="i"><use href="#i-maximize"/></svg> <span>Full screen</span></button><a class="cs-btn" href="#/t/dash" title="Exit"><svg class="i"><use href="#i-x"/></svg> <span>Exit</span></a></div></header>' +
         '<div class="cs-grid"><section class="cs-main">' +
         '<div class="cs-card cs-racebox"><div class="cs-race-h"><h2 id="cs-race-h"></h2><div class="cs-race-meta" id="cs-race-meta"></div><div class="cs-views" id="cs-views"></div></div>' +
         '<div id="cs-race" class="cs-race"></div><div id="cs-others" class="cs-others"></div></div>' +
         '<div class="cs-row2"><div class="cs-card cs-mission"><h2><svg class="i"><use href="#i-target"/></svg> What to work on</h2><div id="cs-mission"></div></div>' +
         '<div class="cs-card cs-helpbox" id="cs-helpbox"><h2><svg class="i"><use href="#i-help"/></svg> Who to ask for help</h2><div id="cs-help"></div></div></div>' +
         '</section><section class="cs-side">' +
+        '<div class="cs-card cs-needhelp" id="cs-needhelp" hidden><h2><span class="hand">✋</span> Needs help</h2><div id="cs-needlist"></div></div>' +
         '<div class="cs-card cs-timecard"><div class="cs-clock"><span id="cs-clock"></span><small id="cs-ampm"></small></div><div class="cs-date" id="cs-date"></div><div class="cs-left" id="cs-left"></div></div>' +
         '<div class="cs-card cs-think"><h2><svg class="i"><use href="#i-message"/></svg> Essential question</h2><div id="cs-question"></div></div>' +
         '<div class="cs-card cs-winsbox" id="cs-winsbox"><h2><svg class="i"><use href="#i-sparkles"/></svg> Recent wins</h2><div id="cs-wins"></div></div>' +
         '</section></div>';
     }
     var d = S.cs.data, sc = d.cls.screen || {}, race = d.race;
+    var csNeeds = {}, hl = (S.csHelp && S.csHelp.list) || [];
+    hl.forEach(function (x) { csNeeds[x.who] = 1; });
+    var hb = document.getElementById('cs-helpbtn');
+    if (hb) { hb.hidden = !hl.length; hb.innerHTML = '✋ <span>' + hl.length + ' need' + (hl.length === 1 ? 's' : '') + ' help</span>'; }
+    var nh = document.getElementById('cs-needhelp');
+    if (nh) { nh.hidden = !hl.length; csSet('cs-needlist', hl.length ? helpListHTML(hl, d.cls.id, S.csHelp.serverNow) : ''); }
+    var tcl = tc(), arcOn = tcl && tcl.arcade && tcl.arcade.mode !== 'off';
+    csSet('cs-arcbtn', '<svg class="i"><use href="#i-gamepad"/></svg> <span>' + (arcOn ? 'Arcade open · Lock' : 'Open arcade') + '</span>');
+    var ab = document.getElementById('cs-arcbtn'); if (ab) ab.classList.toggle('on', !!arcOn);
     root.classList.toggle('dark', !!sc.dark); document.body.classList.toggle('cs-dark', !!sc.dark);
     var teams = d.cls.teams || [];
     var view = sc.view === 'map' ? 'map' : (sc.view === 'teams' && teams.length ? 'teams' : 'quest');
@@ -1392,7 +1602,7 @@
       csSet('cs-race-h', '<svg class="i"><use href="#i-flag"/></svg> Race to the finish: ' + esc(race.title));
       csSet('cs-race-meta', working + ' on their way · ' + fin + ' finished');
       csSet('cs-others', race.others.length ? '<b>On other quests:</b> ' + race.others.sort(function (a, b) { return a.tier - b.tier || a.name.localeCompare(b.name); }).map(function (o) {
-        return '<span class="cs-other">' + avatarImgTag(o.avatar, 'cs-av sm') + esc(o.name) + ' · ' + o.tier + '</span>';
+        return '<span class="cs-other' + (csNeeds[o.hid] ? ' needs-help' : '') + '">' + avatarImgTag(o.avatar, 'cs-av sm') + (csNeeds[o.hid] ? '✋ ' : '') + esc(o.name) + ' · ' + o.tier + '</span>';
       }).join('') : '');
     } else if (view === 'map') {
       stations = [];
@@ -1416,7 +1626,7 @@
         var kids = (groups[s.key] || []).sort(function (a, b) { return a.name.localeCompare(b.name); });
         return '<div class="cs-st' + (s.finish ? ' finish' : '') + '"><div class="cs-st-dot" style="--c:' + s.color + '">' + s.icon + '</div><div class="cs-st-l">' + esc(s.label) + '</div>' +
           '<div class="cs-st-kids' + (kids.length ? ' has' : '') + '">' + kids.map(function (m) {
-            return '<div class="cs-kid">' + avatarImgTag(m.avatar, 'cs-kid-av') + '<span>' + esc(m.name.split(' ')[0]) + '</span></div>';
+            return '<div class="cs-kid' + (csNeeds[m.hid] ? ' needs-help' : '') + '">' + avatarImgTag(m.avatar, 'cs-kid-av') + (csNeeds[m.hid] ? '<i class="cs-hand">✋</i>' : '') + '<span>' + esc(m.name.split(' ')[0]) + '</span></div>';
           }).join('') + '</div></div>';
       }).join('') + '</div>');
     } else {
@@ -1501,10 +1711,23 @@
       '<div class="cs-quick sm"><button class="cs-chip" data-act="cs-timer" data-min="+5">+5 min</button><button class="cs-chip" data-act="cs-timer" data-min="0">Stop</button></div>';
     csSet('cs-left', html);
   }
+  // Help requests are checked every 5 seconds (separately from the 20-second refresh), with a doorbell for new ones.
+  function csHelpLoad() {
+    var c = tc(); if (!c) return;
+    API.call('helpList', { classId: c.id }).then(function (res) {
+      var seen = S.csHelpSeen || (S.csHelpSeen = {}), fresh = res.list.filter(function (h) { return !seen[h.who + h.at]; });
+      if (S.csHelpLoaded && fresh.length) SQ_SOUND.play('doorbell');
+      res.list.forEach(function (h) { seen[h.who + h.at] = 1; }); S.csHelpLoaded = true;
+      S.csHelp = res; csHelpPaint();
+    }).catch(function () { });
+  }
+  function csHelpPaint() { if (S.cs) csPaint(false); }
   function csStart() {
     csStop();
+    S.csHelpLoaded = false;
     csLoad(true);
-    S.csTimers = [setInterval(csTick, 1000), setInterval(function () { csLoad(false); }, 20000)];
+    csHelpLoad();
+    S.csTimers = [setInterval(csTick, 1000), setInterval(function () { csLoad(false); }, 20000), setInterval(csHelpLoad, 5000)];
   }
   function csSave(screen, teams) {
     var c = tc(), args = { classId: c.id, screen: screen };
@@ -1669,6 +1892,8 @@
 
   // ------------------------------------------------------------ events
   document.addEventListener('click', function (e) {
+    var lk = e.target.closest('[aria-disabled="true"]');
+    if (lk) { e.preventDefault(); e.stopPropagation(); lockedClick(lk); return; }
     var t = e.target.closest('[data-act]');
     if (!t) return;
     var act = t.getAttribute('data-act');
@@ -1776,6 +2001,13 @@
       return;
     }
     if (act === 'cs-setup') { if (S.cs) csSetup(); return; }
+    if (act === 'cs-bell') { SQ_SOUND.play('doorbell'); toast('🔔 That is the sound when a student asks for help.'); return; }
+    if (act === 'cs-help-jump') { var nb = document.getElementById('cs-needhelp'); if (nb) { nb.classList.remove('flash-red'); void nb.offsetWidth; nb.classList.add('flash-red'); } return; }
+    if (act === 'cs-arcade') {
+      var cc = tc(), on = cc.arcade && cc.arcade.mode !== 'off';
+      call('setArcade', { classId: cc.id, mode: on ? 'off' : 'earned', minutes: S.arcMin || 45 }).then(function () { return loadTeacher(); }).then(function () { toast(on ? 'Arcade locked' : 'Arcade open for ' + (S.arcMin || 45) + ' minutes (students use tickets)'); csPaint(false); }).catch(function () { });
+      return;
+    }
     if (act === 'cs-view') {
       var vv = t.getAttribute('data-v');
       S.cs.data.cls.screen = Object.assign({}, S.cs.data.cls.screen || {}, { view: vv });
@@ -1832,6 +2064,33 @@
       return;
     }
     if (act === 't-projector') { go('#/t/projector'); return; }
+    if (act === 'ask-help') {
+      var hs = t.getAttribute('data-step');
+      modal('<h2><span class="hand">✋</span> Ask for help</h2><p class="muted">Your teacher will see where you are. Keep trying while you wait!</p><form data-form="ask-help" data-node="' + t.getAttribute('data-node') + '" data-step="' + esc(hs) + '" class="stack">' +
+        '<label>What are you stuck on? <span class="muted">(optional)</span><input name="note" maxlength="140" placeholder="e.g. my sprite won’t move"></label><button class="btn primary big">Ask for help</button></form>');
+      return;
+    }
+    if (act === 'cancel-help') { call('cancelHelp', {}).then(function (res) { S.help = res.help; SQ_SOUND.play('equip'); toast('👍 Nice work figuring it out!'); S.keepScroll = true; var y8 = window.scrollY; render(); window.scrollTo(0, y8); }).catch(function () { }); return; }
+    if (act === 'confusing') {
+      var cf = (fbFor(t.getAttribute('data-node')).flags || {})[t.getAttribute('data-kind') + ':' + t.getAttribute('data-idx')] || {};
+      modal('<h2>🤔 What was confusing?</h2><form data-form="confusing" data-node="' + t.getAttribute('data-node') + '" data-kind="' + t.getAttribute('data-kind') + '" data-idx="' + t.getAttribute('data-idx') + '" class="stack"><div class="reasons">' +
+        FB_REASONS.map(function (x) { return '<label class="reason"><input type="radio" name="reason" value="' + x[0] + '"' + (cf.reason === x[0] ? ' checked' : '') + '><span>' + x[1] + '</span> ' + esc(x[2]) + '</label>'; }).join('') +
+        '</div><label>Tell us more <span class="muted">(optional)</span><input name="note" maxlength="200" value="' + esc(cf.note || '') + '"></label><button class="btn primary">Send</button></form>');
+      return;
+    }
+    if (act === 'help-done') {
+      var hc = t.getAttribute('data-class'); t.disabled = true; SQ_SOUND.play('equip');
+      call('helpDone', { classId: hc, who: t.getAttribute('data-who') }).then(function (res) { if (route()[1] === 'screen') { S.csHelp = res; csHelpPaint(); } else tHelpPaint(res, hc); }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'fb-all') { S.fbAll = t.checked; render(); return; }
+    if (act === 'fb-copy') { var fn = t.getAttribute('data-node'); copyText(fbMarkdown(fn ? [fn] : fbIds())); return; }
+    if (act === 'fb-download') {
+      var md = fbMarkdown(fbIds()), a3 = document.createElement('a');
+      a3.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' })); a3.download = 'scratch-quest-feedback.md';
+      document.body.appendChild(a3); a3.click(); a3.remove();
+      return;
+    }
     if (act === 'arc-sel') {
       var sid = t.getAttribute('data-id'), sel = S.arcSel = S.arcSel || [], si = sel.indexOf(sid);
       if (si >= 0) sel.splice(si, 1); else if (sel.length < AR.MAX_POWER) sel.push(sid); else { toast('You can bring ' + AR.MAX_POWER + ' power-ups per run.'); return; }
@@ -1913,6 +2172,9 @@
       f.querySelector('.gate-name').textContent = '(' + tierName(+t.value) + ')';
     }
   });
+  ['input', 'change'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { var z = e.target.closest && e.target.closest('.lockzone'); if (z) { if (e.target.type === 'checkbox' && ev === 'change') SQ_SOUND.play('tap'); lockUpdate(z); } });
+  });
   document.addEventListener('submit', function (e) {
     var f = e.target, kind = f.getAttribute('data-form');
     if (!kind) return;
@@ -1923,7 +2185,24 @@
     if (btn) btn.disabled = true;
     var done = function () { if (btn) btn.disabled = false; };
     var p;
-    if (kind === 'join') p = call('joinClass', v).then(function (res) { S.me = res.student; S.cls = res.cls; go('#/avatar'); toast('<svg class="i"><use href="#i-sparkles"/></svg> Welcome to ' + esc(res.cls.name) + '!'); });
+    var lockBtn = f.querySelector('[aria-disabled="true"]');
+    if (lockBtn) { if (btn) btn.disabled = false; lockedClick(lockBtn); return; }
+    if (kind === 'ask-help') p = call('askHelp', { node: f.getAttribute('data-node'), step: /^\d+$/.test(f.getAttribute('data-step')) ? +f.getAttribute('data-step') : (f.getAttribute('data-step') || null), note: v.note }).then(function (res) {
+      S.help = res.help; closeModal(); SQ_SOUND.play('pop'); toast('<span class="t-ico">✋</span><div><b>Help is on the way!</b><br>Keep trying while you wait.</div>'); S.keepScroll = true; var y9 = window.scrollY; render(); window.scrollTo(0, y9);
+    });
+    else if (kind === 'confusing') {
+      if (!v.reason) { toast('Pick one reason first.'); done(); return; }
+      p = call('flagConfusing', { node: f.getAttribute('data-node'), kind: f.getAttribute('data-kind'), idx: +f.getAttribute('data-idx'), reason: v.reason, note: v.note }).then(function (res) {
+        S.me = res.student; closeModal(); SQ_SOUND.play('equip'); toast('Thanks! Your teacher will see this.'); S.keepScroll = true; var y10 = window.scrollY; render(); window.scrollTo(0, y10);
+      });
+    }
+    else if (kind === 'rate') {
+      if (!v.rating) { SQ_SOUND.play('buzz'); toast('Pick a face first.'); done(); return; }
+      p = call('rateLesson', { node: f.getAttribute('data-node'), rating: +v.rating, hardest: v.hardest, change: v.change }).then(function (res) {
+        updateMe(res, btn); toast('Thanks for the rating! It helps make the quests better.'); S.keepScroll = true; var y11 = window.scrollY; render(); window.scrollTo(0, y11);
+      });
+    }
+    else if (kind === 'join') p = call('joinClass', v).then(function (res) { S.me = res.student; S.cls = res.cls; go('#/avatar'); toast('<svg class="i"><use href="#i-sparkles"/></svg> Welcome to ' + esc(res.cls.name) + '!'); });
     else if (kind === 'submit') p = call('submitLesson', { node: f.getAttribute('data-node'), link: v.link, reflection: v.reflection }).then(function (res) {
       updateMe(res, btn);
       var st = res.student.state.nodes[f.getAttribute('data-node')].status;

@@ -154,6 +154,39 @@ test('arcade: teacher lock, earned passes, power-ups and score checks', () => {
   assert.ok(as(M, 'arcade').me.allBest > 0, 'all-time best is kept');
   assert.throws(() => as(M, 'setArcade', { classId, mode: 'free' }), /Teachers only/);
 });
+test('help requests: students ask, only teachers see the list, no emails in it', () => {
+  const M = 'maya.lopez@school.org', L2 = 'liam.chen@school.org';
+  assert.strictEqual(as(M, 'myHelp').help.open, false);
+  as(M, 'askHelp', { node: 't1', step: 0, note: 'my sprite <b>will not</b> move' });
+  assert.strictEqual(as(M, 'myHelp').help.open, true);
+  const list = as(T, 'helpList', { classId }).list;
+  assert.strictEqual(list.length, 1);
+  assert.ok(/Hello, Sprite/.test(list[0].where) && /Step 1/.test(list[0].where), list[0].where);
+  assert.ok(!/[<>]/.test(list[0].note) && !/@/.test(JSON.stringify(list)), 'note is cleaned and there are no emails');
+  assert.throws(() => as(L2, 'helpList', { classId }), /Teachers only/);
+  assert.throws(() => as(L2, 'helpDone', { classId, who: list[0].who }), /Teachers only/);
+  assert.ok(as(T, 'classScreen', { classId }).members.some(m => m.hid === list[0].who), 'the Class Screen can match the request to an avatar');
+  assert.strictEqual(as(T, 'helpDone', { classId, who: list[0].who }).list.length, 0);
+  assert.strictEqual(as(M, 'myHelp').help.open, false);
+  as(M, 'askHelp', { node: 't1', step: 'quiz' }); as(M, 'cancelHelp');
+  assert.strictEqual(as(T, 'helpList', { classId }).list.length, 0, 'students can cancel');
+});
+test('lesson feedback: confusing flags and ratings are saved; rating gives +10 XP once', () => {
+  const M = 'maya.lopez@school.org';
+  const xp0 = as(M, 'bootstrap').student.profile.xp;
+  as(M, 'flagConfusing', { node: 't1', kind: 'step', idx: 1, reason: 'unclear', note: 'where is the button' });
+  assert.throws(() => as(M, 'flagConfusing', { node: 't1', kind: 'step', idx: 99, reason: 'unclear' }), /Unknown step/);
+  assert.throws(() => as(M, 'rateLesson', { node: 't1', rating: 9 }), /Pick a face/);
+  assert.throws(() => as(M, 'rateLesson', { node: 'g4', rating: 4 }), /Start this quest/);
+  const r1 = as(M, 'rateLesson', { node: 't1', rating: 4, hardest: 'the glide block', change: 'more pictures' });
+  assert.strictEqual(r1.student.profile.xp, xp0 + 10);
+  assert.strictEqual(as(M, 'rateLesson', { node: 't1', rating: 5 }).student.profile.xp, xp0 + 10, 'changing a rating gives no extra XP');
+  const fb = as(T, 'teacherData').students.find(x => x.email === M).state.fb.t1;
+  assert.strictEqual(fb.rating, 5); assert.strictEqual(fb.flags['step:1'].reason, 'unclear');
+  assert.strictEqual(fb.help['0'], 1); assert.strictEqual(fb.help.quiz, 1);
+  as(T, 'reopen', { email: M, node: 't1' });
+  assert.ok(as(T, 'teacherData').students.find(x => x.email === M).state.fb.t1.rating, 'reopening a quest keeps its feedback');
+});
 test('teacher-only settings: accommodations note is not sent to the student', () => {
   as(T, 'updateStudent', { email: 'liam.chen@school.org', accom: { coreOnly: true, note: 'IEP: chunk tasks' } });
   const self = JSON.stringify(as('liam.chen@school.org', 'bootstrap'));

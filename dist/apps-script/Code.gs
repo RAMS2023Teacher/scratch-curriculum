@@ -65,7 +65,7 @@ function setup() {
 }
 
 var CLASSROOM_ACTIONS_ = { classroomCourses: 1, classroomImport: 1, classroomPost: 1, classroomUnlink: 1 };
-var READ_ONLY_ = { bootstrap: 1, classView: 1, teacherData: 1, classroomCourses: 1, lessons: 1, classScreen: 1, arcade: 1, arcadeBoardFor: 1 };
+var READ_ONLY_ = { bootstrap: 1, classView: 1, teacherData: 1, classroomCourses: 1, lessons: 1, classScreen: 1, arcade: 1, arcadeBoardFor: 1, myHelp: 1, helpList: 1 };
 
 /** Single entry point used by the web page: google.script.run.api(action, args). */
 function api(action, args) {
@@ -274,6 +274,17 @@ function sheetStore_() {
     },
     saveSettings: function (obj) {
       Object.keys(obj).forEach(function (k) { upsert('Settings', k, [k, JSON.stringify(obj[k])]); });
+    },
+    // "I'm stuck" requests change every few seconds, so they live in script properties
+    // (fast to read), not in the Sheet. Key: help:<short id>. Never holds an email address.
+    helpAll: function () {
+      var all = PropertiesService.getScriptProperties().getProperties(), out = {};
+      Object.keys(all).forEach(function (k) { if (k.indexOf('help:') === 0) out[k.slice(5)] = parse(all[k], null); });
+      return out;
+    },
+    helpPut: function (id, obj) {
+      var props = PropertiesService.getScriptProperties();
+      if (obj) props.setProperty('help:' + id, JSON.stringify(obj)); else props.deleteProperty('help:' + id);
     }
   };
   return store;
