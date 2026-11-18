@@ -1575,7 +1575,7 @@
     var csNeeds = {}, hl = (S.csHelp && S.csHelp.list) || [];
     hl.forEach(function (x) { csNeeds[x.who] = 1; });
     var hb = document.getElementById('cs-helpbtn');
-    if (hb) { hb.hidden = !hl.length; hb.innerHTML = '✋ <span>' + hl.length + ' need' + (hl.length === 1 ? 's' : '') + ' help</span>'; }
+    if (hb) { hb.hidden = !hl.length; csSet('cs-helpbtn', '✋ <span>' + hl.length + ' need' + (hl.length === 1 ? 's' : '') + ' help</span>'); }
     var nh = document.getElementById('cs-needhelp');
     if (nh) { nh.hidden = !hl.length; csSet('cs-needlist', hl.length ? helpListHTML(hl, d.cls.id, S.csHelp.serverNow) : ''); }
     var tcl = tc(), arcOn = tcl && tcl.arcade && tcl.arcade.mode !== 'off';

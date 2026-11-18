@@ -1214,3 +1214,6 @@ body.cs-on { background: #5b2bd6; }
 .tiny-input.wide { width: 8em; }
 .gc-num { min-width: 2em; width: auto; padding: 0 6px; }
 .gc-t .i { width: 1em; height: 1em; vertical-align: -2px; }
+
+/* hidden really means hidden (the button and card styles set their own display) */
+.cs-helpbtn[hidden], .cs-needhelp[hidden], .cs [hidden] { display: none !important; }
