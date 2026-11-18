@@ -10,6 +10,7 @@ function makeEnv() {
 let currentEmail = 'teacher@school.org';
 const OWNER = 'teacher@school.org';
 const props = {};
+const flags = { failOpen: false };
 const sheetsById = {};
 function makeSheet(name) {
   const data = [];
@@ -31,6 +32,8 @@ function makeSpreadsheet(id, name) {
   const sheets = [makeSheet('Sheet1')];
   return {
     id, name, sheets,
+    getName: () => name,
+    copy: (n) => { const nid = 'sheet' + (Object.keys(sheetsById).length + 1); const c = makeSpreadsheet(nid, n); c.sheets.length = 0; sheets.forEach(sh => { const k = makeSheet(sh.name); sh.data.forEach(r => k.data.push(r.slice())); c.sheets.push(k); }); return (sheetsById[nid] = c); },
     getId: () => id, getUrl: () => 'https://docs.google.com/spreadsheets/d/' + id,
     getSheetByName: (n) => sheets.find(s => s.name === n) || null,
     insertSheet: (n) => { const s = makeSheet(n); sheets.push(s); return s; },
@@ -56,13 +59,16 @@ const ctx = {
   Logger: { log: () => {} },
   SpreadsheetApp: {
     create: (name) => { const id = 'sheet' + (Object.keys(sheetsById).length + 1); return (sheetsById[id] = makeSpreadsheet(id, name)); },
-    openById: (id) => { if (!sheetsById[id]) throw new Error('not found'); return sheetsById[id]; },
+    openById: (id) => { if (flags.failOpen) throw new Error('Service Spreadsheets failed while accessing document'); if (!sheetsById[id]) throw new Error('not found'); return sheetsById[id]; },
+    openByUrl: (u) => { const id = String(u).split('/d/')[1]; if (!sheetsById[id]) throw new Error('not found'); return sheetsById[id]; },
     flush: () => {}
   },
+  CacheService: { getScriptCache: () => ({ getAll: () => ({}), get: () => null, put: () => {} }) },
+  Utilities: { sleep: () => {}, base64Encode: (b) => Buffer.from(String(b)).toString('base64'), computeDigest: (a, t) => t, DigestAlgorithm: { MD5: 1 }, Charset: { UTF_8: 1 }, formatDate: (d) => d.toISOString().slice(0, 10) },
   LanguageApp: { translate: (t, from, to) => '[' + to + '] ' + t },
   PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] || null, setProperty: (k, v) => { props[k] = String(v); }, deleteProperty: k => { delete props[k]; }, getProperties: () => Object.assign({}, props) }) },
   Session: { getActiveUser: () => ({ getEmail: () => currentEmail }), getEffectiveUser: () => ({ getEmail: () => OWNER }) },
-  LockService: { getScriptLock: () => ({ waitLock: () => {}, releaseLock: () => {} }) },
+  LockService: { getScriptLock: () => ({ waitLock: () => {}, tryLock: () => true, releaseLock: () => {} }) },
   ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/a/macros/school.org/s/ABC/exec' }) },
   HtmlService: { createHtmlOutputFromFile: () => { const o = { setTitle: () => o, addMetaTag: () => o, setFaviconUrl: () => o }; return o; } },
   Classroom: {
@@ -94,6 +100,6 @@ ctx.HtmlService = {
 vm.createContext(ctx);
 for (const f of ['Shared.gs', 'Code.gs']) vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
 
-  return { ctx, props, sheetsById, created, setUser: (e) => { currentEmail = e; }, api: (email, action, args) => { currentEmail = email; return JSON.parse(JSON.stringify(ctx.api(action, args))); } };
+  return { ctx, props, flags, sheetsById, created, setUser: (e) => { currentEmail = e; }, api: (email, action, args) => { currentEmail = email; return JSON.parse(JSON.stringify(ctx.api(action, args))); } };
 }
 module.exports = { makeEnv };

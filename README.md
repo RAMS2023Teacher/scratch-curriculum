@@ -91,6 +91,14 @@ Students can also join with a class code (Classes tab) if you don't use Classroo
 - Students under 13 need to use Scratch through your **teacher/class Scratch accounts** (or just "show the teacher" instead of a link; the project link is optional unless you turn on "Require a Scratch project link").
 - Data never leaves your Google Workspace. It's one Sheet, and you can open it any time. Rows hold a readable summary (XP, level, quests done, current quest). Please don't hand-edit the JSON "data" column.
 
+## Keeping your data safe
+
+- **The app never replaces its data sheet.** If Google is too busy to open the "Scratch Quest Data" spreadsheet, students see a short "Busy… saving your work" note and the page retries by itself. (An earlier version could create a new, empty sheet in that situation, which made classes seem to vanish.)
+- **Fewer requests at once.** Google allows about 30 requests at the same moment for the whole class. Each browser now sends one request at a time, retries quietly when Google is busy, keeps the lessons on the device, and stops checking for updates while its tab is in the background.
+- **Weekly backups.** About once a week, when you open the teacher view, a copy named "Scratch Quest Backup (date)" is saved to your Google Drive. The Classes page lists them and has a **Back up now** button. Delete old ones from Drive whenever you like.
+- **If classes or students are missing:** open **Classes → Your data**. It shows which spreadsheet the app is using and how many students are in it. Under "Reconnect your data sheet", paste the link to the spreadsheet that has your students (search Google Drive for "Scratch Quest Data" and open the one with rows in its Students tab). Nothing is deleted; it only tells the app which sheet to use. Only the owner of the script can do this.
+- Without the app: in the Apps Script editor, open **Project Settings → Script properties** and set `DB_ID` to the id of the right spreadsheet (the long code in its link between `/d/` and `/edit`).
+
 ## Editing lessons
 Lesson content is in `src/lessons/` (one file per lesson; the format is in `docs/LESSON_SPEC.md`, and `node tools/validate.js` checks it, including that every block is a real Scratch block). Each lesson has: titles, a one-line `mission`, steps (a one-sentence `short` that students see first, plus the fuller `text` behind "Tell me more"), block scripts, quiz questions, challenges and teacher notes. Block pictures use [scratchblocks](https://scratchblocks.github.io) syntax. The tree layout, XP values and badges are in `src/rules.js`, and avatar items are in `src/avatar.js`. Run `node build.js` after editing.
 

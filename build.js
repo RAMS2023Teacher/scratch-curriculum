@@ -12,7 +12,7 @@ const rd = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 const lessonFiles = fs.readdirSync(path.join(root, 'src/lessons')).filter(f => f.endsWith('.js')).sort();
 const lessonsJs = 'var SQ_LESSONS = {};\n' + lessonFiles.map(f => rd('src/lessons/' + f)).join('\n');
 // build date (shown in bug reports) and the Brazilian Portuguese names of Scratch blocks
-const EXTRA = 'var SQ_BUILD = ' + JSON.stringify(new Date().toISOString().slice(0, 10)) + ';\nvar SQ_BLOCKS_PT = ' + JSON.stringify(JSON.parse(rd('src/blocks-pt-br.json'))) + ';';
+const EXTRA = 'var SQ_BUILD = ' + JSON.stringify(new Date().toISOString().slice(0, 16)) + ';\nvar SQ_BLOCKS_PT = ' + JSON.stringify(JSON.parse(rd('src/blocks-pt-br.json'))) + ';';
 const shared = [lessonsJs, rd('src/rules.js'), rd('src/avatar.js'), rd('src/arcade.js'), rd('src/service.js'), rd('src/classroom.js')].join('\n\n');
 // "Where to look" screenshots, embedded as data URIs (client only)
 const shotDir = path.join(root, 'shots');

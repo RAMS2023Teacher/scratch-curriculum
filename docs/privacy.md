@@ -52,6 +52,7 @@ The app **doesn't** change rosters, grades, other assignments, or any student's 
 - Read-aloud uses the **voice built into the browser**. No audio is sent anywhere.
 
 ## Keeping and deleting data
+- About once a week a backup copy of the data sheet ("Scratch Quest Backup" plus the date) is saved to the teacher's Google Drive. Backups hold the same student data as the main sheet; delete them at the end of the year along with the main sheet.
 - **Remove a student:** Dashboard → student → Remove student. This deletes their row from the Sheet.
 - **End of year:** Classes → Delete this class and all its student data. This removes the class and every student record in it. The Sheet can also be deleted from Drive.
 - Data stays only as long as the teacher keeps the Sheet.

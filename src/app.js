@@ -176,6 +176,11 @@
     celebrate(before, S.me.profile, el);
   }
 
+  window.addEventListener('sq-busy', function (e) {
+    var el = document.getElementById('busy-note');
+    if (e.detail && !el) { el = document.createElement('div'); el.id = 'busy-note'; el.setAttribute('role', 'status'); el.innerHTML = '<span class="spinner sm"></span> Busy… saving your work, one moment'; document.body.appendChild(el); }
+    else if (!e.detail && el) el.remove();
+  });
   // ------------------------------------------------------------ boot
   document.body.insertAdjacentHTML('afterbegin', SQ_ICONS.sprite);
   function boot() {
@@ -971,6 +976,7 @@
     return S.help && S.help.open ? '<div class="banner helpwait" role="status"><span class="hand">✋</span> <b>Help is on the way!</b> Keep trying while you wait… <button class="btn small" data-act="cancel-help">I figured it out 👍</button></div>' : '';
   }
   function helpLoadMine() {
+    if (document.hidden) return;
     API.call('myHelp', {}).then(function (res) {
       var was = S.help && S.help.open;
       S.help = res.help;
@@ -989,11 +995,12 @@
   function tHelpStart() {
     if (S.tHelpTimer) clearInterval(S.tHelpTimer);
     var tick = function () {
+      if (document.hidden) return;
       var box = document.getElementById('t-helpbox'), c = tc();
       if (!box || !c) { clearInterval(S.tHelpTimer); S.tHelpTimer = null; return; }
       API.call('helpList', { classId: c.id }).then(function (res) { tHelpPaint(res, c.id); }).catch(function () { });
     };
-    tick(); S.tHelpTimer = setInterval(tick, 10000);
+    tick(); S.tHelpTimer = setInterval(tick, 15000);
   }
   function tHelpPaint(res, classId) {
     var box = document.getElementById('t-helpbox'); if (!box) return;
@@ -1313,7 +1320,7 @@
     if (S.arcWasPlayable && !playable) { S.arcWasPlayable = false; arcPaint(); }
     S.arcWasPlayable = playable;
     S.arcPoll = (S.arcPoll || 0) + 1;
-    if (S.arcPoll % 20 === 0) loadArcade(); // notice when the teacher opens or locks the arcade
+    if (S.arcPoll % 45 === 0 && !document.hidden) loadArcade(); // notice when the teacher opens or locks the arcade
   }
   function arcStartGame() {
     var box = document.getElementById('arc-play');
@@ -1468,9 +1475,29 @@
     $app.innerHTML = (page === 'projector' ? '' : header()) + '<main class="' + (page === 'projector' ? 'projector' : 'teacher') + '">' + body + '</main>';
     afterRender(r);
   }
+  // Where the data lives, backups, and a way to reconnect the right sheet (owner only; not in the demo)
+  function tData() {
+    if (API.demo) return '';
+    if (S.dataInfo === undefined) {
+      S.dataInfo = null;
+      API.call('dataInfo', {}).then(function (d) { S.dataInfo = d; if (route()[0] === 't') render(); }).catch(function () { S.dataInfo = false; });
+    }
+    var d = S.dataInfo; if (!d) return '';
+    var cur = d.current || {}, better = (d.others || []).filter(function (o) { return o.students > (cur.students || 0); }).sort(function (a, b) { return b.students - a.students; })[0];
+    var row = function (o) { return '<a href="' + esc(o.url) + '" target="_blank" rel="noopener">' + esc(o.name) + ' <svg class="i"><use href="#i-external"/></svg></a> · ' + o.classes + ' class' + (o.classes === 1 ? '' : 'es') + ', ' + o.students + ' student' + (o.students === 1 ? '' : 's'); };
+    var h = '<div class="card data-card"><h2><svg class="i"><use href="#i-save"/></svg> Your data</h2>';
+    if (cur.error) h += '<div class="banner ret">The app cannot open its data sheet right now. If this keeps happening, reconnect it below.</div>';
+    else h += '<p>Everything is saved in: ' + row(cur) + '</p>';
+    if (better) h += '<div class="banner ret"><b>This sheet has fewer students than another one this app has used.</b> ' + row(better) + ' <button class="btn small primary" data-act="data-use" data-id="' + esc(better.id) + '">Use that one</button></div>';
+    h += '<p class="small"><b>Backups</b> (a copy is made about once a week): ' + ((d.backups || []).length ? d.backups.slice().reverse().map(function (b) { return '<a href="' + esc(b.url) + '" target="_blank" rel="noopener">' + esc(b.day) + '</a> (' + b.students + ')'; }).join(' · ') : 'none yet') + ' <button class="btn tiny ghost" data-act="data-backup">Back up now</button></p>';
+    if ((d.others || []).length) h += '<details class="p-more"><summary>Other data sheets this app has used</summary><ul class="small">' + d.others.map(function (o) { return '<li>' + row(o) + ' <button class="btn tiny" data-act="data-use" data-id="' + esc(o.id) + '">Use this one</button></li>'; }).join('') + '</ul></details>';
+    h += '<details class="p-more"' + (cur.students ? '' : ' open') + '><summary>Classes or students missing? Reconnect your data sheet</summary><p class="small">Open Google Drive and search for <b>Scratch Quest Data</b>. Open the one that has your students in its Students tab, copy the link from the address bar, and paste it here. Nothing is deleted; this only tells the app which sheet to use.</p>' +
+      '<form data-form="data-reconnect" class="row"><input name="sheet" placeholder="https://docs.google.com/spreadsheets/d/…" required style="flex:1;min-width:16em"><button class="btn primary">Reconnect</button></form></details></div>';
+    return h;
+  }
   function tWelcome() {
     return '<div class="card narrow"><h1>Welcome, teacher!</h1><h2>Option 1: Import from Google Classroom</h2><p>Bring in a class roster. Students are added automatically and don\'t need a code.</p><a class="btn primary" href="#/t/classroom"><svg class="i"><use href="#i-school"/></svg> Import from Google Classroom</a>' +
-      '<h2 style="margin-top:20px">Option 2: Make a class</h2><p>You\'ll get a <b>class code</b> students type in to join.</p>' + createClassForm() + '</div>';
+      '<h2 style="margin-top:20px">Option 2: Make a class</h2><p>You\'ll get a <b>class code</b> students type in to join.</p>' + createClassForm() + '</div>' + tData();
   }
   function createClassForm() {
     return '<form data-form="create-class" class="row"><input name="name" placeholder="Class name, e.g. Period 3" maxlength="40" required><button class="btn primary">+ Create class</button></form>';
@@ -1634,6 +1661,7 @@
     return '<div class="cs" id="cs"><div class="cs-loading">Loading the Class Screen…</div></div>';
   }
   function csLoad(first) {
+    if (!first && document.hidden) return;
     var c = tc();
     if (!c) return;
     var t0 = Date.now();
@@ -1814,6 +1842,7 @@
   }
   // Help requests are checked every 5 seconds (separately from the 20-second refresh), with a doorbell for new ones.
   function csHelpLoad() {
+    if (document.hidden) return;
     var c = tc(); if (!c) return;
     API.call('helpList', { classId: c.id }).then(function (res) {
       var seen = S.csHelpSeen || (S.csHelpSeen = {}), fresh = res.list.filter(function (h) { return !seen[h.who + h.at]; });
@@ -1828,7 +1857,7 @@
     S.csHelpLoaded = false;
     csLoad(true);
     csHelpLoad();
-    S.csTimers = [setInterval(csTick, 1000), setInterval(function () { csLoad(false); }, 20000), setInterval(csHelpLoad, 5000)];
+    S.csTimers = [setInterval(csTick, 1000), setInterval(function () { csLoad(false); }, 20000), setInterval(csHelpLoad, 8000)];
   }
   function csSave(screen, teams) {
     var c = tc(), args = { classId: c.id, screen: screen };
@@ -1940,7 +1969,7 @@
     return 'Choose a path: ' + nodes.map(function (n) { return SQ_ICONS.branch(R.NODE[n.id].branch) + ' ' + esc(title(n.id)); }).join(' / ');
   }
   function tClasses() {
-    var h = '<div class="t-head"><div><h1><svg class="i"><use href="#i-sliders"/></svg> Classes</h1></div></div><div class="card">' + createClassForm() + '</div>';
+    var h = '<div class="t-head"><div><h1><svg class="i"><use href="#i-sliders"/></svg> Classes</h1></div></div><div class="card">' + createClassForm() + '</div>' + tData();
     S.teacher.classes.forEach(function (c) {
       var n = S.teacher.students.filter(function (s) { return s.classId === c.id && !s.isTeacher; }).length;
       h += '<div class="card class-set' + (c.archived ? ' archived' : '') + '"><form data-form="class-set" data-id="' + c.id + '">' +
@@ -2170,6 +2199,14 @@
       return;
     }
     if (act === 't-projector') { go('#/t/projector'); return; }
+    if (act === 'data-use') {
+      var did = t.getAttribute('data-id');
+      ask('Use this data sheet from now on? Students will see the classes and progress saved in it. Nothing is deleted.', 'Use this sheet').then(function (ok) {
+        if (ok) call('dataReconnect', { sheet: did }).then(function () { toast('Reconnected. Reloading…'); S = { boot: null, avatarTab: 'hair' }; boot(); }).catch(function () { });
+      });
+      return;
+    }
+    if (act === 'data-backup') { t.disabled = true; call('dataBackupNow', {}).then(function (d) { S.dataInfo = d; toast('Backup saved to your Google Drive'); render(); }).catch(function () { t.disabled = false; }); return; }
     if (act === 'display') {
       modal('<h2><svg class="i"><use href="#i-sliders"/></svg> Display</h2><p class="muted">Make Scratch Quest easier for you to read.</p><form data-form="display" class="stack accom-form">' + displayFields(disp()) +
         '<button class="btn primary big">Save</button></form>');
@@ -2319,7 +2356,8 @@
     var p;
     var lockBtn = f.querySelector('[aria-disabled="true"]');
     if (lockBtn) { if (btn) btn.disabled = false; lockedClick(lockBtn); return; }
-    if (kind === 'display') p = call('setDisplay', { display: displayFrom(v) }).then(function (res) { S.me = res.student; closeModal(); render(); toast('Display settings saved'); });
+    if (kind === 'data-reconnect') p = call('dataReconnect', { sheet: v.sheet }).then(function (d) { toast('Reconnected: ' + d.current.students + ' students found. Reloading…'); S = { boot: null, avatarTab: 'hair' }; boot(); });
+    else if (kind === 'display') p = call('setDisplay', { display: displayFrom(v) }).then(function (res) { S.me = res.student; closeModal(); render(); toast('Display settings saved'); });
     else if (kind === 'stu-display') p = call('updateStudent', { email: f.getAttribute('data-email'), display: displayFrom(v) }).then(function () { return loadTeacher(); }).then(function () { toast('Display settings saved for this student'); render(); });
     else if (kind === 'bug') p = call('reportBug', { text: v.text, where: bugWhere(), info: bugInfo() }).then(function () { closeModal(); S.bugs = null; toast('<svg class="i"><use href="#i-check"/></svg> Thanks! Your report was sent to your teacher.'); });
     else if (kind === 'ask-help') p = call('askHelp', { node: f.getAttribute('data-node'), step: /^\d+$/.test(f.getAttribute('data-step')) ? +f.getAttribute('data-step') : (f.getAttribute('data-step') || null), note: v.note }).then(function (res) {

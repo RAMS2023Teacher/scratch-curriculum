@@ -256,6 +256,38 @@ test('Class Screen: the teacher can choose which quest the track shows', () => {
   assert.strictEqual(as(T, 'saveScreen', { classId, screen: { raceQuest: 't3' } }).race.quest, 't3');
   assert.notStrictEqual(as(T, 'saveScreen', { classId, screen: { raceQuest: '' } }).cls.screen.raceQuest, 't3');
 });
+test('data safety: a busy Google never causes a new, empty data sheet', () => {
+  const M = 'maya.lopez@school.org', realId = props.DB_ID, count = Object.keys(sheetsById).length;
+  const xp = as(M, 'bootstrap').student.profile.xp;
+  env.flags.failOpen = true; // Google refuses to open the spreadsheet (what happens under heavy load)
+  assert.throws(() => as(M, 'bootstrap'), /BUSY/);
+  assert.throws(() => as(M, 'toggleStep', { node: 't1', idx: 0, value: true }), /BUSY/);
+  env.flags.failOpen = false;
+  assert.strictEqual(props.DB_ID, realId, 'the app still points at the real data sheet');
+  assert.strictEqual(Object.keys(sheetsById).length, count, 'no replacement spreadsheet was created');
+  const b = as(M, 'bootstrap');
+  assert.ok(b.student && b.cls && b.student.profile.xp === xp, 'students and classes are all still there');
+});
+test('data safety: the owner can reconnect the right data sheet; a weekly backup is made', () => {
+  const M = 'maya.lopez@school.org', realId = props.DB_ID;
+  // recreate the old failure: the app was pointed at a new, empty sheet
+  const empty = ctx.SpreadsheetApp.create('Scratch Quest Data');
+  props.DB_ID = empty.getId();
+  assert.ok(!as(M, 'bootstrap').student, 'with the wrong sheet, the student looks like a stranger');
+  assert.throws(() => as(M, 'dataReconnect', { sheet: realId }), /Only the owner/);
+  assert.throws(() => as(T, 'dataReconnect', { sheet: 'https://docs.google.com/spreadsheets/d/nope' }), /Could not open/);
+  const info = as(T, 'dataReconnect', { sheet: 'https://docs.google.com/spreadsheets/d/' + realId });
+  assert.strictEqual(info.current.id, realId); assert.ok(info.current.students >= 3);
+  assert.ok(info.others.some(o => o.id === empty.getId() && o.students === 0), 'the empty sheet is listed so it can be told apart');
+  assert.ok(as(M, 'bootstrap').student, 'after reconnecting, students are back');
+  delete props.LAST_BACKUP; delete props.BACKUPS;
+  as(T, 'teacherData');
+  const backups = JSON.parse(props.BACKUPS);
+  assert.strictEqual(backups.length, 1); assert.ok(/Backup/.test(sheetsById[backups[0].id].getName()));
+  assert.ok(sheetsById[backups[0].id].getSheetByName('Students').data.length > 1, 'the backup holds the student rows');
+  as(T, 'teacherData');
+  assert.strictEqual(JSON.parse(props.BACKUPS).length, 1, 'only one backup a week');
+});
 test('teacher-only settings: accommodations note is not sent to the student', () => {
   as(T, 'updateStudent', { email: 'liam.chen@school.org', accom: { coreOnly: true, note: 'IEP: chunk tasks' } });
   const self = JSON.stringify(as('liam.chen@school.org', 'bootstrap'));

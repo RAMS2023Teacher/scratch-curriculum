@@ -1248,3 +1248,8 @@ html.rm .confetti, html.rm .xp-float, html.rm .fx-rays, html.rm .fx-parts, html.
 .arc-coins { font-weight: 900; font-size: 1.2rem; }
 
 [hidden] { display: none !important; }
+
+/* busy note (requests are being retried) and the data card */
+#busy-note { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 4000; background: #2a1650; color: #fff; font-weight: 800; padding: 8px 16px; border-radius: 999px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(0, 0, 0, .3); }
+.spinner.sm { width: 16px; height: 16px; border-width: 3px; margin: 0; }
+.data-card .banner { margin: 8px 0; }

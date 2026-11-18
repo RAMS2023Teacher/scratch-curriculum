@@ -7,10 +7,44 @@ var SQ_API = (function () {
   var isGAS = typeof google !== 'undefined' && google.script && google.script.run;
 
   if (isGAS) {
+    // Google allows only about 30 requests at the same moment for the whole class, so each browser:
+    //   - sends ONE request at a time (the rest wait their turn),
+    //   - never sends the same request twice while it is waiting,
+    //   - quietly retries when Google says it is too busy (the request did not run, so retrying is safe).
+    var chain = Promise.resolve(), pending = {};
+    var BUSY = /simultaneous|too many|BUSY|lock|try again later|invoked too many|quota/i;
+    var raw = function (action, args) {
+      return new Promise(function (resolve, reject) {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(function (e) { reject(new Error((e && e.message) || String(e))); })
+          .api(action, args || {});
+      });
+    };
+    var busyNote = function (on) { try { window.dispatchEvent(new CustomEvent('sq-busy', { detail: on })); } catch (e) { } };
+    var attempt = function (action, args, n) {
+      return raw(action, args).catch(function (e) {
+        if (n < 5 && BUSY.test(e.message)) {
+          busyNote(true);
+          return new Promise(function (r) { setTimeout(r, 1200 * Math.pow(1.8, n) + Math.random() * 1500); }).then(function () { return attempt(action, args, n + 1); });
+        }
+        if (BUSY.test(e.message)) throw new Error('Scratch Quest is very busy right now. Your work is safe. Wait a few seconds and try again.');
+        throw e;
+      });
+    };
     return {
       demo: false,
+      // Lessons are big and never change between updates, so keep a copy on the device
       loadLessons: function (cb, fail) {
-        google.script.run.withSuccessHandler(cb).withFailureHandler(fail).api('lessons', {});
+        var key = 'sq-lessons-' + (typeof SQ_BUILD === 'undefined' ? '' : SQ_BUILD);
+        try { var saved = localStorage.getItem(key); if (saved) { cb(JSON.parse(saved)); return; } } catch (e) { }
+        attempt('lessons', {}, 0).then(function (d) {
+          try {
+            Object.keys(localStorage).forEach(function (k) { if (k.indexOf('sq-lessons-') === 0) localStorage.removeItem(k); });
+            localStorage.setItem(key, JSON.stringify(d));
+          } catch (e) { }
+          cb(d);
+        }, fail);
       },
       // Quest links posted to Classroom look like .../exec?quest=t3 — read that from the outer page
       deepLink: function (cb) {
@@ -18,12 +52,13 @@ var SQ_API = (function () {
         catch (e) { cb(null); }
       },
       call: function (action, args) {
-        return new Promise(function (resolve, reject) {
-          google.script.run
-            .withSuccessHandler(resolve)
-            .withFailureHandler(function (e) { reject(new Error((e && e.message) || String(e))); })
-            .api(action, args || {});
-        });
+        var key = action + '|' + JSON.stringify(args || {});
+        if (pending[key]) return pending[key];
+        var p = chain.then(function () { return attempt(action, args, 0); });
+        var clear = function () { delete pending[key]; busyNote(false); };
+        chain = p.then(clear, clear);
+        pending[key] = p;
+        return p;
       }
     };
   }

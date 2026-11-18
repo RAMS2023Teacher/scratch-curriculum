@@ -65,11 +65,19 @@ function setup() {
 }
 
 var CLASSROOM_ACTIONS_ = { classroomCourses: 1, classroomImport: 1, classroomPost: 1, classroomUnlink: 1 };
+var NO_LOCK_ = { translate: 1, reportBug: 1, askHelp: 0 };
 var READ_ONLY_ = { bootstrap: 1, classView: 1, teacherData: 1, classroomCourses: 1, lessons: 1, classScreen: 1, arcade: 1, arcadeBoardFor: 1, myHelp: 1, helpList: 1, bugList: 1 };
 
 /** Single entry point used by the web page: google.script.run.api(action, args). */
 function api(action, args) {
   var user = currentUser_();
+  // Data safety tools: only the person who owns this script may use them
+  if (action === 'dataInfo' || action === 'dataReconnect' || action === 'dataBackupNow') {
+    if (user.email !== (Session.getEffectiveUser().getEmail() || '').toLowerCase()) throw new Error('Only the owner of this Scratch Quest can do that.');
+    if (action === 'dataReconnect') return dataReconnect_(args || {});
+    if (action === 'dataBackupNow') { PropertiesService.getScriptProperties().deleteProperty('LAST_BACKUP'); maybeBackup_(db_()); }
+    return dataInfo_();
+  }
   var store = sheetStore_();
   var handler;
   if (CLASSROOM_ACTIONS_[action]) {
@@ -80,9 +88,12 @@ function api(action, args) {
     handler = SQ_SERVICE(store);
   }
   if (!Object.prototype.hasOwnProperty.call(handler, action) || typeof handler[action] !== 'function') throw new Error('Unknown action: ' + action);
-  if (READ_ONLY_[action]) return handler[action](user, args || {});
+  if (action === 'teacherData' && user.isTeacher) maybeBackup_(db_());
+  // Reads, translation and bug reports don't take the write lock, so they never hold up students' saves
+  if (READ_ONLY_[action] || NO_LOCK_[action]) return handler[action](user, args || {});
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  try { lock.waitLock(25000); }
+  catch (e) { throw new Error('BUSY: Scratch Quest is very busy right now. Your work is safe. Trying again...'); }
   try {
     return handler[action](user, args || {});
   } finally {
@@ -176,14 +187,44 @@ function progressHeader_() {
   }));
 }
 
+// IMPORTANT: once a data sheet exists, this NEVER creates a replacement. If Google is too busy to
+// open the sheet, the request fails with a "try again" message instead (the page retries by itself).
+// A new sheet is only made on the very first run, or when the owner asks for one (Classes page).
 function db_() {
   var props = PropertiesService.getScriptProperties();
   var id = props.getProperty('DB_ID'), ss = null;
-  if (id) { try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; } }
-  if (!ss) {
-    ss = SpreadsheetApp.create('Scratch Quest Data');
-    props.setProperty('DB_ID', ss.getId());
+  if (id) {
+    for (var i = 0; i < 4 && !ss; i++) {
+      try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; Utilities.sleep(300 * (i + 1)); }
+    }
+    if (!ss) throw new Error('BUSY: Scratch Quest is very busy right now. Your work is safe. Trying again...');
+  } else {
+    // first run: take a lock so two first visitors can't each make a sheet
+    var lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      id = props.getProperty('DB_ID');
+      ss = id ? SpreadsheetApp.openById(id) : newDataSheet_(props);
+    } finally { lock.releaseLock(); }
   }
+  // Tabs and headers only need checking when the app version changes (not on every request)
+  var schema = JSON.stringify(SHEETS_) + '|' + progressHeader_().length;
+  if (props.getProperty('SCHEMA_' + ss.getId()) !== schema) { ensureTabs_(ss); props.setProperty('SCHEMA_' + ss.getId(), schema); }
+  return ss;
+}
+function newDataSheet_(props) {
+  var ss = SpreadsheetApp.create('Scratch Quest Data');
+  rememberSheet_(props, ss.getId());
+  props.setProperty('DB_ID', ss.getId());
+  return ss;
+}
+// Keep a list of every data sheet this app has used, so one can always be found again
+function rememberSheet_(props, id) {
+  var hist = [];
+  try { hist = JSON.parse(props.getProperty('DB_HISTORY') || '[]'); } catch (e) { hist = []; }
+  if (hist.indexOf(id) < 0) { hist.push(id); props.setProperty('DB_HISTORY', JSON.stringify(hist.slice(-12))); }
+}
+function ensureTabs_(ss) {
   Object.keys(SHEETS_).forEach(function (name) {
     var header = SHEETS_[name] || progressHeader_();
     var sh = ss.getSheetByName(name);
@@ -198,7 +239,48 @@ function db_() {
   });
   var def = ss.getSheetByName('Sheet1');
   if (def && ss.getSheets().length > 1) ss.deleteSheet(def);
-  return ss;
+}
+
+// ------------------------------------------------------------------ data safety (owner only)
+function sheetSummary_(ss) {
+  var count = function (name) { var sh = ss.getSheetByName(name); return sh ? Math.max(0, sh.getLastRow() - 1) : -1; };
+  return { id: ss.getId(), name: ss.getName(), url: ss.getUrl(), classes: count('Classes'), students: count('Students') };
+}
+function dataInfo_() {
+  var props = PropertiesService.getScriptProperties(), id = props.getProperty('DB_ID'), out = { current: null, others: [], backups: [] };
+  var hist = []; try { hist = JSON.parse(props.getProperty('DB_HISTORY') || '[]'); } catch (e) { hist = []; }
+  if (id) { try { out.current = sheetSummary_(SpreadsheetApp.openById(id)); } catch (e) { out.current = { id: id, error: true }; } }
+  hist.forEach(function (h) { if (h !== id) { try { out.others.push(sheetSummary_(SpreadsheetApp.openById(h))); } catch (e) { } } });
+  try { out.backups = JSON.parse(props.getProperty('BACKUPS') || '[]'); } catch (e) { out.backups = []; }
+  return out;
+}
+// Point the app at a data sheet the owner chooses (a link from Drive, or an id from the list)
+function dataReconnect_(args) {
+  var props = PropertiesService.getScriptProperties(), ss;
+  var ref = String(args.sheet || '').trim();
+  try { ss = /^https?:/.test(ref) ? SpreadsheetApp.openByUrl(ref) : SpreadsheetApp.openById(ref); }
+  catch (e) { throw new Error('Could not open that spreadsheet. Paste the full link from your browser\'s address bar, and make sure you own it.'); }
+  if (!ss.getSheetByName('Students') || !ss.getSheetByName('Classes')) throw new Error('That spreadsheet is not a Scratch Quest data sheet (it has no Classes and Students tabs).');
+  var old = props.getProperty('DB_ID');
+  if (old) rememberSheet_(props, old);
+  rememberSheet_(props, ss.getId());
+  props.setProperty('DB_ID', ss.getId());
+  return dataInfo_();
+}
+// A copy of the data sheet about once a week (made when the teacher opens the app)
+function maybeBackup_(ss) {
+  try {
+    var props = PropertiesService.getScriptProperties(), last = Number(props.getProperty('LAST_BACKUP') || 0);
+    if (Date.now() - last < 6.5 * 864e5) return;
+    var sh = ss.getSheetByName('Students');
+    if (!sh || sh.getLastRow() < 2) return; // nothing worth copying yet
+    props.setProperty('LAST_BACKUP', String(Date.now()));
+    var day = Utilities.formatDate(new Date(), 'America/New_York', 'yyyy-MM-dd');
+    var copy = ss.copy('Scratch Quest Backup ' + day);
+    var list = []; try { list = JSON.parse(props.getProperty('BACKUPS') || '[]'); } catch (e) { list = []; }
+    list.push({ id: copy.getId(), url: copy.getUrl(), day: day, students: sh.getLastRow() - 1 });
+    props.setProperty('BACKUPS', JSON.stringify(list.slice(-8)));
+  } catch (e) { /* a backup must never break the app */ }
 }
 
 function bugRow_(b) {
@@ -288,17 +370,29 @@ function sheetStore_() {
     bugDelete: function (id) { remove('Bugs', id); },
     // ---- translation: Google Translate, remembered in the Translations tab (edit column D to correct one)
     translate: function (list, lang) {
-      var known = {}, sh = ss.getSheetByName('Translations'), add = [];
-      rows('Translations').forEach(function (r) { known[r[0]] = r[3]; });
+      var cache = CacheService.getScriptCache(), known = {}, add = [], started = Date.now(), loaded = false;
+      var keyOf = function (x) { return lang + (x.html ? '|h|' : '|t|') + x.t; };
+      var ck = function (k) { return 'tr' + Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, k, Utilities.Charset.UTF_8)); };
+      var hits = {};
+      try { hits = cache.getAll(list.map(function (x) { return ck(keyOf(x)); })) || {}; } catch (e) { hits = {}; }
       var out = list.map(function (x) {
-        var key = lang + (x.html ? '|h|' : '|t|') + x.t;
-        if (known[key] !== undefined && known[key] !== '') return String(known[key]);
-        var tr = x.t;
-        try { tr = LanguageApp.translate(x.t, 'en', lang, { contentType: x.html ? 'html' : 'text' }); } catch (e) { return x.t; }
+        var key = keyOf(x), c = hits[ck(key)];
+        if (c != null) return c;
+        if (!loaded) { loaded = true; rows('Translations').forEach(function (r) { known[r[0]] = r[3]; }); }
+        if (known[key] !== undefined && known[key] !== '') { try { cache.put(ck(key), String(known[key]), 21600); } catch (e) { } return String(known[key]); }
+        if (Date.now() - started > 8000) return null; // keep each request short; the page asks again for the rest
+        var tr;
+        try { tr = LanguageApp.translate(x.t, 'en', lang, { contentType: x.html ? 'html' : 'text' }); } catch (e) { return null; }
         known[key] = tr; add.push([key, lang, x.t, tr]);
+        try { cache.put(ck(key), tr, 21600); } catch (e) { }
         return tr;
       });
-      if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 4).setValues(add);
+      if (add.length) {
+        var lock = LockService.getScriptLock();
+        if (lock.tryLock(5000)) {
+          try { var sh = ss.getSheetByName('Translations'); sh.getRange(sh.getLastRow() + 1, 1, add.length, 4).setValues(add); } finally { lock.releaseLock(); }
+        }
+      }
       return out;
     },
     // "I'm stuck" requests change every few seconds, so they live in script properties
