@@ -58,7 +58,7 @@ function SQ_SERVICE(store) {
   function teacherClass(c) {
     var o = publicClass(c);
     o.courseId = c.courseId || null; o.courseName = c.courseName || ''; o.courseLink = c.courseLink || '';
-    o.posted = c.posted || {}; o.nameStyle = c.nameStyle || 'initial'; o.syncedAt = c.syncedAt || null;
+    o.posted = c.posted || {}; o.gcTopic = c.gcTopic || 'Scratch Quest'; o.gcUnit = c.gcUnit || ''; o.gcWord = c.gcWord === undefined ? 'Quest' : c.gcWord; o.nameStyle = c.nameStyle || 'initial'; o.syncedAt = c.syncedAt || null;
     return o;
   }
   function selfView(st) {

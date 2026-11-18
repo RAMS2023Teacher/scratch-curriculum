@@ -70,6 +70,18 @@ test('posting quests creates assignments with deep links, a topic, and no duplic
   const again = as(T, 'classroomPost', { classId, tiers: [1] });
   assert.ok(again.results[0].skipped, 'already-posted quest is skipped');
   assert.strictEqual(created.coursework.length, 2);
+  // the teacher can choose the topic (unit title), a unit number and the label
+  as(T, 'classroomPost', { classId, tiers: [2], topic: 'Unit 2: Scratch', unit: '2', word: 'Lesson' });
+  const q2 = created.coursework[2];
+  assert.strictEqual(q2.title, 'Lesson 2.2: Lights, Camera, Events!');
+  assert.strictEqual(created.topics.length, 2);
+  assert.strictEqual(created.topics[1].name, 'Unit 2: Scratch');
+  assert.strictEqual(q2.topicId, created.topics[1].topicId);
+  const saved = as(T, 'teacherData').classes.find(c => c.id === classId);
+  assert.strictEqual(saved.gcTopic, 'Unit 2: Scratch'); assert.strictEqual(saved.gcUnit, '2'); assert.strictEqual(saved.gcWord, 'Lesson');
+  as(T, 'classroomPost', { classId, tiers: [3], word: '' });
+  assert.strictEqual(created.coursework[3].title, '2.3: Loop-de-Loop', 'a blank label gives just the number');
+  assert.strictEqual(created.topics.length, 2, 'the saved topic is reused');
 });
 test('student work shows in the Progress tab, and only teachers can approve', () => {
   const M = 'maya.lopez@school.org';

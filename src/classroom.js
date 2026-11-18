@@ -109,7 +109,15 @@ function SQ_CLASSROOM(store, gc) {
         due = { dueDate: { year: d[0], month: d[1], day: d[2] }, dueTime: { hours: 23, minutes: 59 } };
       }
       cls.posted = cls.posted || {};
-      if (!cls.topicId) { cls.topicId = gc.ensureTopic(cls.courseId, 'Scratch Quest'); store.saveClass(cls); }
+      // The teacher chooses the Classroom topic (unit title) and how lessons are numbered, e.g. "Lesson 2.3: ..."
+      var clean = function (x, max) { return String(x == null ? '' : x).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max); };
+      var topic = clean(args.topic, 80) || cls.gcTopic || 'Scratch Quest';
+      var unit = args.unit === undefined ? (cls.gcUnit || '') : clean(args.unit, 6);
+      var word = args.word === undefined ? (cls.gcWord === undefined ? 'Quest' : cls.gcWord) : clean(args.word, 20);
+      if (!cls.topicId || cls.gcTopic !== topic) { cls.topicId = gc.ensureTopic(cls.courseId, topic); }
+      cls.gcTopic = topic; cls.gcUnit = unit; cls.gcWord = word;
+      store.saveClass(cls);
+      var label = function (t) { return (word ? word + ' ' : '') + (unit ? unit + '.' : '') + t; };
       var results = [];
       tiers.sort(function (a, b) { return a - b; }).forEach(function (t) {
         if (cls.posted[t] && !args.repost) { results.push({ tier: t, skipped: true, link: cls.posted[t].link }); return; }
@@ -124,7 +132,7 @@ function SQ_CLASSROOM(store, gc) {
           var url = questUrl(n.id);
           return url ? { link: { url: url, title: (fork ? R.BRANCHES[n.branch].name + ': ' : '') + SQ_LESSONS[n.id].title + ' — Scratch Quest' } } : null;
         }).filter(Boolean);
-        var cw = { title: 'Quest ' + t + ': ' + tierTitle(t), description: desc, workType: 'ASSIGNMENT', state: state, topicId: cls.topicId, materials: materials };
+        var cw = { title: label(t) + ': ' + tierTitle(t), description: desc, workType: 'ASSIGNMENT', state: state, topicId: cls.topicId, materials: materials };
         if (points) cw.maxPoints = points;
         if (due) { cw.dueDate = due.dueDate; cw.dueTime = due.dueTime; }
         var made = gc.createCourseWork(cls.courseId, cw);
@@ -132,7 +140,7 @@ function SQ_CLASSROOM(store, gc) {
         results.push({ tier: t, posted: true, link: made.link || '' });
       });
       store.saveClass(cls);
-      return { results: results, posted: cls.posted };
+      return { results: results, posted: cls.posted, topic: topic };
     },
 
     // Forget the Classroom link (does not touch Classroom itself).

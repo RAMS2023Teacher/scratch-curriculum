@@ -1812,11 +1812,14 @@
       if (!c.courseId) h += '<p class="muted">This class isn\'t linked to Google Classroom yet. Import or link it above.</p>';
       else {
         var posted = c.posted || {};
-        h += '<p class="small">Linked to <a href="' + esc(c.courseLink || 'https://classroom.google.com/') + '" target="_blank" rel="noopener">' + esc(c.courseName || 'Classroom class') + ' <svg class="i"><use href="#i-external"/></svg></a>. Each quest becomes an assignment under the topic <b>Scratch Quest</b>, with a link that opens that quest. Students still turn quests in inside Scratch Quest.</p>' +
-          '<form data-form="gc-post" data-class="' + c.id + '"><div class="gc-tiers">';
+        h += '<p class="small">Linked to <a href="' + esc(c.courseLink || 'https://classroom.google.com/') + '" target="_blank" rel="noopener">' + esc(c.courseName || 'Classroom class') + ' <svg class="i"><use href="#i-external"/></svg></a>. Each quest becomes an assignment under the topic you choose, with a link that opens that quest. Students still turn quests in inside Scratch Quest.</p>' +
+          '<form data-form="gc-post" data-class="' + c.id + '"><div class="row gc-name"><label>Topic (unit title) <input name="topic" maxlength="80" value="' + esc(c.gcTopic || 'Scratch Quest') + '" data-act="gc-name"></label>' +
+          '<label>Unit number <input name="unit" maxlength="6" placeholder="e.g. 2" value="' + esc(c.gcUnit || '') + '" class="tiny-input" data-act="gc-name"></label>' +
+          '<label>Label <input name="word" maxlength="20" placeholder="Lesson" value="' + esc(c.gcWord === undefined ? 'Quest' : c.gcWord) + '" class="tiny-input wide" data-act="gc-name"></label></div>' +
+          '<p class="small gc-preview">Assignments will be titled like: <b id="gc-preview">' + esc(gcLabel(c.gcWord === undefined ? 'Quest' : c.gcWord, c.gcUnit || '', 3) + ': ' + title('t3')) + '</b></p><div class="gc-tiers">';
         for (var t = 1; t <= R.MAX_TIER; t++) {
           var p = posted[t];
-          h += '<label class="gc-tier' + (p ? ' posted' : '') + '"><input type="checkbox" name="t' + t + '"' + (p ? ' disabled' : '') + '><span class="gc-num">' + t + '</span><span class="gc-t">' + esc(tierTitleUI(t)) + '</span>' +
+          h += '<label class="gc-tier' + (p ? ' posted' : '') + '"><input type="checkbox" name="t' + t + '"' + (p ? ' disabled' : '') + '><span class="gc-num">' + (c.gcUnit ? esc(c.gcUnit) + '.' : '') + t + '</span><span class="gc-t">' + tierTitleUI(t) + '</span>' +
             (p ? '<a class="small" href="' + esc(p.link || '#') + '" target="_blank" rel="noopener">' + (p.state === 'PUBLISHED' ? '<svg class="i"><use href="#i-check-circle"/></svg> Posted' : '<svg class="i"><use href="#i-pencil"/></svg> Draft') + ' <svg class="i"><use href="#i-external"/></svg></a>' : '') + '</label>';
         }
         h += '</div><div class="row gc-opts"><button type="button" class="btn small ghost" data-act="gc-select" data-n="5">Select the next 5</button>' +
@@ -1829,10 +1832,11 @@
     h += '</div>';
     return h;
   }
+  function gcLabel(word, unit, t) { word = String(word || '').trim(); unit = String(unit || '').trim(); return (word ? word + ' ' : '') + (unit ? unit + '.' : '') + t; }
   function tierTitleUI(t) {
     var nodes = R.NODES.filter(function (n) { return n.tier === t; });
-    if (nodes.length === 1) return title(nodes[0].id);
-    return 'Choose a path: ' + nodes.map(function (n) { return SQ_ICONS.branch(R.NODE[n.id].branch) + ' ' + title(n.id); }).join(' / ');
+    if (nodes.length === 1) return esc(title(nodes[0].id));
+    return 'Choose a path: ' + nodes.map(function (n) { return SQ_ICONS.branch(R.NODE[n.id].branch) + ' ' + esc(title(n.id)); }).join(' / ');
   }
   function tClasses() {
     var h = '<div class="t-head"><div><h1><svg class="i"><use href="#i-sliders"/></svg> Classes</h1></div></div><div class="card">' + createClassForm() + '</div>';
@@ -2172,6 +2176,12 @@
       f.querySelector('.gate-name').textContent = '(' + tierName(+t.value) + ')';
     }
   });
+  document.addEventListener('input', function (e) {
+    var gf = e.target.closest && e.target.closest('form[data-form="gc-post"]');
+    if (!gf || e.target.getAttribute('data-act') !== 'gc-name') return;
+    var pv = document.getElementById('gc-preview'); if (pv) pv.textContent = gcLabel(gf.elements.word.value, gf.elements.unit.value, 3) + ': ' + title('t3');
+    gf.querySelectorAll('.gc-num').forEach(function (el, i) { el.textContent = (gf.elements.unit.value.trim() ? gf.elements.unit.value.trim() + '.' : '') + (i + 1); });
+  });
   ['input', 'change'].forEach(function (ev) {
     document.addEventListener(ev, function (e) { var z = e.target.closest && e.target.closest('.lockzone'); if (z) { if (e.target.type === 'checkbox' && ev === 'change') SQ_SOUND.play('tap'); lockUpdate(z); } });
   });
@@ -2227,7 +2237,7 @@
     else if (kind === 'gc-post') {
       var tiers = []; for (var tt = 1; tt <= R.MAX_TIER; tt++) if (v['t' + tt]) tiers.push(tt);
       if (!tiers.length) { toast('Tick at least one quest to post.'); done(); return; }
-      p = call('classroomPost', { classId: f.getAttribute('data-class'), tiers: tiers, publish: !!v.publish, points: v.points, due: v.due }).then(function (r) {
+      p = call('classroomPost', { classId: f.getAttribute('data-class'), tiers: tiers, publish: !!v.publish, points: v.points, due: v.due, topic: v.topic, unit: v.unit, word: v.word }).then(function (r) {
         var n = r.results.filter(function (x) { return x.posted; }).length;
         toast('<svg class="i"><use href="#i-upload"/></svg> Posted ' + n + ' quest' + (n === 1 ? '' : 's') + ' to Classroom' + (v.publish ? '' : ' as drafts') + '.');
         return loadTeacher().then(render);
