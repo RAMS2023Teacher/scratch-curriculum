@@ -478,6 +478,8 @@
     }
     return out;
   }
+  // lesson notes may use <b>, <i> and <br>; everything else is shown as plain text
+  function notesHTML(t) { return esc(t || '').replace(/&lt;(\/?(?:b|i|em|strong)|br\s*\/?)&gt;/g, '<$1>'); }
   function statusWord(s) {
     return { locked: 'Locked', gated: 'Not open yet', available: 'Ready', started: 'In progress', submitted: 'Turned in', returned: 'Needs changes', done: 'Finished' }[s] || s;
   }
@@ -516,7 +518,7 @@
       if (status === 'done') h += '<div class="banner done"><svg class="i"><use href="#i-check-circle"/></svg> Quest complete!' + (ns.feedback ? ' <b>Teacher says:</b> ' + esc(ns.feedback) : '') + '</div>';
       if (status === 'returned') h += '<div class="banner ret"><svg class="i"><use href="#i-undo"/></svg> Your teacher sent this back. <b>Feedback:</b> ' + esc(ns.feedback || 'See your teacher.') + ' Fix it up and turn it in again!</div>';
     } else {
-      h += '<div class="banner sub"><svg class="i"><use href="#i-eye"/></svg> Teacher preview — this is what students see. <b>Teacher notes:</b> ' + esc(Ls.teacherNotes || '') + '</div>' + stdFull(id);
+      h += '<div class="banner sub"><svg class="i"><use href="#i-eye"/></svg> Teacher preview — this is what students see. <b>Teacher notes:</b> ' + notesHTML(Ls.teacherNotes) + '</div>' + stdFull(id);
     }
 
     h += '<div class="quest-grid"><div class="quest-main">';
@@ -548,7 +550,7 @@
         var isAns = right && ci === q.answer;
         h += '<button class="choice' + (isAns ? ' correct' : '') + '" data-act="quiz" data-node="' + id + '" data-q="' + qi + '" data-c="' + ci + '"' + (right || lockedUI ? ' disabled' : '') + '>' + esc(c) + '</button>';
       });
-      h += '</div>' + (right ? '<p class="explain say"><svg class="i"><use href="#i-check-circle"/></svg> ' + esc(q.explain) + (r.firstTry ? ' <span class="chip gold">First try!</span>' : '') + '</p>' : '<p class="explain" hidden></p>') + (readOnly ? '' : '<div class="conf-row">' + confBtn(id, 'quiz', c.i) + '</div>') + '</div>';
+      h += '</div>' + (right ? '<p class="explain say"><svg class="i"><use href="#i-check-circle"/></svg> ' + esc(q.explain) + (r.firstTry ? ' <span class="chip gold">First try!</span>' : '') + '</p>' : '<p class="explain" hidden></p>') + '</div>';
     });
     h += '</section>';
 
@@ -768,7 +770,7 @@
       q.choices.forEach(function (ch, ci) {
         h += '<button class="choice' + (right && ci === q.answer ? ' correct' : '') + '" data-act="quiz" data-node="' + id + '" data-q="' + c.i + '" data-c="' + ci + '"' + (right || readOnly ? ' disabled' : '') + '>' + esc(ch) + '</button>';
       });
-      h += '</div>' + (right ? '<p class="explain say"><svg class="i"><use href="#i-check-circle"/></svg> ' + esc(q.explain) + (r.firstTry ? ' <span class="chip gold">First try!</span>' : '') + '</p>' : '<p class="explain" hidden></p>') + '</div>';
+      h += '</div>' + (right ? '<p class="explain say"><svg class="i"><use href="#i-check-circle"/></svg> ' + esc(q.explain) + (r.firstTry ? ' <span class="chip gold">First try!</span>' : '') + '</p>' : '<p class="explain" hidden></p>') + (readOnly ? '' : '<div class="conf-row">' + confBtn(id, 'quiz', c.i) + '</div>') + '</div>';
       h += '<div class="p-nav">' + backBtn + (right ? nextBtn.replace('btn big', 'btn primary big') : readOnly ? nextBtn : '<span></span>') + '</div>';
     } else if (c.type === 'challenge') {
       var Ch = Ls.challenge, ans = Ch.answer || Ch.blocks;
@@ -1619,7 +1621,7 @@
       groups[t].forEach(function (n) {
         var Ls = L[n.id], B = R.BRANCHES[n.branch];
         h += '<div class="card lesson-item" style="--c:' + B.color + '"><div class="eyebrow">' + SQ_ICONS.branch(n.branch) + ' ' + esc(B.name) + (Ls.project ? ' · ' + esc(Ls.project.name) + ' ' + esc(Ls.project.part) : '') + '</div><h3>' + esc(Ls.title) + '</h3>' +
-          '<p class="small">' + esc(Ls.skill) + ' · ' + esc(Ls.minutes) + ' min</p>' + (SQ_UBD.lessons[n.id] ? '<p class="ubd-mini"><b>EQ:</b> ' + esc(SQ_UBD.lessons[n.id].eq) + '</p>' : '') + '<p class="muted small">' + esc(Ls.teacherNotes || '') + '</p>' +
+          '<p class="small">' + esc(Ls.skill) + ' · ' + esc(Ls.minutes) + ' min</p>' + (SQ_UBD.lessons[n.id] ? '<p class="ubd-mini"><b>EQ:</b> ' + esc(SQ_UBD.lessons[n.id].eq) + '</p>' : '') + '<p class="muted small">' + notesHTML(Ls.teacherNotes) + '</p>' +
           '<form class="row" data-form="video" data-node="' + n.id + '"><input name="url" placeholder="Video link (optional)" value="' + esc(vids[n.id] || '') + '"><button class="btn small">Save</button></form>' +
           (Ls.starter ? '<form class="row" data-form="starter" data-node="' + n.id + '"><input name="url" placeholder="Starter project link (for absent students)" value="' + esc((S.boot.settings.starters || {})[n.id] || '') + '"><button class="btn small">Save</button></form><p class="muted small"><svg class="i"><use href="#i-briefcase"/></svg> Starter should contain: ' + esc(Ls.starter.contains) + '</p>' : '') +
           stdChips(n.id) + '<a class="btn small ghost" href="#/t/lesson/' + n.id + '"><svg class="i"><use href="#i-eye"/></svg> Preview</a></div>';
@@ -2048,7 +2050,7 @@
         else {
           SQ_SOUND.play('wrong'); t.classList.add('wrong'); t.disabled = true;
           var box = t.closest('.quiz').querySelector('.explain');
-          box.hidden = false; box.textContent = '<svg class="i"><use href="#i-x"/></svg> Not quite — reread the steps above and try again!';
+          box.hidden = false; box.innerHTML = '<svg class="i"><use href="#i-x"/></svg> Not quite. Reread the steps above and try again!'; box.classList.add('nope');
           S.me = res.student;
         }
       }).catch(function () { });
