@@ -36,16 +36,18 @@ function SQ_SERVICE(store) {
   function arcadeStatus(st) {
     var a = AR.stateOf(st.state), p = R.profile(st.state), info = arcadeInfo(findClass(st.classId) || {});
     var t = now();
-    return { tickets: AR.tickets(a, p.doneCount, info.questsPerTicket), toNext: info.questsPerTicket - (p.doneCount % info.questsPerTicket), goals: a.goals, until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
+    return { kart: { owned: a.kart.owned, active: a.kart.active, best: a.kart.season === info.season ? a.kart.best : 0, allBest: a.kart.allBest }, tickets: AR.tickets(a, p.doneCount, info.questsPerTicket), toNext: info.questsPerTicket - (p.doneCount % info.questsPerTicket), goals: a.goals, until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
       best: a.season === info.season ? a.best : 0, allBest: a.allBest, plays: a.plays, running: !!(a.run && t - a.run.t < AR.RUN_MAX_MS) };
   }
   // Top scores this season (only students; positive information only)
-  function arcadeBoard(classId, season) {
-    return store.getStudents().filter(function (s) {
-      var a = s.state.arcade;
-      return s.classId === classId && !s.isTeacher && a && a.season === season && a.best > 0;
-    }).sort(function (x, y) { return y.state.arcade.best - x.state.arcade.best; }).slice(0, 10).map(function (s) {
-      return { name: s.name, avatar: s.state.avatar || A.DEFAULT, score: s.state.arcade.best, title: A.titleText(s.state.avatar), key: memberId(s.email) };
+  // game: 'rush' (Block Rush, the default) or 'kart' (Kart Dash); each has its own leaderboard
+  function gameRec(s, game) { var a = s.state.arcade; return !a ? null : game === 'kart' ? a.kart : a; }
+  function arcadeBoard(classId, season, game, all) {
+    return (all || store.getStudents()).filter(function (s) {
+      var g = gameRec(s, game);
+      return s.classId === classId && !s.isTeacher && g && g.season === season && g.best > 0;
+    }).sort(function (x, y) { return gameRec(y, game).best - gameRec(x, game).best; }).slice(0, 10).map(function (s) {
+      return { name: s.name, avatar: s.state.avatar || A.DEFAULT, score: gameRec(s, game).best, title: A.titleText(s.state.avatar), key: memberId(s.email) };
     });
   }
   function canPlay(st) {
@@ -383,7 +385,8 @@ function SQ_SERVICE(store) {
     arcade: function (user) {
       var st = requireStudent(user), c = findClass(st.classId) || {};
       var info = arcadeInfo(c);
-      return { info: info, me: arcadeStatus(st), board: arcadeBoard(st.classId, info.season), you: memberId(st.email), now: now() };
+      var everyone = store.getStudents();
+      return { info: info, me: arcadeStatus(st), board: arcadeBoard(st.classId, info.season, 'rush', everyone), kartBoard: arcadeBoard(st.classId, info.season, 'kart', everyone), you: memberId(st.email), now: now() };
     },
     // Buy a ticket or a power-up with coins
     arcadeBuy: function (user, args) {
@@ -417,11 +420,13 @@ function SQ_SERVICE(store) {
       var st = requireStudent(user);
       canPlay(st);
       var a = AR.stateOf(st.state), want = (args.power || []).map(String), power = [];
+      var game = args.game === 'kart' ? 'kart' : 'rush';
       want.forEach(function (id) {
+        if (game === 'kart' && AR.KART_POWER.indexOf(id) < 0) return;
         if (AR.POWER[id] && power.indexOf(id) < 0 && power.length < AR.MAX_POWER && (a.inv[id] || 0) > 0) power.push(id);
       });
       power.forEach(function (id) { a.inv[id] -= 1; if (!a.inv[id]) delete a.inv[id]; });
-      a.run = { id: 'r' + now().toString(36) + Math.floor(Math.random() * 1e4), t: now(), power: power };
+      a.run = { id: 'r' + now().toString(36) + Math.floor(Math.random() * 1e4), t: now(), power: power, game: game };
       persist(st);
       return { run: a.run, me: arcadeStatus(st) };
     },
@@ -429,28 +434,64 @@ function SQ_SERVICE(store) {
       var st = requireStudent(user), a = AR.stateOf(st.state);
       var c = findClass(st.classId) || {}, cfg = AR.config(c);
       if (!a.run || a.run.id !== String(args.runId || '')) err('That run was not found. Start a new one!');
-      var ms = now() - a.run.t, score = Math.max(0, Math.floor(Number(args.score) || 0));
+      var ms = now() - a.run.t, score = Math.max(0, Math.floor(Number(args.score) || 0)), game = a.run.game === 'kart' ? 'kart' : 'rush';
+      var rec = game === 'kart' ? a.kart : a;
       a.run = null;
       if (ms > AR.RUN_MAX_MS) err('That run went too long to count.');
       score = Math.min(score, AR.scoreCap(ms));
-      a.plays += 1;
-      if (a.season !== cfg.season) { a.season = cfg.season; a.best = 0; }
-      var newBest = score > a.best;
-      if (newBest) a.best = score;
-      var allBest = score > a.allBest;
-      if (allBest) a.allBest = score;
+      rec.plays += 1;
+      if (rec.season !== cfg.season) { rec.season = cfg.season; rec.best = 0; }
+      var newBest = score > rec.best;
+      if (newBest) rec.best = score;
+      var allBest = score > rec.allBest;
+      if (allBest) rec.allBest = score;
       // rewards: coins for the run (with a daily limit) and one-time prizes for score goals
       var today = new Date(now()).toISOString().slice(0, 10);
       if (a.day !== today) { a.day = today; a.dayCoins = 0; }
       var runCoins = Math.max(0, Math.min(AR.RUN_COINS, Math.floor(score / 100), AR.DAY_COINS - a.dayCoins));
       a.dayCoins += runCoins;
       var newGoals = [];
-      AR.GOALS.forEach(function (g) { if (score >= g[0] && a.goals.indexOf(g[0]) < 0) { a.goals.push(g[0]); newGoals.push({ score: g[0], coins: g[1] }); runCoins += g[1]; } });
+      if (game === 'rush') AR.GOALS.forEach(function (g) { if (score >= g[0] && a.goals.indexOf(g[0]) < 0) { a.goals.push(g[0]); newGoals.push({ score: g[0], coins: g[1] }); runCoins += g[1]; } });
       a.earned += runCoins;
       persist(st);
-      var board = arcadeBoard(st.classId, cfg.season), id = memberId(st.email), place = 0;
+      var board = arcadeBoard(st.classId, cfg.season, game), id = memberId(st.email), place = 0;
       board.forEach(function (b, i) { if (b.key === id) place = i + 1; });
-      return { score: score, newBest: newBest, allBest: allBest, place: place, board: board, coins: runCoins, goals: newGoals, me: arcadeStatus(st), student: selfView(st) };
+      return { game: game, score: score, newBest: newBest, allBest: allBest, place: place, board: board, coins: runCoins, goals: newGoals, me: arcadeStatus(st), student: selfView(st) };
+    },
+
+    // ---- Kart Dash garage: buy a kart, upgrade one of its parts, or choose which kart to drive
+    kartBuy: function (user, args) {
+      var st = requireStudent(user), c = classDefaults(findClass(st.classId) || {});
+      if (c.shop === false) err('The coin shop is turned off for your class.');
+      var a = AR.stateOf(st.state), p = R.profile(st.state), k = AR.KART[String(args.kart || '')];
+      if (!k) err('That kart is not in the garage.');
+      if (a.kart.owned[k.id]) err('You already own the ' + k.name + '.');
+      if (p.coins < k.price) err('You need ' + (k.price - p.coins) + ' more coins for the ' + k.name + '.');
+      a.spent += k.price; a.kart.owned[k.id] = {}; a.kart.active = k.id;
+      persist(st);
+      return { me: arcadeStatus(st), student: selfView(st) };
+    },
+    kartUpgrade: function (user, args) {
+      var st = requireStudent(user), c = classDefaults(findClass(st.classId) || {});
+      if (c.shop === false) err('The coin shop is turned off for your class.');
+      var a = AR.stateOf(st.state), p = R.profile(st.state), k = AR.KART[String(args.kart || '')];
+      var part = AR.PARTS.filter(function (x) { return x.id === args.part; })[0];
+      if (!k || !a.kart.owned[k.id]) err('Buy that kart first.');
+      if (!part) err('That part does not exist.');
+      var lv = a.kart.owned[k.id][part.id] || 0;
+      if (lv >= AR.PART_PRICES.length) err(part.name + ' is already at the top level.');
+      var price = AR.PART_PRICES[lv];
+      if (p.coins < price) err('You need ' + (price - p.coins) + ' more coins for that upgrade.');
+      a.spent += price; a.kart.owned[k.id][part.id] = lv + 1;
+      persist(st);
+      return { me: arcadeStatus(st), student: selfView(st) };
+    },
+    kartSelect: function (user, args) {
+      var st = requireStudent(user), a = AR.stateOf(st.state), id = String(args.kart || '');
+      if (!a.kart.owned[id]) err('Buy that kart first.');
+      a.kart.active = id;
+      persist(st);
+      return { me: arcadeStatus(st) };
     },
 
     // ---------------------------------------------------------- teacher
@@ -471,9 +512,11 @@ function SQ_SERVICE(store) {
       var winners = [];
       if (args.resetBoard) {
         // the top 3 of the round that is ending win coins (and the Round Champion badge)
-        var top = store.getStudents().filter(function (s) { var x = s.state.arcade; return s.classId === c.id && !s.isTeacher && x && x.season === cfg.season && x.best > 0; })
-          .sort(function (x, y) { return y.state.arcade.best - x.state.arcade.best; }).slice(0, AR.ROUND_PRIZES.length);
-        top.forEach(function (s, i) { var x = AR.stateOf(s.state); x.earned += AR.ROUND_PRIZES[i]; x.roundWins += 1; persist(s); winners.push({ name: s.name, place: i + 1, coins: AR.ROUND_PRIZES[i] }); });
+        ['rush', 'kart'].forEach(function (game) {
+          var top = store.getStudents().filter(function (s) { var x = gameRec(s, game); return s.classId === c.id && !s.isTeacher && x && x.season === cfg.season && x.best > 0; })
+            .sort(function (x, y) { return gameRec(y, game).best - gameRec(x, game).best; }).slice(0, AR.ROUND_PRIZES.length);
+          top.forEach(function (s, i) { var x = AR.stateOf(s.state); x.earned += AR.ROUND_PRIZES[i]; x.roundWins += 1; persist(s); winners.push({ game: game, name: s.name, place: i + 1, coins: AR.ROUND_PRIZES[i] }); });
+        });
         cfg.season += 1;
       }
       c.arcade = cfg;
@@ -482,13 +525,13 @@ function SQ_SERVICE(store) {
       if (cfg.mode === 'off') store.getStudents().forEach(function (s) {
         if (s.classId === c.id && s.state.arcade && s.state.arcade.until > now()) { s.state.arcade.until = 0; store.saveStudent(s); }
       });
-      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season), winners: winners };
+      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season, 'rush'), kartBoard: arcadeBoard(c.id, cfg.season, 'kart'), winners: winners };
     },
     arcadeBoardFor: function (user, args) {
       requireTeacher(user);
       var c = findClass(args.classId);
       if (!c) err('Class not found.');
-      return { board: arcadeBoard(c.id, AR.config(c).season), info: arcadeInfo(c) };
+      return { board: arcadeBoard(c.id, AR.config(c).season, 'rush'), kartBoard: arcadeBoard(c.id, AR.config(c).season, 'kart'), info: arcadeInfo(c) };
     },
 
     teacherData: function (user) {
@@ -750,6 +793,14 @@ function SQ_MERGE(target, source, apply, tag) {
         // coins and tickets are separate histories in each sheet, so add them (once only)
         if (firstTime) ['spent', 'earned', 'bought', 'used', 'plays', 'roundWins'].forEach(function (k) { a[k] = (a[k] || 0) + (o[k] || 0); });
         a.allBest = Math.max(a.allBest || 0, o.allBest || 0);
+        if (o.kart) {
+          a.kart = a.kart || { owned: { starter: {} }, active: 'starter', best: 0, season: 0, allBest: 0, plays: 0 };
+          a.kart.allBest = Math.max(a.kart.allBest || 0, o.kart.allBest || 0);
+          Object.keys(o.kart.owned || {}).forEach(function (id) {
+            var mine = a.kart.owned[id] || (a.kart.owned[id] = {});
+            Object.keys(o.kart.owned[id]).forEach(function (part) { mine[part] = Math.max(mine[part] || 0, o.kart.owned[id][part]); });
+          });
+        }
         a.goals = a.goals || []; (o.goals || []).forEach(function (g) { if (a.goals.indexOf(g) < 0) a.goals.push(g); });
         if (firstTime) { a.inv = a.inv || {}; Object.keys(o.inv || {}).forEach(function (k) { a.inv[k] = Math.min(9, (a.inv[k] || 0) + o.inv[k]); }); }
       }

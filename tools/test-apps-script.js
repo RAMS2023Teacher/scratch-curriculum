@@ -184,6 +184,35 @@ test('arcade: teacher lock, earned passes, power-ups and score checks', () => {
   assert.ok(as(M, 'arcade').me.allBest > 0, 'all-time best is kept');
   assert.throws(() => as(M, 'setArcade', { classId, mode: 'free' }), /Teachers only/);
 });
+test('Kart Dash: karts and upgrades cost coins, and the game has its own leaderboard', () => {
+  const M = 'maya.lopez@school.org';
+  as(T, 'setArcade', { classId, mode: 'free', minutes: 30 });
+  as(T, 'bonus', { email: M, amount: 1000, note: 'test coins' });
+  const start = as(M, 'bootstrap').student.profile, rushBest = as(M, 'arcade').me.best;
+  assert.deepStrictEqual(Object.keys(as(M, 'arcade').me.kart.owned), ['starter'], 'everyone starts with the free Go-Kart');
+  assert.throws(() => as(M, 'kartBuy', { kart: 'gold' }), /more coins/);
+  assert.throws(() => as(M, 'kartBuy', { kart: 'hovercraft' }), /not in the garage/);
+  assert.throws(() => as(M, 'kartUpgrade', { kart: 'bolt', part: 'engine' }), /Buy that kart first/);
+  const buy = as(M, 'kartBuy', { kart: 'bolt' });
+  assert.strictEqual(buy.student.profile.coins, start.coins - 150); assert.strictEqual(buy.me.kart.active, 'bolt');
+  assert.throws(() => as(M, 'kartBuy', { kart: 'bolt' }), /already own/);
+  const up = as(M, 'kartUpgrade', { kart: 'bolt', part: 'engine' });
+  assert.strictEqual(up.me.kart.owned.bolt.engine, 1); assert.strictEqual(up.student.profile.coins, start.coins - 150 - 40);
+  assert.strictEqual(up.student.profile.xp, start.xp, 'buying karts never changes XP');
+  assert.strictEqual(ctx.SQ_ARCADE.kartStats('bolt', { engine: 1 }).speed, 1.17, 'an engine upgrade makes the kart 6% faster');
+  assert.throws(() => as(M, 'kartUpgrade', { kart: 'bolt', part: 'wings' }), /does not exist/);
+  assert.throws(() => as(M, 'kartSelect', { kart: 'rocket' }), /Buy that kart first/);
+  assert.strictEqual(as(M, 'kartSelect', { kart: 'starter' }).me.kart.active, 'starter');
+  const run = as(M, 'arcadeStart', { game: 'kart', power: ['slow', 'heart'] }).run;
+  assert.strictEqual(run.game, 'kart'); assert.strictEqual(run.power.length, 0, 'power-ups that do nothing in Kart Dash are not used up');
+  const end = as(M, 'arcadeEnd', { runId: run.id, score: 420 });
+  assert.strictEqual(end.game, 'kart'); assert.strictEqual(end.score, 420); assert.strictEqual(end.goals.length, 0);
+  assert.ok(end.student.profile.badges.includes('kart_racer'));
+  const a = as(M, 'arcade');
+  assert.strictEqual(a.kartBoard[0].name, 'Maya L.'); assert.strictEqual(a.kartBoard[0].score, 420);
+  assert.strictEqual(a.me.kart.best, 420); assert.strictEqual(a.me.best, rushBest, 'the Block Rush score is separate');
+  as(T, 'setArcade', { classId, mode: 'off' });
+});
 test('help requests: students ask, only teachers see the list, no emails in it', () => {
   const M = 'maya.lopez@school.org', L2 = 'liam.chen@school.org';
   assert.strictEqual(as(M, 'myHelp').help.open, false);

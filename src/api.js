@@ -64,7 +64,7 @@ var SQ_API = (function () {
   }
 
   // ------------------------------------------------------------------ demo mode
-  var KEY = 'scratchQuestDemo.v5';
+  var KEY = 'scratchQuestDemo.v6';
   var mem = null;
   function load() {
     if (mem) return mem;
@@ -138,7 +138,8 @@ var SQ_API = (function () {
         }
         ns.touched = t + (j * 2 + i % 3) * 86400000;
       });
-      if (i % 5 !== 4) { var sc = [1840, 960, 2310, 420, 0, 1290, 680, 3050, 150, 1500, 770, 0, 1120, 530][i]; if (sc) st.arcade = { spent: 0, inv: {}, bought: 0, used: 1, until: 0, best: sc, season: 1, allBest: sc, plays: 3, run: null }; }
+      if (i % 5 !== 4) { var sc = [1840, 960, 2310, 420, 0, 1290, 680, 3050, 150, 1500, 770, 0, 1120, 530][i]; if (sc) { var ks = [2140, 0, 2890, 1320, 0, 1760, 980, 3310, 0, 2450, 1510, 0, 0, 0][i], kid = ['starter', 'starter', 'bolt', 'starter', 'starter', 'drifter', 'starter', 'rocket', 'starter', 'bolt'][i] || 'starter', own = { starter: {} }; own[kid] = {};
+          st.arcade = { spent: 0, inv: {}, bought: 0, used: 1, until: 0, best: sc, season: 1, allBest: sc, plays: 3, run: null, kart: { owned: own, active: kid, best: ks, season: 1, allBest: ks, plays: ks ? 2 : 0 } }; } }
       if (i === 2) st.awards.push({ id: 'helper', note: 'Helped Owen fix his loop.', at: t });
       if (i === 7) st.awards.push({ id: 'creative', note: 'Amazing paint app idea!', at: t });
       var email = n.toLowerCase() + '@demo.school';

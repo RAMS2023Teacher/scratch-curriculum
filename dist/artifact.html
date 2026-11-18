@@ -1261,6 +1261,38 @@ html.rm .confetti, html.rm .xp-float, html.rm .fx-rays, html.rm .fx-parts, html.
 .explain.nope { color: #b42318; font-weight: 800; }
 .explain.nope .i { width: 1em; height: 1em; vertical-align: -2px; }
 
+/* ===================== Arcade: game tabs, Kart Dash, garage ===================== */
+.arc-tabs { display: flex; gap: 8px; }
+.arc-tabs button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 12px 12px 0 0; border: 0; background: #d9d0f2; color: #3b2a73; font: 400 1.1rem var(--display), sans-serif; cursor: pointer; }
+.arc-tabs button.on { background: #3a0ca3; color: #ffd60a; }
+.arc-tabs .i { width: 20px; height: 20px; }
+.arc-tabs + .arc-hero { border-top-left-radius: 0; margin-top: -16px; }
+.arc-hero.kart { background: radial-gradient(circle at 85% 20%, rgba(255, 214, 10, .35), transparent 40%), linear-gradient(135deg, #14532d, #15803d 55%, #f97316); box-shadow: 0 6px 0 #0b3a1e; }
+.arc-hero.kart h1 { text-shadow: 0 4px 0 #0b3a1e; }
+.kart-now { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; }
+.kart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.kart-card { position: relative; display: grid; gap: 8px; align-content: start; padding: 14px; border-radius: 14px; border: 3px solid var(--line); background: var(--bg2); box-shadow: 0 4px 0 var(--line); }
+.kart-card.on { border-color: #22a559; box-shadow: 0 4px 0 #22a559, 0 0 0 4px rgba(34, 197, 94, .18); }
+.kart-card.r-rare { border-color: #9cc3ff; } .kart-card.r-epic { border-color: #d3b0fb; } .kart-card.r-legendary { border-color: #ffd166; box-shadow: 0 4px 0 #e0a800, 0 0 18px rgba(255, 183, 3, .35); }
+.kart-card.on.r-rare, .kart-card.on.r-epic, .kart-card.on.r-legendary { border-color: #22a559; }
+.kart-card .rar-chip { position: absolute; top: 8px; right: 8px; }
+.kart-card.locked-k .kart-ico { filter: grayscale(.45); opacity: .85; }
+.kart-top { display: flex; gap: 12px; align-items: center; }
+.kart-top p { margin: 2px 0 0; font-size: .85rem; color: var(--muted); }
+.kart-ico { flex: none; }
+.kstats { display: grid; gap: 4px; }
+.kstat { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 8px; }
+.kstat small { font-weight: 800; color: var(--muted); }
+.kstat i { height: 9px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.kstat b { display: block; height: 100%; border-radius: 5px; background: linear-gradient(90deg, #22c55e, #facc15); }
+.kparts { display: grid; gap: 5px; padding-top: 6px; border-top: 2px dashed var(--line); }
+.kpart { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .92rem; }
+.pips { display: inline-flex; gap: 3px; vertical-align: middle; margin-left: 4px; }
+.pips i { width: 12px; height: 8px; border-radius: 3px; background: var(--line); }
+.pips i.on { background: #f97316; }
+.btn.tiny .coin-tag, .kart-card .btn .coin-tag { color: inherit; }
+.kart-card .rar-chip { left: auto; right: 8px; top: 8px; width: max-content; }
+
 </style>
 
 <div id="app"><div style="padding:60px 16px;text-align:center;font:18px/1.5 system-ui,sans-serif;color:#555">Loading Scratch Quest…</div></div>
@@ -11051,6 +11083,7 @@ var SQ_RULES = (function () {
     { id: 'arcade_rookie', icon: '🕹️', name: 'Arcade Rookie',   desc: 'Play your first game of Block Rush.',      test: function (c) { return ((c.state.arcade || {}).plays || 0) >= 1; } },
     { id: 'high_scorer',  icon: '🎯', name: 'High Scorer',      desc: 'Score 1,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 1000; } },
     { id: 'arcade_master', icon: '👾', name: 'Arcade Master',   desc: 'Score 3,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 3000; } },
+    { id: 'kart_racer',   icon: '🏎️', name: 'Kart Racer',      desc: 'Finish your first Kart Dash race.',        test: function (c) { return (((c.state.arcade || {}).kart || {}).plays || 0) >= 1; } },
     { id: 'round_champ',  icon: '🏆', name: 'Round Champion',   desc: 'Finish a leaderboard round in the top 3.', test: function (c) { return ((c.state.arcade || {}).roundWins || 0) >= 1; } }
   ];
   // Awarded by the teacher only
@@ -11251,7 +11284,7 @@ var SQ_AVATAR = (function () {
     bg: [['candy', 'Candy Land', 90, 'rare'], ['ocean', 'Deep Sea', 140, 'rare'], ['volcano', 'Volcano', 240, 'epic']],
     frame: [['neon', 'Neon', 200, 'epic'], ['diamond', 'Diamond', 450, 'legendary']],
     title: [['sprite', 'Sprite Tamer', 40, 'common'], ['loops', 'Loop Master', 60, 'common'], ['bugs', 'Bug Hunter', 80, 'rare'], ['pixel', 'Pixel Artist', 80, 'rare'],
-      ['games', 'Game Maker', 120, 'rare'], ['stories', 'Story Weaver', 120, 'rare'], ['apps', 'App Inventor', 120, 'rare'], ['wizard', 'Code Wizard', 250, 'epic'], ['legend', 'Legend of Scratch', 600, 'legendary']]
+      ['games', 'Game Maker', 120, 'rare'], ['stories', 'Story Weaver', 120, 'rare'], ['apps', 'App Inventor', 120, 'rare'], ['racer', 'Speed Racer', 90, 'rare'], ['drift', 'Drift King', 150, 'rare'], ['pit', 'Pit Crew Chief', 200, 'epic'], ['wizard', 'Code Wizard', 250, 'epic'], ['legend', 'Legend of Scratch', 600, 'legendary']]
   };
   CATALOG.aura = [{ id: 'none', name: 'None' }];
   CATALOG.effect = [{ id: 'none', name: 'None' }];
@@ -11629,6 +11662,28 @@ var SQ_ARCADE = (function () {
   var GOALS = [[300, 20], [600, 40], [1000, 60], [1500, 80], [2000, 100], [3000, 150], [4000, 250]];
   // Coins for 1st, 2nd and 3rd place when the teacher starts a new leaderboard round
   var ROUND_PRIZES = [100, 60, 30];
+  // ---- Kart Dash: karts are bought with coins, and each kart can be upgraded (3 levels per part).
+  // speed / handling / boost are multipliers; offroad is how much of the grass slow-down a kart ignores.
+  var KARTS = [
+    { id: 'starter', name: 'Go-Kart', price: 0, rarity: 'common', color: '#ef4444', accent: '#fde047', speed: 1, handling: 1, boost: 1, offroad: 0, desc: 'Your first kart. Steady and reliable.' },
+    { id: 'bolt', name: 'Blue Bolt', price: 150, rarity: 'rare', color: '#3a86ff', accent: '#ffffff', speed: 1.1, handling: 0.95, boost: 1, offroad: 0, desc: 'Faster on the straights.' },
+    { id: 'drifter', name: 'Drift Wing', price: 200, rarity: 'rare', color: '#a855f7', accent: '#22d3ee', speed: 1, handling: 1.3, boost: 1, offroad: 0, desc: 'Turns on a dime.' },
+    { id: 'dozer', name: 'Mud Dozer', price: 250, rarity: 'epic', color: '#22a559', accent: '#fb923c', speed: 0.97, handling: 1, boost: 1, offroad: 1, desc: 'Barely slows down on the grass.' },
+    { id: 'rocket', name: 'Rocket Racer', price: 400, rarity: 'epic', color: '#f97316', accent: '#1f2937', speed: 1.18, handling: 0.9, boost: 1.35, offroad: 0, desc: 'Very fast, with long boosts. Harder to steer.' },
+    { id: 'gold', name: 'Golden Comet', price: 800, rarity: 'legendary', color: '#fbbf24', accent: '#7c3aed', speed: 1.15, handling: 1.15, boost: 1.2, offroad: 0.3, desc: 'Great at everything.' }
+  ];
+  var KART = {};
+  KARTS.forEach(function (k) { KART[k.id] = k; });
+  var PARTS = [{ id: 'engine', name: 'Engine', stat: 'speed', desc: 'Higher top speed' }, { id: 'tires', name: 'Tires', stat: 'handling', desc: 'Sharper steering' }, { id: 'turbo', name: 'Turbo', stat: 'boost', desc: 'Longer boosts' }];
+  var PART_PRICES = [40, 80, 150], PART_STEP = 0.06;
+  // the stats a kart really has, with its upgrades
+  function kartStats(id, levels) {
+    var k = KART[id] || KART.starter, o = { color: k.color, accent: k.accent, offroad: k.offroad };
+    PARTS.forEach(function (p) { o[p.stat] = Math.round(k[p.stat] * (1 + PART_STEP * ((levels || {})[p.id] || 0)) * 100) / 100; });
+    return o;
+  }
+  var KART_POWER = ['shield', 'magnet', 'double']; // the power-ups that do something in Kart Dash
+  var GAMES = { rush: 'Block Rush', kart: 'Kart Dash' };
   var MAX_POWER = 2;          // power-ups per run
   var RUN_MAX_MS = 12 * 60e3; // a run longer than this is not accepted
   var GRACE_MS = 3 * 60e3;    // a run started before the pass ended may still finish
@@ -11644,7 +11699,7 @@ var SQ_ARCADE = (function () {
     if (cfg.closes && now > cfg.closes) return 'off';
     return cfg.mode;
   }
-  function blank() { return { spent: 0, earned: 0, goals: [], roundWins: 0, day: '', dayCoins: 0, inv: {}, bought: 0, used: 0, until: 0, best: 0, season: 0, allBest: 0, plays: 0, run: null }; }
+  function blank() { return { kart: { owned: { starter: {} }, active: 'starter', best: 0, season: 0, allBest: 0, plays: 0 }, spent: 0, earned: 0, goals: [], roundWins: 0, day: '', dayCoins: 0, inv: {}, bought: 0, used: 0, until: 0, best: 0, season: 0, allBest: 0, plays: 0, run: null }; }
   function stateOf(state) {
     var a = state.arcade || (state.arcade = blank()), b = blank();
     for (var k in b) if (a[k] === undefined) a[k] = b[k];
@@ -11655,7 +11710,7 @@ var SQ_ARCADE = (function () {
   // Most points a fair run could reach in this much time (the game tops out well below this).
   function scoreCap(ms) { return Math.round(500 + Math.max(0, ms) / 1000 * 250); }
 
-  return { RUN_COINS: RUN_COINS, DAY_COINS: DAY_COINS, GOALS: GOALS, ROUND_PRIZES: ROUND_PRIZES, GAME: GAME, POWERUPS: POWERUPS, POWER: POWER, DEFAULTS: DEFAULTS, MAX_POWER: MAX_POWER, RUN_MAX_MS: RUN_MAX_MS, GRACE_MS: GRACE_MS,
+  return { KARTS: KARTS, KART: KART, PARTS: PARTS, PART_PRICES: PART_PRICES, kartStats: kartStats, KART_POWER: KART_POWER, GAMES: GAMES, RUN_COINS: RUN_COINS, DAY_COINS: DAY_COINS, GOALS: GOALS, ROUND_PRIZES: ROUND_PRIZES, GAME: GAME, POWERUPS: POWERUPS, POWER: POWER, DEFAULTS: DEFAULTS, MAX_POWER: MAX_POWER, RUN_MAX_MS: RUN_MAX_MS, GRACE_MS: GRACE_MS,
     config: config, liveMode: liveMode, stateOf: stateOf, tickets: tickets, scoreCap: scoreCap };
 })();
 
@@ -11698,16 +11753,18 @@ function SQ_SERVICE(store) {
   function arcadeStatus(st) {
     var a = AR.stateOf(st.state), p = R.profile(st.state), info = arcadeInfo(findClass(st.classId) || {});
     var t = now();
-    return { tickets: AR.tickets(a, p.doneCount, info.questsPerTicket), toNext: info.questsPerTicket - (p.doneCount % info.questsPerTicket), goals: a.goals, until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
+    return { kart: { owned: a.kart.owned, active: a.kart.active, best: a.kart.season === info.season ? a.kart.best : 0, allBest: a.kart.allBest }, tickets: AR.tickets(a, p.doneCount, info.questsPerTicket), toNext: info.questsPerTicket - (p.doneCount % info.questsPerTicket), goals: a.goals, until: a.until > t ? a.until : 0, inv: a.inv, coins: p.coins,
       best: a.season === info.season ? a.best : 0, allBest: a.allBest, plays: a.plays, running: !!(a.run && t - a.run.t < AR.RUN_MAX_MS) };
   }
   // Top scores this season (only students; positive information only)
-  function arcadeBoard(classId, season) {
-    return store.getStudents().filter(function (s) {
-      var a = s.state.arcade;
-      return s.classId === classId && !s.isTeacher && a && a.season === season && a.best > 0;
-    }).sort(function (x, y) { return y.state.arcade.best - x.state.arcade.best; }).slice(0, 10).map(function (s) {
-      return { name: s.name, avatar: s.state.avatar || A.DEFAULT, score: s.state.arcade.best, title: A.titleText(s.state.avatar), key: memberId(s.email) };
+  // game: 'rush' (Block Rush, the default) or 'kart' (Kart Dash); each has its own leaderboard
+  function gameRec(s, game) { var a = s.state.arcade; return !a ? null : game === 'kart' ? a.kart : a; }
+  function arcadeBoard(classId, season, game, all) {
+    return (all || store.getStudents()).filter(function (s) {
+      var g = gameRec(s, game);
+      return s.classId === classId && !s.isTeacher && g && g.season === season && g.best > 0;
+    }).sort(function (x, y) { return gameRec(y, game).best - gameRec(x, game).best; }).slice(0, 10).map(function (s) {
+      return { name: s.name, avatar: s.state.avatar || A.DEFAULT, score: gameRec(s, game).best, title: A.titleText(s.state.avatar), key: memberId(s.email) };
     });
   }
   function canPlay(st) {
@@ -12045,7 +12102,8 @@ function SQ_SERVICE(store) {
     arcade: function (user) {
       var st = requireStudent(user), c = findClass(st.classId) || {};
       var info = arcadeInfo(c);
-      return { info: info, me: arcadeStatus(st), board: arcadeBoard(st.classId, info.season), you: memberId(st.email), now: now() };
+      var everyone = store.getStudents();
+      return { info: info, me: arcadeStatus(st), board: arcadeBoard(st.classId, info.season, 'rush', everyone), kartBoard: arcadeBoard(st.classId, info.season, 'kart', everyone), you: memberId(st.email), now: now() };
     },
     // Buy a ticket or a power-up with coins
     arcadeBuy: function (user, args) {
@@ -12079,11 +12137,13 @@ function SQ_SERVICE(store) {
       var st = requireStudent(user);
       canPlay(st);
       var a = AR.stateOf(st.state), want = (args.power || []).map(String), power = [];
+      var game = args.game === 'kart' ? 'kart' : 'rush';
       want.forEach(function (id) {
+        if (game === 'kart' && AR.KART_POWER.indexOf(id) < 0) return;
         if (AR.POWER[id] && power.indexOf(id) < 0 && power.length < AR.MAX_POWER && (a.inv[id] || 0) > 0) power.push(id);
       });
       power.forEach(function (id) { a.inv[id] -= 1; if (!a.inv[id]) delete a.inv[id]; });
-      a.run = { id: 'r' + now().toString(36) + Math.floor(Math.random() * 1e4), t: now(), power: power };
+      a.run = { id: 'r' + now().toString(36) + Math.floor(Math.random() * 1e4), t: now(), power: power, game: game };
       persist(st);
       return { run: a.run, me: arcadeStatus(st) };
     },
@@ -12091,28 +12151,64 @@ function SQ_SERVICE(store) {
       var st = requireStudent(user), a = AR.stateOf(st.state);
       var c = findClass(st.classId) || {}, cfg = AR.config(c);
       if (!a.run || a.run.id !== String(args.runId || '')) err('That run was not found. Start a new one!');
-      var ms = now() - a.run.t, score = Math.max(0, Math.floor(Number(args.score) || 0));
+      var ms = now() - a.run.t, score = Math.max(0, Math.floor(Number(args.score) || 0)), game = a.run.game === 'kart' ? 'kart' : 'rush';
+      var rec = game === 'kart' ? a.kart : a;
       a.run = null;
       if (ms > AR.RUN_MAX_MS) err('That run went too long to count.');
       score = Math.min(score, AR.scoreCap(ms));
-      a.plays += 1;
-      if (a.season !== cfg.season) { a.season = cfg.season; a.best = 0; }
-      var newBest = score > a.best;
-      if (newBest) a.best = score;
-      var allBest = score > a.allBest;
-      if (allBest) a.allBest = score;
+      rec.plays += 1;
+      if (rec.season !== cfg.season) { rec.season = cfg.season; rec.best = 0; }
+      var newBest = score > rec.best;
+      if (newBest) rec.best = score;
+      var allBest = score > rec.allBest;
+      if (allBest) rec.allBest = score;
       // rewards: coins for the run (with a daily limit) and one-time prizes for score goals
       var today = new Date(now()).toISOString().slice(0, 10);
       if (a.day !== today) { a.day = today; a.dayCoins = 0; }
       var runCoins = Math.max(0, Math.min(AR.RUN_COINS, Math.floor(score / 100), AR.DAY_COINS - a.dayCoins));
       a.dayCoins += runCoins;
       var newGoals = [];
-      AR.GOALS.forEach(function (g) { if (score >= g[0] && a.goals.indexOf(g[0]) < 0) { a.goals.push(g[0]); newGoals.push({ score: g[0], coins: g[1] }); runCoins += g[1]; } });
+      if (game === 'rush') AR.GOALS.forEach(function (g) { if (score >= g[0] && a.goals.indexOf(g[0]) < 0) { a.goals.push(g[0]); newGoals.push({ score: g[0], coins: g[1] }); runCoins += g[1]; } });
       a.earned += runCoins;
       persist(st);
-      var board = arcadeBoard(st.classId, cfg.season), id = memberId(st.email), place = 0;
+      var board = arcadeBoard(st.classId, cfg.season, game), id = memberId(st.email), place = 0;
       board.forEach(function (b, i) { if (b.key === id) place = i + 1; });
-      return { score: score, newBest: newBest, allBest: allBest, place: place, board: board, coins: runCoins, goals: newGoals, me: arcadeStatus(st), student: selfView(st) };
+      return { game: game, score: score, newBest: newBest, allBest: allBest, place: place, board: board, coins: runCoins, goals: newGoals, me: arcadeStatus(st), student: selfView(st) };
+    },
+
+    // ---- Kart Dash garage: buy a kart, upgrade one of its parts, or choose which kart to drive
+    kartBuy: function (user, args) {
+      var st = requireStudent(user), c = classDefaults(findClass(st.classId) || {});
+      if (c.shop === false) err('The coin shop is turned off for your class.');
+      var a = AR.stateOf(st.state), p = R.profile(st.state), k = AR.KART[String(args.kart || '')];
+      if (!k) err('That kart is not in the garage.');
+      if (a.kart.owned[k.id]) err('You already own the ' + k.name + '.');
+      if (p.coins < k.price) err('You need ' + (k.price - p.coins) + ' more coins for the ' + k.name + '.');
+      a.spent += k.price; a.kart.owned[k.id] = {}; a.kart.active = k.id;
+      persist(st);
+      return { me: arcadeStatus(st), student: selfView(st) };
+    },
+    kartUpgrade: function (user, args) {
+      var st = requireStudent(user), c = classDefaults(findClass(st.classId) || {});
+      if (c.shop === false) err('The coin shop is turned off for your class.');
+      var a = AR.stateOf(st.state), p = R.profile(st.state), k = AR.KART[String(args.kart || '')];
+      var part = AR.PARTS.filter(function (x) { return x.id === args.part; })[0];
+      if (!k || !a.kart.owned[k.id]) err('Buy that kart first.');
+      if (!part) err('That part does not exist.');
+      var lv = a.kart.owned[k.id][part.id] || 0;
+      if (lv >= AR.PART_PRICES.length) err(part.name + ' is already at the top level.');
+      var price = AR.PART_PRICES[lv];
+      if (p.coins < price) err('You need ' + (price - p.coins) + ' more coins for that upgrade.');
+      a.spent += price; a.kart.owned[k.id][part.id] = lv + 1;
+      persist(st);
+      return { me: arcadeStatus(st), student: selfView(st) };
+    },
+    kartSelect: function (user, args) {
+      var st = requireStudent(user), a = AR.stateOf(st.state), id = String(args.kart || '');
+      if (!a.kart.owned[id]) err('Buy that kart first.');
+      a.kart.active = id;
+      persist(st);
+      return { me: arcadeStatus(st) };
     },
 
     // ---------------------------------------------------------- teacher
@@ -12133,9 +12229,11 @@ function SQ_SERVICE(store) {
       var winners = [];
       if (args.resetBoard) {
         // the top 3 of the round that is ending win coins (and the Round Champion badge)
-        var top = store.getStudents().filter(function (s) { var x = s.state.arcade; return s.classId === c.id && !s.isTeacher && x && x.season === cfg.season && x.best > 0; })
-          .sort(function (x, y) { return y.state.arcade.best - x.state.arcade.best; }).slice(0, AR.ROUND_PRIZES.length);
-        top.forEach(function (s, i) { var x = AR.stateOf(s.state); x.earned += AR.ROUND_PRIZES[i]; x.roundWins += 1; persist(s); winners.push({ name: s.name, place: i + 1, coins: AR.ROUND_PRIZES[i] }); });
+        ['rush', 'kart'].forEach(function (game) {
+          var top = store.getStudents().filter(function (s) { var x = gameRec(s, game); return s.classId === c.id && !s.isTeacher && x && x.season === cfg.season && x.best > 0; })
+            .sort(function (x, y) { return gameRec(y, game).best - gameRec(x, game).best; }).slice(0, AR.ROUND_PRIZES.length);
+          top.forEach(function (s, i) { var x = AR.stateOf(s.state); x.earned += AR.ROUND_PRIZES[i]; x.roundWins += 1; persist(s); winners.push({ game: game, name: s.name, place: i + 1, coins: AR.ROUND_PRIZES[i] }); });
+        });
         cfg.season += 1;
       }
       c.arcade = cfg;
@@ -12144,13 +12242,13 @@ function SQ_SERVICE(store) {
       if (cfg.mode === 'off') store.getStudents().forEach(function (s) {
         if (s.classId === c.id && s.state.arcade && s.state.arcade.until > now()) { s.state.arcade.until = 0; store.saveStudent(s); }
       });
-      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season), winners: winners };
+      return { cls: teacherClass(c), board: arcadeBoard(c.id, cfg.season, 'rush'), kartBoard: arcadeBoard(c.id, cfg.season, 'kart'), winners: winners };
     },
     arcadeBoardFor: function (user, args) {
       requireTeacher(user);
       var c = findClass(args.classId);
       if (!c) err('Class not found.');
-      return { board: arcadeBoard(c.id, AR.config(c).season), info: arcadeInfo(c) };
+      return { board: arcadeBoard(c.id, AR.config(c).season, 'rush'), kartBoard: arcadeBoard(c.id, AR.config(c).season, 'kart'), info: arcadeInfo(c) };
     },
 
     teacherData: function (user) {
@@ -12412,6 +12510,14 @@ function SQ_MERGE(target, source, apply, tag) {
         // coins and tickets are separate histories in each sheet, so add them (once only)
         if (firstTime) ['spent', 'earned', 'bought', 'used', 'plays', 'roundWins'].forEach(function (k) { a[k] = (a[k] || 0) + (o[k] || 0); });
         a.allBest = Math.max(a.allBest || 0, o.allBest || 0);
+        if (o.kart) {
+          a.kart = a.kart || { owned: { starter: {} }, active: 'starter', best: 0, season: 0, allBest: 0, plays: 0 };
+          a.kart.allBest = Math.max(a.kart.allBest || 0, o.kart.allBest || 0);
+          Object.keys(o.kart.owned || {}).forEach(function (id) {
+            var mine = a.kart.owned[id] || (a.kart.owned[id] = {});
+            Object.keys(o.kart.owned[id]).forEach(function (part) { mine[part] = Math.max(mine[part] || 0, o.kart.owned[id][part]); });
+          });
+        }
         a.goals = a.goals || []; (o.goals || []).forEach(function (g) { if (a.goals.indexOf(g) < 0) a.goals.push(g); });
         if (firstTime) { a.inv = a.inv || {}; Object.keys(o.inv || {}).forEach(function (k) { a.inv[k] = Math.min(9, (a.inv[k] || 0) + o.inv[k]); }); }
       }
@@ -12938,7 +13044,7 @@ var SQ_API = (function () {
   }
 
   // ------------------------------------------------------------------ demo mode
-  var KEY = 'scratchQuestDemo.v5';
+  var KEY = 'scratchQuestDemo.v6';
   var mem = null;
   function load() {
     if (mem) return mem;
@@ -13012,7 +13118,8 @@ var SQ_API = (function () {
         }
         ns.touched = t + (j * 2 + i % 3) * 86400000;
       });
-      if (i % 5 !== 4) { var sc = [1840, 960, 2310, 420, 0, 1290, 680, 3050, 150, 1500, 770, 0, 1120, 530][i]; if (sc) st.arcade = { spent: 0, inv: {}, bought: 0, used: 1, until: 0, best: sc, season: 1, allBest: sc, plays: 3, run: null }; }
+      if (i % 5 !== 4) { var sc = [1840, 960, 2310, 420, 0, 1290, 680, 3050, 150, 1500, 770, 0, 1120, 530][i]; if (sc) { var ks = [2140, 0, 2890, 1320, 0, 1760, 980, 3310, 0, 2450, 1510, 0, 0, 0][i], kid = ['starter', 'starter', 'bolt', 'starter', 'starter', 'drifter', 'starter', 'rocket', 'starter', 'bolt'][i] || 'starter', own = { starter: {} }; own[kid] = {};
+          st.arcade = { spent: 0, inv: {}, bought: 0, used: 1, until: 0, best: sc, season: 1, allBest: sc, plays: 3, run: null, kart: { owned: own, active: kid, best: ks, season: 1, allBest: ks, plays: ks ? 2 : 0 } }; } }
       if (i === 2) st.awards.push({ id: 'helper', note: 'Helped Owen fix his loop.', at: t });
       if (i === 7) st.awards.push({ id: 'creative', note: 'Amazing paint app idea!', at: t });
       var email = n.toLowerCase() + '@demo.school';
@@ -13219,7 +13326,7 @@ var SQ_SOUND = (function () {
 })();
 
 
-var SQ_BUILD = "2026-11-18T20:00";
+var SQ_BUILD = "2026-11-18T21:58";
 var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
 
 /* Scratch Quest — page translation for students (Brazilian Portuguese).
@@ -13694,6 +13801,196 @@ var SQ_GAME = (function () {
     };
   }
   return { create: create, W: W, H: H };
+})();
+
+
+/* Scratch Quest — Kart Dash, the second arcade game.
+ * A 60-second top-down race on a winding road. Steer your kart (with your own avatar driving),
+ * pass rival karts, grab coins, hit boost pads, and stay out of the grass and the oil.
+ * Score = distance + passes + coins. Draws on a <canvas>; no images or sound files.
+ *
+ * SQ_KART.create(canvas, { avatar: Image|null, kart: { color, accent, speed, handling, boost, offroad },
+ *                          power: ['shield', 'magnet', 'double'], onEnd: function (score, stats) {} }) -> { stop }
+ */
+var SQ_KART = (function () {
+  var W = 420, H = 600, PY = H - 150, ROAD = 230, RACE = 60;
+  var RIVAL_COLORS = [['#3a86ff', '#fff'], ['#22a559', '#fde047'], ['#a855f7', '#fff'], ['#f97316', '#1f2937'], ['#ec4899', '#fff'], ['#14b8a6', '#fde047']];
+  function center(d) { return W / 2 + 62 * Math.sin(d / 420) + 34 * Math.sin(d / 173 + 1.3); }
+  function rr(g, x, y, w, h, r) {
+    g.beginPath(); g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+    g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h); g.lineTo(x + r, y + h);
+    g.quadraticCurveTo(x, y + h, x, y + h - r); g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y); g.closePath();
+  }
+  // a kart seen from above, pointing up the screen
+  function drawKart(g, x, y, tilt, color, accent, head) {
+    g.save(); g.translate(x, y); g.rotate(tilt);
+    g.fillStyle = 'rgba(0,0,0,.25)'; rr(g, -19, -24, 40, 56, 10); g.fill();
+    g.fillStyle = '#1f2937';
+    [[-23, -22], [13, -22], [-24, 10], [14, 10]].forEach(function (w) { rr(g, w[0], w[1], 10, 16, 3); g.fill(); });
+    g.fillStyle = color; rr(g, -17, -28, 34, 54, 10); g.fill();
+    g.fillStyle = accent; rr(g, -11, -32, 22, 9, 4); g.fill();            // front bumper
+    g.fillRect(-2.5, -24, 5, 14);                                         // racing stripe
+    g.fillStyle = 'rgba(0,0,0,.28)'; rr(g, -13, 16, 26, 7, 3); g.fill();  // rear wing
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 2, 13, 0, 7); g.fill();
+    if (head && head.complete && head.naturalWidth) {
+      g.save(); g.beginPath(); g.arc(0, 2, 12, 0, 7); g.clip(); g.drawImage(head, -15, -15, 30, 30); g.restore();
+    } else { g.fillStyle = accent; g.beginPath(); g.arc(0, 2, 9, 0, 7); g.fill(); }
+    g.restore();
+  }
+  function create(canvas, opts) {
+    opts = opts || {};
+    var K = opts.kart || {}, kSpeed = K.speed || 1, kHandle = K.handling || 1, kBoost = K.boost || 1, kOff = K.offroad || 0;
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    var g = canvas.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var has = {}; (opts.power || []).forEach(function (p) { has[p] = true; });
+    var shield = !!has.shield;
+    var MAXV = 330 * kSpeed, x = center(0), tx = null, keyL = false, keyR = false, tilt = 0;
+    var d = 0, v = 0, t = -2.4, boost = 0, spin = 0, bump = 0;
+    var things = [], pops = [], nextThing = 260, passes = 0, coins = 0, bonus = 0;
+    var over = false, overT = 0, stopped = false, finished = false, raf = 0, last = 0;
+    function sound(n) { if (typeof SQ_SOUND !== 'undefined') SQ_SOUND.play(n); }
+    function pop(px, py, text, color) { pops.push({ x: px, y: py, text: text, color: color || '#fff', life: 0.9 }); }
+    function score() { return Math.floor(d / 10) + bonus; }
+    function dbl() { return has.double && t >= 0 && t < 30 ? 2 : 1; }
+    function spawn() {
+      var at = d + H + 40, r = Math.random(), off = (Math.random() - 0.5) * (ROAD - 70);
+      if (r < 0.34) things.push({ kind: 'rival', d: at, off: off, v: MAXV / kSpeed * (0.5 + Math.random() * 0.22), c: RIVAL_COLORS[Math.floor(Math.random() * RIVAL_COLORS.length)], sway: Math.random() * 6, passed: false });
+      else if (r < 0.74) { for (var i = 0; i < 4; i++) things.push({ kind: 'coin', d: at + i * 46, off: off }); }
+      else if (r < 0.88) things.push({ kind: 'boost', d: at, off: off });
+      else things.push({ kind: 'oil', d: at, off: off });
+      nextThing = d + 210 + Math.random() * 190 - Math.min(90, t * 1.5);
+    }
+    function update(dt) {
+      if (over) { overT += dt; return; }
+      t += dt;
+      if (t < 0) return;
+      boost = Math.max(0, boost - dt); spin = Math.max(0, spin - dt); bump = Math.max(0, bump - dt);
+      var c = center(d + 0), offroad = Math.abs(x - c) > ROAD / 2 - 8;
+      var top = MAXV * (boost > 0 ? 1.55 : 1) * (offroad ? 0.45 + 0.4 * kOff : 1) * (spin > 0 ? 0.55 : 1);
+      v += (top - v) * Math.min(1, dt * (v < top ? 1.6 : 3.5));
+      d += v * dt;
+      var steer = spin > 0 ? 0 : (keyR ? 1 : 0) - (keyL ? 1 : 0);
+      if (steer) { x += steer * 250 * kHandle * dt; tx = null; }
+      else if (tx != null && spin <= 0) { var dx = tx - x, m = 330 * kHandle * dt; x += Math.max(-m, Math.min(m, dx)); steer = Math.abs(dx) > 4 ? (dx > 0 ? 1 : -1) : 0; }
+      x = Math.max(24, Math.min(W - 24, x));
+      tilt += ((spin > 0 ? Math.sin(t * 30) * 0.9 : steer * 0.22) - tilt) * Math.min(1, dt * 12);
+      if (offroad && Math.floor(t * 8) % 2 === 0 && v > 60) pops.length < 6 && pops.push({ x: x + (Math.random() - 0.5) * 30, y: PY + 30, text: '•', color: '#6b4f2a', life: 0.35 });
+      if (d >= nextThing) spawn();
+      var magnet = has.magnet && t < 20;
+      for (var i = things.length - 1; i >= 0; i--) {
+        var o = things[i];
+        if (o.kind === 'rival') { o.d += o.v * dt; }
+        var oy = PY - (o.d - d), ox = center(o.d) + o.off + (o.kind === 'rival' ? Math.sin(t * 1.3 + o.sway) * 14 : 0);
+        if (o.kind === 'coin' && magnet && oy > 80) { o.off += (x - ox) * Math.min(1, dt * 4); ox = center(o.d) + o.off; }
+        if (oy > H + 60) { things.splice(i, 1); continue; }
+        var hit = Math.abs(ox - x) < (o.kind === 'rival' ? 32 : 28) && Math.abs(oy - PY) < (o.kind === 'rival' ? 46 : 30);
+        if (o.kind === 'rival') {
+          if (hit && bump <= 0) {
+            if (shield) { shield = false; pop(x, PY - 50, 'Shield!', '#8ecae6'); sound('locked'); bump = 0.8; }
+            else { v *= 0.45; bump = 0.9; sound('wrong'); pop(x, PY - 50, 'Bump!', '#ff8fa3'); x += (x < ox ? -1 : 1) * 16; }
+          } else if (!o.passed && oy > PY + 40) { o.passed = true; passes++; bonus += 30 * dbl(); pop(x, PY - 56, 'Pass! +' + 30 * dbl(), '#ffd60a'); sound('step'); }
+        } else if (hit) {
+          things.splice(i, 1);
+          if (o.kind === 'coin') { coins++; bonus += 10 * dbl(); pop(ox, oy, '+' + 10 * dbl(), '#ffd60a'); sound('coin'); }
+          else if (o.kind === 'boost') { boost = 1.5 * kBoost; pop(x, PY - 56, 'Boost!', '#7dd3fc'); sound('whoosh'); }
+          else if (spin <= 0 && bump <= 0) {
+            if (shield) { shield = false; pop(x, PY - 50, 'Shield!', '#8ecae6'); sound('locked'); }
+            else { spin = 0.8; sound('wrong'); pop(x, PY - 50, 'Slip!', '#ff8fa3'); }
+          }
+        }
+      }
+      for (var k = pops.length - 1; k >= 0; k--) { pops[k].life -= dt; pops[k].y += (pops[k].text === '•' ? 120 : -50) * dt; if (pops[k].life <= 0) pops.splice(k, 1); }
+      if (t >= RACE) { over = true; sound('fanfare'); setTimeout(finish, 1500); }
+    }
+    function draw() {
+      // grass, in two shades that scroll
+      for (var y = -80; y < H + 40; y += 40) {
+        var yy = y + (d % 40), band = Math.round((d - (d % 40) + PY - y) / 40);
+        g.fillStyle = band % 2 ? '#4caf50' : '#43a047';
+        g.fillRect(0, yy, W, 41);
+      }
+      // road in thin strips
+      var step = 6;
+      for (var sy = -step; sy < H + step; sy += step) {
+        var wd = d + (PY - sy), cx = center(wd), stripe = Math.floor(wd / 36) % 2;
+        g.fillStyle = stripe ? '#e63946' : '#f8f9fa'; g.fillRect(cx - ROAD / 2 - 8, sy, ROAD + 16, step + 1);
+        g.fillStyle = '#4b5563'; g.fillRect(cx - ROAD / 2, sy, ROAD, step + 1);
+        if (Math.floor(wd / 44) % 2) { g.fillStyle = '#fde047'; g.fillRect(cx - 3, sy, 6, step + 1); }
+      }
+      things.forEach(function (o) {
+        var oy = PY - (o.d - d), ox = center(o.d) + o.off + (o.kind === 'rival' ? Math.sin(t * 1.3 + o.sway) * 14 : 0);
+        if (oy < -60) return;
+        if (o.kind === 'coin') { g.fillStyle = '#ffd60a'; g.strokeStyle = '#e85d04'; g.lineWidth = 3; g.beginPath(); g.arc(ox, oy, 11, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#e85d04'; g.fillRect(ox - 2, oy - 6, 4, 12); }
+        else if (o.kind === 'boost') {
+          g.fillStyle = '#0ea5e9'; rr(g, ox - 26, oy - 22, 52, 44, 8); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 5; g.lineCap = 'round'; g.lineJoin = 'round';
+          [-8, 6].forEach(function (yy) { g.beginPath(); g.moveTo(ox - 12, oy + yy + 6); g.lineTo(ox, oy + yy - 6); g.lineTo(ox + 12, oy + yy + 6); g.stroke(); });
+        } else if (o.kind === 'oil') { g.fillStyle = '#111827'; g.beginPath(); g.ellipse(ox, oy, 26, 17, 0.3, 0, 7); g.fill(); g.fillStyle = 'rgba(255,255,255,.22)'; g.beginPath(); g.ellipse(ox - 8, oy - 5, 8, 4, 0.3, 0, 7); g.fill(); }
+        else drawKart(g, ox, oy, 0, o.c[0], o.c[1], null);
+      });
+      if (boost > 0) { g.fillStyle = '#fb923c'; g.beginPath(); g.moveTo(x - 9, PY + 26); g.lineTo(x, PY + 50 + Math.random() * 16); g.lineTo(x + 9, PY + 26); g.fill(); }
+      if (!(bump > 0 && Math.floor(bump * 14) % 2 === 0)) drawKart(g, x, PY, tilt, K.color || '#ef4444', K.accent || '#fde047', opts.avatar);
+      if (shield) { g.strokeStyle = '#8ecae6'; g.lineWidth = 3; g.fillStyle = 'rgba(142,202,230,.22)'; g.beginPath(); g.arc(x, PY, 40, 0, 7); g.fill(); g.stroke(); }
+      pops.forEach(function (p) {
+        g.globalAlpha = Math.max(0, Math.min(1, p.life * 1.8)); g.font = '900 21px Nunito, system-ui, sans-serif'; g.textAlign = 'center';
+        g.lineWidth = 5; g.strokeStyle = 'rgba(20,8,50,.8)'; g.strokeText(p.text, p.x, p.y); g.fillStyle = p.color; g.fillText(p.text, p.x, p.y);
+      });
+      g.globalAlpha = 1;
+      // HUD: time left, score, speed bar
+      g.fillStyle = 'rgba(20,8,50,.55)'; rr(g, 10, 10, W - 20, 44, 12); g.fill();
+      var left = Math.max(0, Math.ceil(RACE - Math.max(0, t)));
+      g.textAlign = 'left'; g.font = '900 26px Nunito, system-ui, sans-serif'; g.fillStyle = left <= 10 ? '#ff8fa3' : '#fff'; g.fillText(left + 's', 24, 41);
+      g.textAlign = 'right'; g.fillStyle = '#ffd60a'; g.fillText(String(score()), W - 24, 41);
+      g.fillStyle = 'rgba(255,255,255,.25)'; rr(g, 110, 26, 150, 12, 6); g.fill();
+      g.fillStyle = boost > 0 ? '#7dd3fc' : '#22c55e'; rr(g, 110, 26, Math.max(6, 150 * Math.min(1, v / (MAXV * 1.55))), 12, 6); g.fill();
+      if (dbl() > 1) { g.textAlign = 'center'; g.font = '800 12px Nunito, system-ui, sans-serif'; g.fillStyle = '#ffd60a'; g.fillText('x2 points', 185, 22); }
+      if (t < 0) {
+        var n = Math.ceil(-t / 0.8);
+        g.textAlign = 'center'; g.font = '900 96px "Titan One", Nunito, system-ui, sans-serif';
+        g.lineWidth = 10; g.strokeStyle = '#1b1035'; g.strokeText(String(n), W / 2, H / 2 - 40); g.fillStyle = '#ffd60a'; g.fillText(String(n), W / 2, H / 2 - 40);
+        g.font = '800 18px Nunito, system-ui, sans-serif'; g.lineWidth = 5; g.strokeText('Stay on the road. Pass the karts!', W / 2, H / 2 + 10); g.fillStyle = '#fff'; g.fillText('Stay on the road. Pass the karts!', W / 2, H / 2 + 10);
+      }
+      if (over) {
+        g.fillStyle = 'rgba(20,8,50,' + Math.min(0.7, overT) + ')'; g.fillRect(0, 0, W, H);
+        g.textAlign = 'center'; g.font = '900 54px "Titan One", Nunito, system-ui, sans-serif';
+        g.lineWidth = 8; g.strokeStyle = '#1b1035'; g.strokeText('Finish!', W / 2, H / 2 - 20); g.fillStyle = '#fff'; g.fillText('Finish!', W / 2, H / 2 - 20);
+        g.font = '900 34px Nunito, system-ui, sans-serif'; g.fillStyle = '#ffd60a'; g.fillText(score() + ' points', W / 2, H / 2 + 30);
+      }
+    }
+    function frame(ts) {
+      if (stopped) return;
+      var dt = last ? Math.min(0.05, (ts - last) / 1000) : 0; last = ts;
+      update(dt); draw();
+      raf = requestAnimationFrame(frame);
+    }
+    function finish() { if (finished || stopped) return; finished = true; if (opts.onEnd) opts.onEnd(score(), { passes: passes, coins: coins, distance: Math.round(d / 10) }); }
+    function toX(e) { var r = canvas.getBoundingClientRect(); return (e.clientX - r.left) / r.width * W; }
+    function onMove(e) { tx = toX(e); }
+    function onDown(e) { tx = toX(e); try { canvas.setPointerCapture(e.pointerId); } catch (x2) { } }
+    function onKey(e) {
+      var down = e.type === 'keydown', k = e.key;
+      if (k === 'ArrowLeft' || k === 'a' || k === 'A') { keyL = down; e.preventDefault(); }
+      if (k === 'ArrowRight' || k === 'd' || k === 'D') { keyR = down; e.preventDefault(); }
+    }
+    canvas.addEventListener('pointermove', onMove); canvas.addEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey); window.addEventListener('keyup', onKey);
+    raf = requestAnimationFrame(frame);
+    return {
+      stop: function () {
+        stopped = true; cancelAnimationFrame(raf);
+        canvas.removeEventListener('pointermove', onMove); canvas.removeEventListener('pointerdown', onDown);
+        window.removeEventListener('keydown', onKey); window.removeEventListener('keyup', onKey);
+      }
+    };
+  }
+  // a small picture of a kart for the garage (returns an SVG string)
+  function icon(color, accent, size) {
+    return '<svg class="kart-ico" viewBox="0 0 60 70" width="' + (size || 60) + '" aria-hidden="true">' +
+      '<g fill="#1f2937"><rect x="4" y="10" width="11" height="17" rx="3"/><rect x="45" y="10" width="11" height="17" rx="3"/><rect x="3" y="42" width="12" height="18" rx="3"/><rect x="45" y="42" width="12" height="18" rx="3"/></g>' +
+      '<rect x="11" y="5" width="38" height="60" rx="12" fill="' + color + '"/><rect x="18" y="1" width="24" height="10" rx="4" fill="' + accent + '"/><rect x="27.5" y="9" width="5" height="16" fill="' + accent + '"/>' +
+      '<rect x="15" y="54" width="30" height="8" rx="3" fill="rgba(0,0,0,.28)"/><circle cx="30" cy="38" r="12" fill="#fff"/><circle cx="30" cy="38" r="8" fill="' + accent + '"/></svg>';
+  }
+  return { create: create, icon: icon, RACE: RACE };
 })();
 
 
@@ -15074,23 +15371,27 @@ var SQ_MAPART = (function () {
   }
   function arcHTML() {
     var a = S.arc, me = a.me, m = arcLive(), p = prof(), shop = shopOn();
-    var h = '<section class="arc-hero"><div><div class="eyebrow">Scratch Quest Arcade</div><h1>Block Rush</h1><p>Catch falling code blocks, dodge the bugs, and climb the class leaderboard.</p></div>' +
+    var G = arcG(), board = G === 'kart' ? (a.kartBoard || []) : a.board, myBest = G === 'kart' ? me.kart.best : me.best, myAll = G === 'kart' ? me.kart.allBest : me.allBest;
+    var h = '<div class="arc-tabs" role="tablist">' + [['rush', 'Block Rush', 'blocks'], ['kart', 'Kart Dash', 'flag']].map(function (x) {
+      return '<button role="tab" class="' + (G === x[0] ? 'on' : '') + '" data-act="arc-game" data-game="' + x[0] + '"><svg class="i"><use href="#i-' + x[2] + '"/></svg> ' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<section class="arc-hero' + (G === 'kart' ? ' kart' : '') + '"><div><div class="eyebrow">Scratch Quest Arcade</div><h1>' + AR.GAMES[G] + '</h1><p>' + (G === 'kart' ? 'Race your kart for 60 seconds. Pass rivals, grab coins, hit the boost pads, and stay on the road.' : 'Catch falling code blocks, dodge the bugs, and climb the class leaderboard.') + '</p></div>' +
       '<div class="arc-hero-side">' + arcStatusChip() + '<div class="arc-wallet"><span>' + puIcon('ticket') + '<b>' + me.tickets + '</b> ticket' + (me.tickets === 1 ? '' : 's') + '</span>' + (shop ? '<span>' + coinTag(Math.max(0, p.coins), 'big') + '</span>' : '') + '</div></div></section>';
     h += '<div class="arc-grid"><section class="card arc-play" id="arc-play">' + arcPlayPanel() + '</section>';
     // leaderboard
     h += '<section class="card arc-board"><h2><svg class="i"><use href="#i-award"/></svg> Top scores</h2>';
-    if (!a.board.length) h += '<p class="muted">No scores yet this round. Be the first!</p>';
-    else h += '<ol class="lb">' + a.board.map(function (b, i) {
+    if (!board.length) h += '<p class="muted">No scores yet this round. Be the first!</p>';
+    else h += '<ol class="lb">' + board.map(function (b, i) {
       return '<li class="' + (b.key === a.you ? 'me ' : '') + (i < 3 ? 'top' + (i + 1) : '') + '"><span class="lb-n">' + (i + 1) + '</span>' + avatarImgTag(b.avatar, 'lb-av') +
         '<span class="lb-name notr">' + esc(b.name) + (b.title ? '<small>' + esc(b.title) + '</small>' : '') + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>';
     }).join('') + '</ol>';
-    h += '<div class="arc-mine"><div><span>Your best this round</span><b>' + fmtN(me.best) + '</b></div><div><span>All-time best</span><b>' + fmtN(me.allBest) + '</b></div></div>';
-    h += '<h3>Score goals</h3><ul class="arc-goals">' + AR.GOALS.map(function (g) {
+    h += '<div class="arc-mine"><div><span>Your best this round</span><b>' + fmtN(myBest) + '</b></div><div><span>All-time best</span><b>' + fmtN(myAll) + '</b></div></div>';
+    if (G === 'kart') h += '<p class="muted small">Every 100 points earns 1 coin (up to ' + AR.RUN_COINS + ' a game and ' + AR.DAY_COINS + ' a day). When a round ends, the top 3 in each game win ' + AR.ROUND_PRIZES.join(', ') + ' coins.</p></section></div>' + (shop ? garageHTML() : '');
+    else h += '<h3>Score goals</h3><ul class="arc-goals">' + AR.GOALS.map(function (g) {
       var got = (me.goals || []).indexOf(g[0]) >= 0;
       return '<li class="' + (got ? 'got' : '') + '"><span>' + (got ? '<svg class="i"><use href="#i-check"/></svg> ' : '') + 'Score ' + fmtN(g[0]) + '</span>' + coinTag(g[1]) + '</li>';
     }).join('') + '</ul><p class="muted small">Every 100 points also earns 1 coin (up to ' + AR.RUN_COINS + ' a game and ' + AR.DAY_COINS + ' a day). When a round ends, the top 3 win ' + AR.ROUND_PRIZES.join(', ') + ' coins.</p>';
     // trophies (titles earned by score)
-    h += '<h3>Arcade titles</h3><ul class="arc-troph">' + A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade; }).map(function (t) {
+    if (G === 'rush') h += '<h3>Arcade titles</h3><ul class="arc-troph">' + A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade; }).map(function (t) {
       var got = me.allBest >= t.unlock.arcade;
       return '<li class="r-' + t.rarity + (got ? ' got' : '') + '"><span class="title-prev sm">' + esc(t.name) + '</span><span class="small">' + (got ? '<svg class="i"><use href="#i-check"/></svg> Unlocked: wear it in the <a href="#/avatar">studio</a>' : 'Score ' + fmtN(t.unlock.arcade)) + '</span></li>';
     }).join('') + '</ul></section></div>';
@@ -15100,13 +15401,38 @@ var SQ_MAPART = (function () {
       h += '<div class="pu-card ticket">' + puIcon('ticket') + '<b>Arcade ticket</b><p>' + a.info.passMin + ' minutes of play. ' + arcTicketRule() + '</p>' +
         '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span>' + (a.info.ticketPrice ? '' : '<span class="small muted">Earn only</span>') + '<button' + (a.info.ticketPrice ? '' : ' hidden') + ' class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (a.info.ticketPrice - p.coins) + ' more coins. Earn coins by finishing steps and quests.') + '" data-act="arc-buy" data-item="ticket">' + coinTag(a.info.ticketPrice) + '</button></div></div>';
       AR.POWERUPS.forEach(function (u) {
-        var n = me.inv[u.id] || 0, ok = p.coins >= u.price;
+        if (G === 'kart' && AR.KART_POWER.indexOf(u.id) < 0) return;
+        var n = me.inv[u.id] || 0, ok = p.coins >= u.price, kd = G === 'kart' ? ({ shield: 'Blocks your first bump or oil slip.', magnet: 'Pulls coins toward your kart for 20 seconds.', double: 'Pass and coin points count twice for 30 seconds.' })[u.id] : null;
+        if (kd) u = { id: u.id, name: u.name, price: u.price, desc: kd };
         h += '<div class="pu-card">' + puIcon(u.id) + '<b>' + esc(u.name) + '</b><p>' + esc(u.desc) + '</p><div class="pu-foot"><span class="small">' + (n ? 'You have <b>' + n + '</b>' : 'None yet') + '</span>' +
           '<button class="btn small' + (ok ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (u.price - p.coins) + ' more coins for ' + esc(u.name) + '.') + '" data-act="arc-buy" data-item="' + u.id + '">' + coinTag(u.price) + '</button></div></div>';
       });
       h += '</div><p class="muted small">Coins come from XP (1 coin for every 5 XP). Spending coins never lowers your XP or level.</p></section>';
     }
     return h;
+  }
+  function arcG() { return S.arcGameSel === 'kart' ? 'kart' : 'rush'; }
+  function statBar(label, v) { return '<span class="kstat"><small>' + label + '</small><i><b style="width:' + Math.max(8, Math.min(100, Math.round((v - 0.8) / 0.75 * 100))) + '%"></b></i></span>'; }
+  // The garage: karts to buy with coins, and three parts on each kart to upgrade
+  function garageHTML() {
+    var me = S.arc.me, p = prof(), K = me.kart;
+    var h = '<section class="card arc-garage"><div class="row between"><h2><svg class="i"><use href="#i-flag"/></svg> Garage</h2><span class="muted small">Your driver is your own character. Upgrades stay with the kart.</span></div><div class="kart-grid">';
+    AR.KARTS.forEach(function (k) {
+      var own = K.owned[k.id], on = K.active === k.id, st = AR.kartStats(k.id, own || {}), ok = p.coins >= k.price;
+      h += '<div class="kart-card r-' + k.rarity + (on ? ' on' : '') + (own ? '' : ' locked-k') + '">' + (k.rarity !== 'common' ? '<span class="rar-chip r-' + k.rarity + '">' + A.RARITY[k.rarity].name + '</span>' : '') +
+        '<div class="kart-top">' + SQ_KART.icon(k.color, k.accent, 58) + '<div><b>' + esc(k.name) + '</b><p>' + esc(k.desc) + '</p></div></div>' +
+        '<div class="kstats">' + statBar('Speed', st.speed) + statBar('Steering', st.handling) + statBar('Boost', st.boost) + '</div>';
+      if (!own) h += '<button class="btn' + (ok ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (k.price - p.coins) + ' more coins for the ' + esc(k.name) + '.') + '" data-act="kart-buy" data-kart="' + k.id + '">Buy ' + coinTag(k.price) + '</button>';
+      else {
+        h += '<div class="kparts">' + AR.PARTS.map(function (pt) {
+          var lv = own[pt.id] || 0, max = lv >= AR.PART_PRICES.length, price = AR.PART_PRICES[lv], can = !max && p.coins >= price;
+          return '<div class="kpart"><span><b>' + pt.name + '</b> <span class="pips">' + [0, 1, 2].map(function (i) { return '<i class="' + (i < lv ? 'on' : '') + '"></i>'; }).join('') + '</span></span>' +
+            (max ? '<span class="chip gold">MAX</span>' : '<button class="btn tiny' + (can ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (price - p.coins) + ' more coins to upgrade the ' + pt.name.toLowerCase() + '.') + '" data-act="kart-up" data-kart="' + k.id + '" data-part="' + pt.id + '" title="' + esc(pt.desc) + '">+ ' + coinTag(price) + '</button>') + '</div>';
+        }).join('') + '</div>' + (on ? '<span class="st-on"><svg class="i"><use href="#i-check"/></svg> Driving this kart</span>' : '<button class="btn small" data-act="kart-pick" data-kart="' + k.id + '">Drive this kart</button>');
+      }
+      h += '</div>';
+    });
+    return h + '</div></section>';
   }
   function arcTicketRule() {
     var a = S.arc, n = a.info.questsPerTicket || 1;
@@ -15119,7 +15445,9 @@ var SQ_MAPART = (function () {
       return '<div class="arc-lock open"><svg class="i big-ico"><use href="#i-gamepad"/></svg><h2>The arcade is open!</h2><p>Use a ticket to play for <b>' + a.info.passMin + ' minutes</b>.</p>' +
         (me.tickets ? '<button class="btn primary big" data-act="arc-pass">Use a ticket · play ' + a.info.passMin + ' min</button>' : '<p class="muted">You have no tickets yet. ' + arcTicketRule() + (shopOn() && a.info.ticketPrice ? ' You can also buy one below.' : '') + '</p>') + '</div>';
     }
-    var sel = S.arcSel || [], inv = me.inv, owned = AR.POWERUPS.filter(function (u) { return inv[u.id]; });
+    var G = arcG(), sel = (S.arcSel || []).filter(function (id) { return G !== 'kart' || AR.KART_POWER.indexOf(id) >= 0; }), inv = me.inv, owned = AR.POWERUPS.filter(function (u) { return inv[u.id] && (G !== 'kart' || AR.KART_POWER.indexOf(u.id) >= 0); });
+    S.arcSel = sel;
+    var kk = AR.KART[me.kart.active] || AR.KARTS[0];
     var h = '<div class="arc-ready"><h2>Ready to play?</h2>';
     if (owned.length) {
       h += '<p class="small">Pick up to ' + AR.MAX_POWER + ' power-ups for this run:</p><div class="pu-pick">' + owned.map(function (u) {
@@ -15127,8 +15455,9 @@ var SQ_MAPART = (function () {
         return '<button class="pu-tog' + (on ? ' on' : '') + '" data-act="arc-sel" data-id="' + u.id + '" title="' + esc(u.desc) + '">' + puIcon(u.id) + '<span>' + esc(u.name) + '</span><small>x' + inv[u.id] + '</small></button>';
       }).join('') + '</div>';
     } else if (shopOn()) h += '<p class="small muted">Tip: power-ups from the shop below give you a head start.</p>';
-    h += '<button class="btn primary huge" data-act="arc-go"><svg class="i"><use href="#i-gamepad"/></svg> Play Block Rush</button>' +
-      '<p class="small muted">Move with the mouse, your finger, or the arrow keys. Blocks in a row build a combo. Gold stars are worth 50!</p></div>';
+    h += '<button class="btn primary huge" data-act="arc-go"><svg class="i"><use href="#i-gamepad"/></svg> ' + (G === 'kart' ? 'Start the race' : 'Play Block Rush') + '</button>' +
+      (G === 'kart' ? '<div class="kart-now">' + SQ_KART.icon(kk.color, kk.accent, 44) + '<span>Driving: <b>' + esc(kk.name) + '</b></span></div><p class="small muted">Steer with the mouse, your finger, or the arrow keys. Grass slows you down, oil makes you slip, and blue pads give a boost.</p></div>'
+        : '<p class="small muted">Move with the mouse, your finger, or the arrow keys. Blocks in a row build a combo. Gold stars are worth 50!</p></div>');
     return h;
   }
   function arcTick() {
@@ -15146,27 +15475,30 @@ var SQ_MAPART = (function () {
     var box = document.getElementById('arc-play');
     if (!box || S.arcRun) return;
     S.arcRun = 'starting';
-    call('arcadeStart', { power: S.arcSel || [] }).then(function (res) {
+    var G = arcG();
+    call('arcadeStart', { power: S.arcSel || [], game: G }).then(function (res) {
       S.arcRun = res.run; S.arc.me = res.me; S.arcSel = [];
-      box.innerHTML = '<div class="arc-stage"><canvas id="arc-canvas" aria-label="Block Rush game"></canvas>' +
+      box.innerHTML = '<div class="arc-stage"><canvas id="arc-canvas" aria-label="' + AR.GAMES[G] + ' game"></canvas>' +
         (res.run.power.length ? '<div class="arc-powers">' + res.run.power.map(function (id) { return puIcon(id) + '<span>' + esc(AR.POWER[id].name) + '</span>'; }).join('') + '</div>' : '') + '</div>';
       var img = new Image(), gav = Object.assign({}, S.me.state.avatar, { bg: 'solid', bgColor: 'transparent', frame: 'none' }); img.src = avatarURI(gav);
       var cv = document.getElementById('arc-canvas');
       cv.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      S.arcGame = SQ_GAME.create(cv, { avatar: img, power: res.run.power, onEnd: function (score) { arcFinish(res.run.id, score); } });
+      var done = function (score) { arcFinish(res.run.id, score); };
+      S.arcGame = G === 'kart' ? SQ_KART.create(cv, { avatar: img, kart: AR.kartStats(S.arc.me.kart.active, S.arc.me.kart.owned[S.arc.me.kart.active]), power: res.run.power, onEnd: done })
+        : SQ_GAME.create(cv, { avatar: img, power: res.run.power, onEnd: done });
     }).catch(function () { S.arcRun = null; arcPaint(); });
   }
   function arcFinish(runId, score) {
     var before = prof();
     call('arcadeEnd', { runId: runId, score: score }).then(function (res) {
       if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; }
-      S.arcRun = null; S.arc.me = res.me; S.arc.board = res.board; S.me = res.student;
+      S.arcRun = null; S.arc.me = res.me; if (res.game === 'kart') S.arc.kartBoard = res.board; else S.arc.board = res.board; S.me = res.student;
       arcPaint();
-      var unlocked = A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade && res.score >= t.unlock.arcade && (before.arcadeBest || 0) < t.unlock.arcade; });
+      var unlocked = res.game === 'kart' ? [] : A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade && res.score >= t.unlock.arcade && (before.arcadeBest || 0) < t.unlock.arcade; });
       if (res.newBest || unlocked.length || (res.goals || []).length) { SQ_SOUND.play('badge'); confetti(); } else if (res.coins) SQ_SOUND.play('coin');
       celebrate(before, S.me.profile, null, true);
-      modal('<div class="arc-result"><div class="eyebrow">Block Rush</div><div class="arc-big">' + fmtN(res.score) + '</div><p>points</p>' +
-        (res.newBest ? '<p class="arc-nb"><svg class="i"><use href="#i-star"/></svg> New personal best!</p>' : '<p class="muted">Your best this round: ' + fmtN(res.me.best) + '</p>') +
+      modal('<div class="arc-result"><div class="eyebrow">' + AR.GAMES[res.game || 'rush'] + '</div><div class="arc-big">' + fmtN(res.score) + '</div><p>points</p>' +
+        (res.newBest ? '<p class="arc-nb"><svg class="i"><use href="#i-star"/></svg> New personal best!</p>' : '<p class="muted">Your best this round: ' + fmtN(res.game === 'kart' ? res.me.kart.best : res.me.best) + '</p>') +
         (res.place ? '<p>You are <b>#' + res.place + '</b> on the class leaderboard.</p>' : '') +
         (res.coins ? '<p class="arc-coins">' + coinTag(res.coins, 'big') + ' coins earned</p>' : '') +
         (res.goals || []).map(function (g) { return '<p class="arc-nb">Score goal reached: ' + fmtN(g.score) + ' (+' + g.coins + ' coins)</p>'; }).join('') +
@@ -16092,6 +16424,20 @@ var SQ_MAPART = (function () {
       var sid = t.getAttribute('data-id'), sel = S.arcSel = S.arcSel || [], si = sel.indexOf(sid);
       if (si >= 0) sel.splice(si, 1); else if (sel.length < AR.MAX_POWER) sel.push(sid); else { toast('You can bring ' + AR.MAX_POWER + ' power-ups per run.'); return; }
       SQ_SOUND.play('tap'); document.getElementById('arc-play').innerHTML = arcPlayPanel(); return;
+    }
+    if (act === 'arc-game') { if (S.arcRun) return; S.arcGameSel = t.getAttribute('data-game'); SQ_SOUND.play('tap'); arcPaint(); return; }
+    if (act === 'kart-buy' || act === 'kart-up' || act === 'kart-pick') {
+      var kid = t.getAttribute('data-kart'), kact = act === 'kart-buy' ? 'kartBuy' : act === 'kart-up' ? 'kartUpgrade' : 'kartSelect';
+      t.disabled = true;
+      call(kact, { kart: kid, part: t.getAttribute('data-part') }).then(function (res) {
+        if (act !== 'kart-pick') { var cp = document.querySelector('.arc-wallet .coin-tag') || document.querySelector('.me-card'); if (cp) SQ_FX.coinFly(cp, t, 5); }
+        SQ_FX.burst(t, { colors: [AR.KART[kid].color, '#facc15', '#fff'], n: act === 'kart-buy' ? 26 : 14, spread: act === 'kart-buy' ? 120 : 70 });
+        SQ_SOUND.play(act === 'kart-buy' ? 'legendary' : act === 'kart-up' ? 'buy' : 'equip');
+        S.arc.me = res.me; if (res.student) { S.me = res.student; saveSeen(prof()); }
+        if (act === 'kart-buy') toast('<b>' + esc(AR.KART[kid].name) + '</b> is yours! It is ready to race.', 't-badge');
+        var y = window.scrollY; render(); window.scrollTo(0, y);
+      }).catch(function () { t.disabled = false; });
+      return;
     }
     if (act === 'arc-go') { SQ_SOUND.play('pop'); arcStartGame(); return; }
     if (act === 'arc-again') { closeModal(); arcStartGame(); return; }

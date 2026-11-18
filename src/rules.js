@@ -96,6 +96,7 @@ var SQ_RULES = (function () {
     { id: 'arcade_rookie', icon: '🕹️', name: 'Arcade Rookie',   desc: 'Play your first game of Block Rush.',      test: function (c) { return ((c.state.arcade || {}).plays || 0) >= 1; } },
     { id: 'high_scorer',  icon: '🎯', name: 'High Scorer',      desc: 'Score 1,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 1000; } },
     { id: 'arcade_master', icon: '👾', name: 'Arcade Master',   desc: 'Score 3,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 3000; } },
+    { id: 'kart_racer',   icon: '🏎️', name: 'Kart Racer',      desc: 'Finish your first Kart Dash race.',        test: function (c) { return (((c.state.arcade || {}).kart || {}).plays || 0) >= 1; } },
     { id: 'round_champ',  icon: '🏆', name: 'Round Champion',   desc: 'Finish a leaderboard round in the top 3.', test: function (c) { return ((c.state.arcade || {}).roundWins || 0) >= 1; } }
   ];
   // Awarded by the teacher only

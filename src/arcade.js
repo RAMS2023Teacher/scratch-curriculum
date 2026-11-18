@@ -24,6 +24,28 @@ var SQ_ARCADE = (function () {
   var GOALS = [[300, 20], [600, 40], [1000, 60], [1500, 80], [2000, 100], [3000, 150], [4000, 250]];
   // Coins for 1st, 2nd and 3rd place when the teacher starts a new leaderboard round
   var ROUND_PRIZES = [100, 60, 30];
+  // ---- Kart Dash: karts are bought with coins, and each kart can be upgraded (3 levels per part).
+  // speed / handling / boost are multipliers; offroad is how much of the grass slow-down a kart ignores.
+  var KARTS = [
+    { id: 'starter', name: 'Go-Kart', price: 0, rarity: 'common', color: '#ef4444', accent: '#fde047', speed: 1, handling: 1, boost: 1, offroad: 0, desc: 'Your first kart. Steady and reliable.' },
+    { id: 'bolt', name: 'Blue Bolt', price: 150, rarity: 'rare', color: '#3a86ff', accent: '#ffffff', speed: 1.1, handling: 0.95, boost: 1, offroad: 0, desc: 'Faster on the straights.' },
+    { id: 'drifter', name: 'Drift Wing', price: 200, rarity: 'rare', color: '#a855f7', accent: '#22d3ee', speed: 1, handling: 1.3, boost: 1, offroad: 0, desc: 'Turns on a dime.' },
+    { id: 'dozer', name: 'Mud Dozer', price: 250, rarity: 'epic', color: '#22a559', accent: '#fb923c', speed: 0.97, handling: 1, boost: 1, offroad: 1, desc: 'Barely slows down on the grass.' },
+    { id: 'rocket', name: 'Rocket Racer', price: 400, rarity: 'epic', color: '#f97316', accent: '#1f2937', speed: 1.18, handling: 0.9, boost: 1.35, offroad: 0, desc: 'Very fast, with long boosts. Harder to steer.' },
+    { id: 'gold', name: 'Golden Comet', price: 800, rarity: 'legendary', color: '#fbbf24', accent: '#7c3aed', speed: 1.15, handling: 1.15, boost: 1.2, offroad: 0.3, desc: 'Great at everything.' }
+  ];
+  var KART = {};
+  KARTS.forEach(function (k) { KART[k.id] = k; });
+  var PARTS = [{ id: 'engine', name: 'Engine', stat: 'speed', desc: 'Higher top speed' }, { id: 'tires', name: 'Tires', stat: 'handling', desc: 'Sharper steering' }, { id: 'turbo', name: 'Turbo', stat: 'boost', desc: 'Longer boosts' }];
+  var PART_PRICES = [40, 80, 150], PART_STEP = 0.06;
+  // the stats a kart really has, with its upgrades
+  function kartStats(id, levels) {
+    var k = KART[id] || KART.starter, o = { color: k.color, accent: k.accent, offroad: k.offroad };
+    PARTS.forEach(function (p) { o[p.stat] = Math.round(k[p.stat] * (1 + PART_STEP * ((levels || {})[p.id] || 0)) * 100) / 100; });
+    return o;
+  }
+  var KART_POWER = ['shield', 'magnet', 'double']; // the power-ups that do something in Kart Dash
+  var GAMES = { rush: 'Block Rush', kart: 'Kart Dash' };
   var MAX_POWER = 2;          // power-ups per run
   var RUN_MAX_MS = 12 * 60e3; // a run longer than this is not accepted
   var GRACE_MS = 3 * 60e3;    // a run started before the pass ended may still finish
@@ -39,7 +61,7 @@ var SQ_ARCADE = (function () {
     if (cfg.closes && now > cfg.closes) return 'off';
     return cfg.mode;
   }
-  function blank() { return { spent: 0, earned: 0, goals: [], roundWins: 0, day: '', dayCoins: 0, inv: {}, bought: 0, used: 0, until: 0, best: 0, season: 0, allBest: 0, plays: 0, run: null }; }
+  function blank() { return { kart: { owned: { starter: {} }, active: 'starter', best: 0, season: 0, allBest: 0, plays: 0 }, spent: 0, earned: 0, goals: [], roundWins: 0, day: '', dayCoins: 0, inv: {}, bought: 0, used: 0, until: 0, best: 0, season: 0, allBest: 0, plays: 0, run: null }; }
   function stateOf(state) {
     var a = state.arcade || (state.arcade = blank()), b = blank();
     for (var k in b) if (a[k] === undefined) a[k] = b[k];
@@ -50,6 +72,6 @@ var SQ_ARCADE = (function () {
   // Most points a fair run could reach in this much time (the game tops out well below this).
   function scoreCap(ms) { return Math.round(500 + Math.max(0, ms) / 1000 * 250); }
 
-  return { RUN_COINS: RUN_COINS, DAY_COINS: DAY_COINS, GOALS: GOALS, ROUND_PRIZES: ROUND_PRIZES, GAME: GAME, POWERUPS: POWERUPS, POWER: POWER, DEFAULTS: DEFAULTS, MAX_POWER: MAX_POWER, RUN_MAX_MS: RUN_MAX_MS, GRACE_MS: GRACE_MS,
+  return { KARTS: KARTS, KART: KART, PARTS: PARTS, PART_PRICES: PART_PRICES, kartStats: kartStats, KART_POWER: KART_POWER, GAMES: GAMES, RUN_COINS: RUN_COINS, DAY_COINS: DAY_COINS, GOALS: GOALS, ROUND_PRIZES: ROUND_PRIZES, GAME: GAME, POWERUPS: POWERUPS, POWER: POWER, DEFAULTS: DEFAULTS, MAX_POWER: MAX_POWER, RUN_MAX_MS: RUN_MAX_MS, GRACE_MS: GRACE_MS,
     config: config, liveMode: liveMode, stateOf: stateOf, tickets: tickets, scoreCap: scoreCap };
 })();

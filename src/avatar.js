@@ -72,7 +72,7 @@ var SQ_AVATAR = (function () {
     bg: [['candy', 'Candy Land', 90, 'rare'], ['ocean', 'Deep Sea', 140, 'rare'], ['volcano', 'Volcano', 240, 'epic']],
     frame: [['neon', 'Neon', 200, 'epic'], ['diamond', 'Diamond', 450, 'legendary']],
     title: [['sprite', 'Sprite Tamer', 40, 'common'], ['loops', 'Loop Master', 60, 'common'], ['bugs', 'Bug Hunter', 80, 'rare'], ['pixel', 'Pixel Artist', 80, 'rare'],
-      ['games', 'Game Maker', 120, 'rare'], ['stories', 'Story Weaver', 120, 'rare'], ['apps', 'App Inventor', 120, 'rare'], ['wizard', 'Code Wizard', 250, 'epic'], ['legend', 'Legend of Scratch', 600, 'legendary']]
+      ['games', 'Game Maker', 120, 'rare'], ['stories', 'Story Weaver', 120, 'rare'], ['apps', 'App Inventor', 120, 'rare'], ['racer', 'Speed Racer', 90, 'rare'], ['drift', 'Drift King', 150, 'rare'], ['pit', 'Pit Crew Chief', 200, 'epic'], ['wizard', 'Code Wizard', 250, 'epic'], ['legend', 'Legend of Scratch', 600, 'legendary']]
   };
   CATALOG.aura = [{ id: 'none', name: 'None' }];
   CATALOG.effect = [{ id: 'none', name: 'None' }];

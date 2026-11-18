@@ -1256,23 +1256,27 @@
   }
   function arcHTML() {
     var a = S.arc, me = a.me, m = arcLive(), p = prof(), shop = shopOn();
-    var h = '<section class="arc-hero"><div><div class="eyebrow">Scratch Quest Arcade</div><h1>Block Rush</h1><p>Catch falling code blocks, dodge the bugs, and climb the class leaderboard.</p></div>' +
+    var G = arcG(), board = G === 'kart' ? (a.kartBoard || []) : a.board, myBest = G === 'kart' ? me.kart.best : me.best, myAll = G === 'kart' ? me.kart.allBest : me.allBest;
+    var h = '<div class="arc-tabs" role="tablist">' + [['rush', 'Block Rush', 'blocks'], ['kart', 'Kart Dash', 'flag']].map(function (x) {
+      return '<button role="tab" class="' + (G === x[0] ? 'on' : '') + '" data-act="arc-game" data-game="' + x[0] + '"><svg class="i"><use href="#i-' + x[2] + '"/></svg> ' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<section class="arc-hero' + (G === 'kart' ? ' kart' : '') + '"><div><div class="eyebrow">Scratch Quest Arcade</div><h1>' + AR.GAMES[G] + '</h1><p>' + (G === 'kart' ? 'Race your kart for 60 seconds. Pass rivals, grab coins, hit the boost pads, and stay on the road.' : 'Catch falling code blocks, dodge the bugs, and climb the class leaderboard.') + '</p></div>' +
       '<div class="arc-hero-side">' + arcStatusChip() + '<div class="arc-wallet"><span>' + puIcon('ticket') + '<b>' + me.tickets + '</b> ticket' + (me.tickets === 1 ? '' : 's') + '</span>' + (shop ? '<span>' + coinTag(Math.max(0, p.coins), 'big') + '</span>' : '') + '</div></div></section>';
     h += '<div class="arc-grid"><section class="card arc-play" id="arc-play">' + arcPlayPanel() + '</section>';
     // leaderboard
     h += '<section class="card arc-board"><h2><svg class="i"><use href="#i-award"/></svg> Top scores</h2>';
-    if (!a.board.length) h += '<p class="muted">No scores yet this round. Be the first!</p>';
-    else h += '<ol class="lb">' + a.board.map(function (b, i) {
+    if (!board.length) h += '<p class="muted">No scores yet this round. Be the first!</p>';
+    else h += '<ol class="lb">' + board.map(function (b, i) {
       return '<li class="' + (b.key === a.you ? 'me ' : '') + (i < 3 ? 'top' + (i + 1) : '') + '"><span class="lb-n">' + (i + 1) + '</span>' + avatarImgTag(b.avatar, 'lb-av') +
         '<span class="lb-name notr">' + esc(b.name) + (b.title ? '<small>' + esc(b.title) + '</small>' : '') + '</span><b class="lb-score">' + fmtN(b.score) + '</b></li>';
     }).join('') + '</ol>';
-    h += '<div class="arc-mine"><div><span>Your best this round</span><b>' + fmtN(me.best) + '</b></div><div><span>All-time best</span><b>' + fmtN(me.allBest) + '</b></div></div>';
-    h += '<h3>Score goals</h3><ul class="arc-goals">' + AR.GOALS.map(function (g) {
+    h += '<div class="arc-mine"><div><span>Your best this round</span><b>' + fmtN(myBest) + '</b></div><div><span>All-time best</span><b>' + fmtN(myAll) + '</b></div></div>';
+    if (G === 'kart') h += '<p class="muted small">Every 100 points earns 1 coin (up to ' + AR.RUN_COINS + ' a game and ' + AR.DAY_COINS + ' a day). When a round ends, the top 3 in each game win ' + AR.ROUND_PRIZES.join(', ') + ' coins.</p></section></div>' + (shop ? garageHTML() : '');
+    else h += '<h3>Score goals</h3><ul class="arc-goals">' + AR.GOALS.map(function (g) {
       var got = (me.goals || []).indexOf(g[0]) >= 0;
       return '<li class="' + (got ? 'got' : '') + '"><span>' + (got ? '<svg class="i"><use href="#i-check"/></svg> ' : '') + 'Score ' + fmtN(g[0]) + '</span>' + coinTag(g[1]) + '</li>';
     }).join('') + '</ul><p class="muted small">Every 100 points also earns 1 coin (up to ' + AR.RUN_COINS + ' a game and ' + AR.DAY_COINS + ' a day). When a round ends, the top 3 win ' + AR.ROUND_PRIZES.join(', ') + ' coins.</p>';
     // trophies (titles earned by score)
-    h += '<h3>Arcade titles</h3><ul class="arc-troph">' + A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade; }).map(function (t) {
+    if (G === 'rush') h += '<h3>Arcade titles</h3><ul class="arc-troph">' + A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade; }).map(function (t) {
       var got = me.allBest >= t.unlock.arcade;
       return '<li class="r-' + t.rarity + (got ? ' got' : '') + '"><span class="title-prev sm">' + esc(t.name) + '</span><span class="small">' + (got ? '<svg class="i"><use href="#i-check"/></svg> Unlocked: wear it in the <a href="#/avatar">studio</a>' : 'Score ' + fmtN(t.unlock.arcade)) + '</span></li>';
     }).join('') + '</ul></section></div>';
@@ -1282,13 +1286,38 @@
       h += '<div class="pu-card ticket">' + puIcon('ticket') + '<b>Arcade ticket</b><p>' + a.info.passMin + ' minutes of play. ' + arcTicketRule() + '</p>' +
         '<div class="pu-foot"><span class="small">You have ' + me.tickets + '</span>' + (a.info.ticketPrice ? '' : '<span class="small muted">Earn only</span>') + '<button' + (a.info.ticketPrice ? '' : ' hidden') + ' class="btn small' + (p.coins >= a.info.ticketPrice ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (a.info.ticketPrice - p.coins) + ' more coins. Earn coins by finishing steps and quests.') + '" data-act="arc-buy" data-item="ticket">' + coinTag(a.info.ticketPrice) + '</button></div></div>';
       AR.POWERUPS.forEach(function (u) {
-        var n = me.inv[u.id] || 0, ok = p.coins >= u.price;
+        if (G === 'kart' && AR.KART_POWER.indexOf(u.id) < 0) return;
+        var n = me.inv[u.id] || 0, ok = p.coins >= u.price, kd = G === 'kart' ? ({ shield: 'Blocks your first bump or oil slip.', magnet: 'Pulls coins toward your kart for 20 seconds.', double: 'Pass and coin points count twice for 30 seconds.' })[u.id] : null;
+        if (kd) u = { id: u.id, name: u.name, price: u.price, desc: kd };
         h += '<div class="pu-card">' + puIcon(u.id) + '<b>' + esc(u.name) + '</b><p>' + esc(u.desc) + '</p><div class="pu-foot"><span class="small">' + (n ? 'You have <b>' + n + '</b>' : 'None yet') + '</span>' +
           '<button class="btn small' + (ok ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (u.price - p.coins) + ' more coins for ' + esc(u.name) + '.') + '" data-act="arc-buy" data-item="' + u.id + '">' + coinTag(u.price) + '</button></div></div>';
       });
       h += '</div><p class="muted small">Coins come from XP (1 coin for every 5 XP). Spending coins never lowers your XP or level.</p></section>';
     }
     return h;
+  }
+  function arcG() { return S.arcGameSel === 'kart' ? 'kart' : 'rush'; }
+  function statBar(label, v) { return '<span class="kstat"><small>' + label + '</small><i><b style="width:' + Math.max(8, Math.min(100, Math.round((v - 0.8) / 0.75 * 100))) + '%"></b></i></span>'; }
+  // The garage: karts to buy with coins, and three parts on each kart to upgrade
+  function garageHTML() {
+    var me = S.arc.me, p = prof(), K = me.kart;
+    var h = '<section class="card arc-garage"><div class="row between"><h2><svg class="i"><use href="#i-flag"/></svg> Garage</h2><span class="muted small">Your driver is your own character. Upgrades stay with the kart.</span></div><div class="kart-grid">';
+    AR.KARTS.forEach(function (k) {
+      var own = K.owned[k.id], on = K.active === k.id, st = AR.kartStats(k.id, own || {}), ok = p.coins >= k.price;
+      h += '<div class="kart-card r-' + k.rarity + (on ? ' on' : '') + (own ? '' : ' locked-k') + '">' + (k.rarity !== 'common' ? '<span class="rar-chip r-' + k.rarity + '">' + A.RARITY[k.rarity].name + '</span>' : '') +
+        '<div class="kart-top">' + SQ_KART.icon(k.color, k.accent, 58) + '<div><b>' + esc(k.name) + '</b><p>' + esc(k.desc) + '</p></div></div>' +
+        '<div class="kstats">' + statBar('Speed', st.speed) + statBar('Steering', st.handling) + statBar('Boost', st.boost) + '</div>';
+      if (!own) h += '<button class="btn' + (ok ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (k.price - p.coins) + ' more coins for the ' + esc(k.name) + '.') + '" data-act="kart-buy" data-kart="' + k.id + '">Buy ' + coinTag(k.price) + '</button>';
+      else {
+        h += '<div class="kparts">' + AR.PARTS.map(function (pt) {
+          var lv = own[pt.id] || 0, max = lv >= AR.PART_PRICES.length, price = AR.PART_PRICES[lv], can = !max && p.coins >= price;
+          return '<div class="kpart"><span><b>' + pt.name + '</b> <span class="pips">' + [0, 1, 2].map(function (i) { return '<i class="' + (i < lv ? 'on' : '') + '"></i>'; }).join('') + '</span></span>' +
+            (max ? '<span class="chip gold">MAX</span>' : '<button class="btn tiny' + (can ? ' primary' : ' locked" aria-disabled="true" data-why="You need ' + (price - p.coins) + ' more coins to upgrade the ' + pt.name.toLowerCase() + '.') + '" data-act="kart-up" data-kart="' + k.id + '" data-part="' + pt.id + '" title="' + esc(pt.desc) + '">+ ' + coinTag(price) + '</button>') + '</div>';
+        }).join('') + '</div>' + (on ? '<span class="st-on"><svg class="i"><use href="#i-check"/></svg> Driving this kart</span>' : '<button class="btn small" data-act="kart-pick" data-kart="' + k.id + '">Drive this kart</button>');
+      }
+      h += '</div>';
+    });
+    return h + '</div></section>';
   }
   function arcTicketRule() {
     var a = S.arc, n = a.info.questsPerTicket || 1;
@@ -1301,7 +1330,9 @@
       return '<div class="arc-lock open"><svg class="i big-ico"><use href="#i-gamepad"/></svg><h2>The arcade is open!</h2><p>Use a ticket to play for <b>' + a.info.passMin + ' minutes</b>.</p>' +
         (me.tickets ? '<button class="btn primary big" data-act="arc-pass">Use a ticket · play ' + a.info.passMin + ' min</button>' : '<p class="muted">You have no tickets yet. ' + arcTicketRule() + (shopOn() && a.info.ticketPrice ? ' You can also buy one below.' : '') + '</p>') + '</div>';
     }
-    var sel = S.arcSel || [], inv = me.inv, owned = AR.POWERUPS.filter(function (u) { return inv[u.id]; });
+    var G = arcG(), sel = (S.arcSel || []).filter(function (id) { return G !== 'kart' || AR.KART_POWER.indexOf(id) >= 0; }), inv = me.inv, owned = AR.POWERUPS.filter(function (u) { return inv[u.id] && (G !== 'kart' || AR.KART_POWER.indexOf(u.id) >= 0); });
+    S.arcSel = sel;
+    var kk = AR.KART[me.kart.active] || AR.KARTS[0];
     var h = '<div class="arc-ready"><h2>Ready to play?</h2>';
     if (owned.length) {
       h += '<p class="small">Pick up to ' + AR.MAX_POWER + ' power-ups for this run:</p><div class="pu-pick">' + owned.map(function (u) {
@@ -1309,8 +1340,9 @@
         return '<button class="pu-tog' + (on ? ' on' : '') + '" data-act="arc-sel" data-id="' + u.id + '" title="' + esc(u.desc) + '">' + puIcon(u.id) + '<span>' + esc(u.name) + '</span><small>x' + inv[u.id] + '</small></button>';
       }).join('') + '</div>';
     } else if (shopOn()) h += '<p class="small muted">Tip: power-ups from the shop below give you a head start.</p>';
-    h += '<button class="btn primary huge" data-act="arc-go"><svg class="i"><use href="#i-gamepad"/></svg> Play Block Rush</button>' +
-      '<p class="small muted">Move with the mouse, your finger, or the arrow keys. Blocks in a row build a combo. Gold stars are worth 50!</p></div>';
+    h += '<button class="btn primary huge" data-act="arc-go"><svg class="i"><use href="#i-gamepad"/></svg> ' + (G === 'kart' ? 'Start the race' : 'Play Block Rush') + '</button>' +
+      (G === 'kart' ? '<div class="kart-now">' + SQ_KART.icon(kk.color, kk.accent, 44) + '<span>Driving: <b>' + esc(kk.name) + '</b></span></div><p class="small muted">Steer with the mouse, your finger, or the arrow keys. Grass slows you down, oil makes you slip, and blue pads give a boost.</p></div>'
+        : '<p class="small muted">Move with the mouse, your finger, or the arrow keys. Blocks in a row build a combo. Gold stars are worth 50!</p></div>');
     return h;
   }
   function arcTick() {
@@ -1328,27 +1360,30 @@
     var box = document.getElementById('arc-play');
     if (!box || S.arcRun) return;
     S.arcRun = 'starting';
-    call('arcadeStart', { power: S.arcSel || [] }).then(function (res) {
+    var G = arcG();
+    call('arcadeStart', { power: S.arcSel || [], game: G }).then(function (res) {
       S.arcRun = res.run; S.arc.me = res.me; S.arcSel = [];
-      box.innerHTML = '<div class="arc-stage"><canvas id="arc-canvas" aria-label="Block Rush game"></canvas>' +
+      box.innerHTML = '<div class="arc-stage"><canvas id="arc-canvas" aria-label="' + AR.GAMES[G] + ' game"></canvas>' +
         (res.run.power.length ? '<div class="arc-powers">' + res.run.power.map(function (id) { return puIcon(id) + '<span>' + esc(AR.POWER[id].name) + '</span>'; }).join('') + '</div>' : '') + '</div>';
       var img = new Image(), gav = Object.assign({}, S.me.state.avatar, { bg: 'solid', bgColor: 'transparent', frame: 'none' }); img.src = avatarURI(gav);
       var cv = document.getElementById('arc-canvas');
       cv.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      S.arcGame = SQ_GAME.create(cv, { avatar: img, power: res.run.power, onEnd: function (score) { arcFinish(res.run.id, score); } });
+      var done = function (score) { arcFinish(res.run.id, score); };
+      S.arcGame = G === 'kart' ? SQ_KART.create(cv, { avatar: img, kart: AR.kartStats(S.arc.me.kart.active, S.arc.me.kart.owned[S.arc.me.kart.active]), power: res.run.power, onEnd: done })
+        : SQ_GAME.create(cv, { avatar: img, power: res.run.power, onEnd: done });
     }).catch(function () { S.arcRun = null; arcPaint(); });
   }
   function arcFinish(runId, score) {
     var before = prof();
     call('arcadeEnd', { runId: runId, score: score }).then(function (res) {
       if (S.arcGame) { S.arcGame.stop(); S.arcGame = null; }
-      S.arcRun = null; S.arc.me = res.me; S.arc.board = res.board; S.me = res.student;
+      S.arcRun = null; S.arc.me = res.me; if (res.game === 'kart') S.arc.kartBoard = res.board; else S.arc.board = res.board; S.me = res.student;
       arcPaint();
-      var unlocked = A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade && res.score >= t.unlock.arcade && (before.arcadeBest || 0) < t.unlock.arcade; });
+      var unlocked = res.game === 'kart' ? [] : A.CATALOG.title.filter(function (t) { return t.unlock && t.unlock.arcade && res.score >= t.unlock.arcade && (before.arcadeBest || 0) < t.unlock.arcade; });
       if (res.newBest || unlocked.length || (res.goals || []).length) { SQ_SOUND.play('badge'); confetti(); } else if (res.coins) SQ_SOUND.play('coin');
       celebrate(before, S.me.profile, null, true);
-      modal('<div class="arc-result"><div class="eyebrow">Block Rush</div><div class="arc-big">' + fmtN(res.score) + '</div><p>points</p>' +
-        (res.newBest ? '<p class="arc-nb"><svg class="i"><use href="#i-star"/></svg> New personal best!</p>' : '<p class="muted">Your best this round: ' + fmtN(res.me.best) + '</p>') +
+      modal('<div class="arc-result"><div class="eyebrow">' + AR.GAMES[res.game || 'rush'] + '</div><div class="arc-big">' + fmtN(res.score) + '</div><p>points</p>' +
+        (res.newBest ? '<p class="arc-nb"><svg class="i"><use href="#i-star"/></svg> New personal best!</p>' : '<p class="muted">Your best this round: ' + fmtN(res.game === 'kart' ? res.me.kart.best : res.me.best) + '</p>') +
         (res.place ? '<p>You are <b>#' + res.place + '</b> on the class leaderboard.</p>' : '') +
         (res.coins ? '<p class="arc-coins">' + coinTag(res.coins, 'big') + ' coins earned</p>' : '') +
         (res.goals || []).map(function (g) { return '<p class="arc-nb">Score goal reached: ' + fmtN(g.score) + ' (+' + g.coins + ' coins)</p>'; }).join('') +
@@ -2274,6 +2309,20 @@
       var sid = t.getAttribute('data-id'), sel = S.arcSel = S.arcSel || [], si = sel.indexOf(sid);
       if (si >= 0) sel.splice(si, 1); else if (sel.length < AR.MAX_POWER) sel.push(sid); else { toast('You can bring ' + AR.MAX_POWER + ' power-ups per run.'); return; }
       SQ_SOUND.play('tap'); document.getElementById('arc-play').innerHTML = arcPlayPanel(); return;
+    }
+    if (act === 'arc-game') { if (S.arcRun) return; S.arcGameSel = t.getAttribute('data-game'); SQ_SOUND.play('tap'); arcPaint(); return; }
+    if (act === 'kart-buy' || act === 'kart-up' || act === 'kart-pick') {
+      var kid = t.getAttribute('data-kart'), kact = act === 'kart-buy' ? 'kartBuy' : act === 'kart-up' ? 'kartUpgrade' : 'kartSelect';
+      t.disabled = true;
+      call(kact, { kart: kid, part: t.getAttribute('data-part') }).then(function (res) {
+        if (act !== 'kart-pick') { var cp = document.querySelector('.arc-wallet .coin-tag') || document.querySelector('.me-card'); if (cp) SQ_FX.coinFly(cp, t, 5); }
+        SQ_FX.burst(t, { colors: [AR.KART[kid].color, '#facc15', '#fff'], n: act === 'kart-buy' ? 26 : 14, spread: act === 'kart-buy' ? 120 : 70 });
+        SQ_SOUND.play(act === 'kart-buy' ? 'legendary' : act === 'kart-up' ? 'buy' : 'equip');
+        S.arc.me = res.me; if (res.student) { S.me = res.student; saveSeen(prof()); }
+        if (act === 'kart-buy') toast('<b>' + esc(AR.KART[kid].name) + '</b> is yours! It is ready to race.', 't-badge');
+        var y = window.scrollY; render(); window.scrollTo(0, y);
+      }).catch(function () { t.disabled = false; });
+      return;
     }
     if (act === 'arc-go') { SQ_SOUND.play('pop'); arcStartGame(); return; }
     if (act === 'arc-again') { closeModal(); arcStartGame(); return; }
