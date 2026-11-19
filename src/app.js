@@ -677,6 +677,30 @@
   function frameBox(text) {
     return '<div class="frame"><div class="frame-head"><svg class="i"><use href="#i-pencil"/></svg> Use this frame <button class="btn tiny ghost" data-act="copy-frame">Copy</button></div><pre class="frame-text">' + esc(text) + '</pre></div>';
   }
+  // "How do I run it?" Scratch only runs code when something starts it. Work out what starts this
+  // step's script from its top block, and say so in plain words under the block picture.
+  var RUN_ICON = {
+    click: '<svg viewBox="0 0 44 36" aria-hidden="true"><rect x="2" y="6" width="26" height="9" rx="3" fill="#4C97FF" stroke="#ffd60a" stroke-width="2.5"/><rect x="2" y="17" width="26" height="9" rx="3" fill="#4C97FF" stroke="#ffd60a" stroke-width="2.5"/><path d="M24 16l13 7-5.5 1.6 3.4 6-2.6 1.5-3.4-6L25 30z" fill="#fff" stroke="#241145" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    flag: '<svg viewBox="0 0 44 36" aria-hidden="true"><path d="M13 4v29" stroke="#3b7d2a" stroke-width="3.5" stroke-linecap="round"/><path d="M13 6c6-4 11 4 19 0v15c-8 4-13-4-19 0z" fill="#4cbf56" stroke="#3b7d2a" stroke-width="2" stroke-linejoin="round"/></svg>',
+    key: '<svg viewBox="0 0 44 36" aria-hidden="true"><rect x="6" y="7" width="32" height="24" rx="6" fill="#fff" stroke="#241145" stroke-width="2.2"/><rect x="6" y="7" width="32" height="19" rx="6" fill="#f1edfb" stroke="#241145" stroke-width="2.2"/><path d="M16 17h12" stroke="#241145" stroke-width="2.4" stroke-linecap="round"/></svg>'
+  };
+  function runHint(blocks, change) {
+    var tops = String(blocks || '').split(/\n\s*\n/).map(function (sc) { return sc.trim().split('\n')[0] || ''; }).filter(Boolean);
+    if (!tops.length) return '';
+    var out = [], seen = {}, add = function (icon, text) { if (!seen[text]) { seen[text] = 1; out.push([icon, text]); } }, m;
+    tops.forEach(function (t) {
+      if (/^when (green )?flag clicked|^when gf clicked/i.test(t)) add('flag', 'click the <b>green flag</b> above the Stage.');
+      else if ((m = /^when \[(.+?) v\] key pressed/i.exec(t))) add('key', 'press the <b>' + esc(m[1]) + '</b> key' + (m[1] === 'any' ? '' : ' on your keyboard') + '.');
+      else if (/^when this sprite clicked/i.test(t)) add('click', 'click the <b>sprite</b> on the Stage.');
+      else if (/^when (I receive|I start as a clone|backdrop switches)/i.test(t) || /^define /i.test(t)) add('flag', 'start your project with the <b>green flag</b>. This script runs when the rest of your code calls it.');
+      else if (/^when /i.test(t)) add('flag', 'do what the yellow block on top says.');
+      else if (change === 'add' || change === 'replace') add('flag', 'put these blocks into your script, then start that script the usual way (the <b>green flag</b>, if it has one).');
+      else add('click', '<b>click the stack of blocks</b>. It glows yellow while it runs. Nothing happens until you click it!');
+    });
+    // when the step also has a green-flag script, that one line is enough
+    if (out.some(function (x) { return /^click the <b>green flag/.test(x[1]); })) out = out.filter(function (x) { return !/^start your project/.test(x[1]); });
+    return '<div class="run-hint say">' + out.slice(0, 2).map(function (x) { return '<div><span class="run-ico">' + RUN_ICON[x[0]] + '</span><span><b>To run it:</b> ' + x[1] + '</span></div>'; }).join('') + '</div>';
+  }
   function stepBody(id, i, teacher) {
     var s = L[id].steps[i], h = '';
     h += whereFor(s) + shotsFor(s.shots);
@@ -693,11 +717,11 @@
       }).join('') + '</div>';
       s.options.forEach(function (o, j) {
         if (!teacher && j !== pick) return;
-        h += '<div class="opt-body">' + (teacher ? '<b>' + esc(o.label) + ':</b> ' : '') + '<p class="say">' + esc(o.short) + '</p>' + codeFor(s.scaffold, o.blocks, key + j, teacher) + '</div>';
+        h += '<div class="opt-body">' + (teacher ? '<b>' + esc(o.label) + ':</b> ' : '') + '<p class="say">' + esc(o.short) + '</p>' + codeFor(s.scaffold, o.blocks, key + j, teacher) + runHint(o.blocks, s.change) + '</div>';
       });
       h += '</div>';
     } else {
-      h += codeFor(s.scaffold, s.blocks, id + '.' + i, teacher);
+      h += codeFor(s.scaffold, s.blocks, id + '.' + i, teacher) + runHint(s.blocks, s.change);
     }
     if (s.frame) h += frameBox(s.frame);
     return h;

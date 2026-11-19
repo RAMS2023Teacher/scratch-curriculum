@@ -1320,6 +1320,15 @@ html.rm .nudge { animation: none; }
 .modal-wrap { z-index: 2200; }
 .modal-wrap .modal { position: relative; z-index: 1; }
 
+/* "To run it" line under a step's blocks */
+.run-hint { display: grid; gap: 6px; margin: 10px 0 4px; padding: 10px 14px; border-radius: 12px; background: #fff8e1; border: 2px solid #ffd166; color: #4a3200; font-size: 1.02rem; }
+.run-hint > div { display: flex; align-items: center; gap: 12px; }
+.run-ico { flex: none; width: 46px; height: 38px; }
+.run-ico svg { width: 100%; height: 100%; }
+html.hc .run-hint { border-color: #000; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .run-hint { background: #3d3200; color: #ffe9a8; border-color: #8a6a00; } }
+:root[data-theme="dark"] .run-hint { background: #3d3200; color: #ffe9a8; border-color: #8a6a00; }
+
 </style>
 </head>
 <body>
@@ -10415,6 +10424,7 @@ SQ_LESSONS.t1 = {
     { term: "Stage", def: "The big rectangle where your project plays.", icon: "🎭" },
     { term: "Block", def: "A puzzle piece of code. You snap blocks together.", icon: "🧩" },
     { term: "Script", def: "A stack of blocks snapped together. They run from top to bottom.", icon: "📜" },
+    { term: "Run", def: "To make code go. Click a block or a script to run it. It glows yellow while it runs.", icon: "▶️" },
     { term: "x and y", def: "Numbers for a spot on the Stage. x is left-right. y is up-down.", icon: "📍" }
   ],
   warmup: "If you could program any character to do anything, what would it be? Say it in one sentence to a neighbor, or write it down. Then think: what is the very first instruction you would give it?",
@@ -10435,8 +10445,8 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Your first move",
-      short: "Drag a move block into the code area and click it.",
-      text: "Click <b>Motion</b>. Drag a <code>move (10) steps</code> block into the code area. <b>Click the block</b>. The sprite moves! Click it again and again. Now change 10 to 50 and click it. Then try a negative number, like -50. Which way does it go now?",
+      short: "Drag a move block into the code area. Then click the block to run it.",
+      text: "Click <b>Motion</b>. Drag a <code>move (10) steps</code> block into the code area. <b>Click the block</b> to run it. The sprite moves! A block only runs when you click it, and it glows yellow while it runs. Click it again and again. Now change 10 to 50 and click it. Then try a negative number, like -50. Which way does it go now?",
       where: "Sprite1",
       change: "new",
       scaffold: "full",
@@ -10445,7 +10455,7 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Turn and spin",
-      short: "Snap a turn block under your move block and click the stack.",
+      short: "Snap a turn block under your move block. Then click the stack to run both.",
       text: "Drag a <code>turn cw (15) degrees</code> block into the code area. Snap it <b>under</b> your move block. You will feel it click into place. Now the two blocks are one <b>script</b>. Click the script: both blocks run, top to bottom. Change 15 to 90 and click it four times. What shape did the sprite make?",
       where: "Sprite1",
       change: "add",
@@ -10456,7 +10466,7 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "The x and y treasure map",
-      short: "Use a go to block to send your sprite to each corner.",
+      short: "Type numbers into a go to block. Then click the block to run it.",
       text: "Drag your sprite around the Stage with the mouse. Watch the <b>x</b> and <b>y</b> numbers under the Stage change.<br>Now use <code>go to x: () y: ()</code> to jump your sprite to a spot. Type the numbers, then click the block.<br>Can you find all four corners? Hint: x is 240 or -240. y is 180 or -180. The center is x: 0, y: 0.",
       where: "Sprite1",
       change: "new",
@@ -10467,8 +10477,8 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Glide like a pro",
-      short: "Build a script that glides your sprite to three different spots.",
-      text: "<b>go to</b> jumps right away. <b>glide</b> moves smoothly, so you can watch it. Build this script and click it. The first block puts the sprite at its starting spot every time.",
+      short: "Build this script. Then click it to watch your sprite glide.",
+      text: "<b>go to</b> jumps right away. <b>glide</b> moves smoothly, so you can watch it. Build this script by snapping the four blocks together. Then <b>click anywhere on the stack</b> to run it. The whole stack glows yellow while it runs. Nothing happens until you click it! The first block puts the sprite at its starting spot every time, so you can click the script again and again.",
       where: "Sprite1",
       change: "new",
       scaffold: "full",
@@ -10477,7 +10487,7 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Corner tour",
-      short: "Build your own script that visits all four corners and returns home.",
+      short: "Build your own script that visits all four corners. Click it to run it.",
       text: "Now you build it with no picture. Make one script that:<br>1. Starts the sprite at the center (x: 0, y: 0).<br>2. Glides to all four corners of the Stage, one after another.<br>3. Glides back to the center at the end.<br>Use the <b>go to</b> and <b>glide</b> blocks from Motion. Click your script to test it. Does the sprite end at x: 0, y: 0?",
       where: "Sprite1",
       change: "new",
@@ -13389,7 +13399,7 @@ var SQ_SOUND = (function () {
 })();
 
 
-var SQ_BUILD = "2026-11-19T16:43";
+var SQ_BUILD = "2026-11-19T17:13";
 var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
 
 /* Scratch Quest — page translation for students (Brazilian Portuguese).
@@ -14855,6 +14865,30 @@ var SQ_MAPART = (function () {
   function frameBox(text) {
     return '<div class="frame"><div class="frame-head"><svg class="i"><use href="#i-pencil"/></svg> Use this frame <button class="btn tiny ghost" data-act="copy-frame">Copy</button></div><pre class="frame-text">' + esc(text) + '</pre></div>';
   }
+  // "How do I run it?" Scratch only runs code when something starts it. Work out what starts this
+  // step's script from its top block, and say so in plain words under the block picture.
+  var RUN_ICON = {
+    click: '<svg viewBox="0 0 44 36" aria-hidden="true"><rect x="2" y="6" width="26" height="9" rx="3" fill="#4C97FF" stroke="#ffd60a" stroke-width="2.5"/><rect x="2" y="17" width="26" height="9" rx="3" fill="#4C97FF" stroke="#ffd60a" stroke-width="2.5"/><path d="M24 16l13 7-5.5 1.6 3.4 6-2.6 1.5-3.4-6L25 30z" fill="#fff" stroke="#241145" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    flag: '<svg viewBox="0 0 44 36" aria-hidden="true"><path d="M13 4v29" stroke="#3b7d2a" stroke-width="3.5" stroke-linecap="round"/><path d="M13 6c6-4 11 4 19 0v15c-8 4-13-4-19 0z" fill="#4cbf56" stroke="#3b7d2a" stroke-width="2" stroke-linejoin="round"/></svg>',
+    key: '<svg viewBox="0 0 44 36" aria-hidden="true"><rect x="6" y="7" width="32" height="24" rx="6" fill="#fff" stroke="#241145" stroke-width="2.2"/><rect x="6" y="7" width="32" height="19" rx="6" fill="#f1edfb" stroke="#241145" stroke-width="2.2"/><path d="M16 17h12" stroke="#241145" stroke-width="2.4" stroke-linecap="round"/></svg>'
+  };
+  function runHint(blocks, change) {
+    var tops = String(blocks || '').split(/\n\s*\n/).map(function (sc) { return sc.trim().split('\n')[0] || ''; }).filter(Boolean);
+    if (!tops.length) return '';
+    var out = [], seen = {}, add = function (icon, text) { if (!seen[text]) { seen[text] = 1; out.push([icon, text]); } }, m;
+    tops.forEach(function (t) {
+      if (/^when (green )?flag clicked|^when gf clicked/i.test(t)) add('flag', 'click the <b>green flag</b> above the Stage.');
+      else if ((m = /^when \[(.+?) v\] key pressed/i.exec(t))) add('key', 'press the <b>' + esc(m[1]) + '</b> key' + (m[1] === 'any' ? '' : ' on your keyboard') + '.');
+      else if (/^when this sprite clicked/i.test(t)) add('click', 'click the <b>sprite</b> on the Stage.');
+      else if (/^when (I receive|I start as a clone|backdrop switches)/i.test(t) || /^define /i.test(t)) add('flag', 'start your project with the <b>green flag</b>. This script runs when the rest of your code calls it.');
+      else if (/^when /i.test(t)) add('flag', 'do what the yellow block on top says.');
+      else if (change === 'add' || change === 'replace') add('flag', 'put these blocks into your script, then start that script the usual way (the <b>green flag</b>, if it has one).');
+      else add('click', '<b>click the stack of blocks</b>. It glows yellow while it runs. Nothing happens until you click it!');
+    });
+    // when the step also has a green-flag script, that one line is enough
+    if (out.some(function (x) { return /^click the <b>green flag/.test(x[1]); })) out = out.filter(function (x) { return !/^start your project/.test(x[1]); });
+    return '<div class="run-hint say">' + out.slice(0, 2).map(function (x) { return '<div><span class="run-ico">' + RUN_ICON[x[0]] + '</span><span><b>To run it:</b> ' + x[1] + '</span></div>'; }).join('') + '</div>';
+  }
   function stepBody(id, i, teacher) {
     var s = L[id].steps[i], h = '';
     h += whereFor(s) + shotsFor(s.shots);
@@ -14871,11 +14905,11 @@ var SQ_MAPART = (function () {
       }).join('') + '</div>';
       s.options.forEach(function (o, j) {
         if (!teacher && j !== pick) return;
-        h += '<div class="opt-body">' + (teacher ? '<b>' + esc(o.label) + ':</b> ' : '') + '<p class="say">' + esc(o.short) + '</p>' + codeFor(s.scaffold, o.blocks, key + j, teacher) + '</div>';
+        h += '<div class="opt-body">' + (teacher ? '<b>' + esc(o.label) + ':</b> ' : '') + '<p class="say">' + esc(o.short) + '</p>' + codeFor(s.scaffold, o.blocks, key + j, teacher) + runHint(o.blocks, s.change) + '</div>';
       });
       h += '</div>';
     } else {
-      h += codeFor(s.scaffold, s.blocks, id + '.' + i, teacher);
+      h += codeFor(s.scaffold, s.blocks, id + '.' + i, teacher) + runHint(s.blocks, s.change);
     }
     if (s.frame) h += frameBox(s.frame);
     return h;

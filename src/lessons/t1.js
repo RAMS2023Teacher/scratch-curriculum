@@ -10,6 +10,7 @@ SQ_LESSONS.t1 = {
     { term: "Stage", def: "The big rectangle where your project plays.", icon: "🎭" },
     { term: "Block", def: "A puzzle piece of code. You snap blocks together.", icon: "🧩" },
     { term: "Script", def: "A stack of blocks snapped together. They run from top to bottom.", icon: "📜" },
+    { term: "Run", def: "To make code go. Click a block or a script to run it. It glows yellow while it runs.", icon: "▶️" },
     { term: "x and y", def: "Numbers for a spot on the Stage. x is left-right. y is up-down.", icon: "📍" }
   ],
   warmup: "If you could program any character to do anything, what would it be? Say it in one sentence to a neighbor, or write it down. Then think: what is the very first instruction you would give it?",
@@ -30,8 +31,8 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Your first move",
-      short: "Drag a move block into the code area and click it.",
-      text: "Click <b>Motion</b>. Drag a <code>move (10) steps</code> block into the code area. <b>Click the block</b>. The sprite moves! Click it again and again. Now change 10 to 50 and click it. Then try a negative number, like -50. Which way does it go now?",
+      short: "Drag a move block into the code area. Then click the block to run it.",
+      text: "Click <b>Motion</b>. Drag a <code>move (10) steps</code> block into the code area. <b>Click the block</b> to run it. The sprite moves! A block only runs when you click it, and it glows yellow while it runs. Click it again and again. Now change 10 to 50 and click it. Then try a negative number, like -50. Which way does it go now?",
       where: "Sprite1",
       change: "new",
       scaffold: "full",
@@ -40,7 +41,7 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Turn and spin",
-      short: "Snap a turn block under your move block and click the stack.",
+      short: "Snap a turn block under your move block. Then click the stack to run both.",
       text: "Drag a <code>turn cw (15) degrees</code> block into the code area. Snap it <b>under</b> your move block. You will feel it click into place. Now the two blocks are one <b>script</b>. Click the script: both blocks run, top to bottom. Change 15 to 90 and click it four times. What shape did the sprite make?",
       where: "Sprite1",
       change: "add",
@@ -51,7 +52,7 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "The x and y treasure map",
-      short: "Use a go to block to send your sprite to each corner.",
+      short: "Type numbers into a go to block. Then click the block to run it.",
       text: "Drag your sprite around the Stage with the mouse. Watch the <b>x</b> and <b>y</b> numbers under the Stage change.<br>Now use <code>go to x: () y: ()</code> to jump your sprite to a spot. Type the numbers, then click the block.<br>Can you find all four corners? Hint: x is 240 or -240. y is 180 or -180. The center is x: 0, y: 0.",
       where: "Sprite1",
       change: "new",
@@ -62,8 +63,8 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Glide like a pro",
-      short: "Build a script that glides your sprite to three different spots.",
-      text: "<b>go to</b> jumps right away. <b>glide</b> moves smoothly, so you can watch it. Build this script and click it. The first block puts the sprite at its starting spot every time.",
+      short: "Build this script. Then click it to watch your sprite glide.",
+      text: "<b>go to</b> jumps right away. <b>glide</b> moves smoothly, so you can watch it. Build this script by snapping the four blocks together. Then <b>click anywhere on the stack</b> to run it. The whole stack glows yellow while it runs. Nothing happens until you click it! The first block puts the sprite at its starting spot every time, so you can click the script again and again.",
       where: "Sprite1",
       change: "new",
       scaffold: "full",
@@ -72,7 +73,7 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Corner tour",
-      short: "Build your own script that visits all four corners and returns home.",
+      short: "Build your own script that visits all four corners. Click it to run it.",
       text: "Now you build it with no picture. Make one script that:<br>1. Starts the sprite at the center (x: 0, y: 0).<br>2. Glides to all four corners of the Stage, one after another.<br>3. Glides back to the center at the end.<br>Use the <b>go to</b> and <b>glide</b> blocks from Motion. Click your script to test it. Does the sprite end at x: 0, y: 0?",
       where: "Sprite1",
       change: "new",
