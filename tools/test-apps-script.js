@@ -218,7 +218,7 @@ test('pacing: no clicking through steps, no rapid guessing, and steps go in orde
   const A2 = 'ava.smith@school.org', vm = require('vm');
   vm.runInContext('var __off = 0, __realNow = Date.now; Date.now = function () { return __realNow() + __off; };', ctx);
   const later = (sec) => vm.runInContext('__off += ' + sec * 1000, ctx);
-  assert.deepStrictEqual([20, 8, true, 45], (c => [c.stepSec, c.quizWait, c.inOrder, c.nudgeSec])(as(T, 'createClass', { name: 'Defaults' }).cls), 'new classes start with pacing on');
+  assert.deepStrictEqual([10, 8, true, 45], (c => [c.stepSec, c.quizWait, c.inOrder, c.nudgeSec])(as(T, 'createClass', { name: 'Defaults' }).cls), 'new classes start with pacing on');
   as(T, 'updateClass', { id: classId, patch: { stepSec: 20, quizWait: 8, inOrder: true } });
   const quiz = ctx.SQ_LESSONS.t1.quiz[0], wrong = (quiz.answer + 1) % quiz.choices.length, wrong2 = (quiz.answer + 2) % quiz.choices.length;
   assert.throws(() => as(A2, 'toggleStep', { node: 't1', idx: 2, value: true }), /in order/);
@@ -237,7 +237,16 @@ test('pacing: no clicking through steps, no rapid guessing, and steps go in orde
   later(9);
   assert.strictEqual(as(A2, 'answerQuiz', { node: 't1', q: 0, choice: quiz.answer }).correct, true);
   assert.strictEqual(as(T, 'teacherData').students.find(x => x.email === A2).state.nodes.t1.quiz[0].tries, 2, 'blocked guesses do not count as tries');
-  as(T, 'updateClass', { id: classId, patch: { stepSec: 0, quizWait: 0, inOrder: false } });
+  // the tick box: when the class requires it, "I did it!" needs the box ticked
+  as(T, 'updateClass', { id: classId, patch: { stepSec: 0, stepCheck: true } });
+  as(A2, 'toggleStep', { node: 't1', idx: 2, value: false });
+  assert.throws(() => as(A2, 'toggleStep', { node: 't1', idx: 2, value: true }), /Tick the box/);
+  assert.ok(as(A2, 'toggleStep', { node: 't1', idx: 2, value: true, confirmed: true }).student.state.nodes.t1.steps[2]);
+  // a class saved with the old 20-second default moves to 10 seconds
+  const sheet = sheetsById[props.DB_ID].getSheetByName('Classes'), row = sheet.data.find(r => r[0] === classId), saved = JSON.parse(row[3]);
+  saved.stepSec = 20; delete saved.paceV; row[3] = JSON.stringify(saved);
+  assert.strictEqual(as(T, 'teacherData').classes.find(c => c.id === classId).stepSec, 10);
+  as(T, 'updateClass', { id: classId, patch: { stepSec: 0, quizWait: 0, inOrder: false, stepCheck: false } });
 });
 test('moving on: a student can start the next quest while their work waits for review', () => {
   const N = 'noah.k@school.org';

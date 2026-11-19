@@ -21,10 +21,13 @@ function SQ_SERVICE(store) {
     var d = { openThrough: R.MAX_TIER, requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false, sounds: true, shop: true,
       // pacing: seconds a student must spend before the next "I did it!", wait after a wrong quick-check answer,
       // whether cards must be done in order, and seconds of no activity before a nudge (0 = off)
-      stepSec: 20, quizWait: 8, inOrder: true, nudgeSec: 45,
+      // stepCheck: students must tick "I did this step in Scratch" before "I did it!" works
+      stepSec: 10, stepCheck: false, quizWait: 8, inOrder: true, nudgeSec: 45,
       // students may start the next quest while their turned-in work waits for review
       moveOn: true };
     for (var k in d) if (c[k] === undefined) c[k] = d[k];
+    // the first version of the step timer was 20 seconds; the default is now 10
+    if (c.paceV !== 2) { if (c.stepSec === 20) c.stepSec = 10; c.paceV = 2; }
     return c;
   }
   function publicClass(c) {
@@ -32,7 +35,7 @@ function SQ_SERVICE(store) {
     classDefaults(c);
     return { id: c.id, name: c.name, code: c.code, openThrough: c.openThrough, requireApproval: c.requireApproval,
       requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false, arcade: arcadeInfo(c),
-      stepSec: c.stepSec, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec, moveOn: c.moveOn !== false };
+      stepSec: c.stepSec, stepCheck: !!c.stepCheck, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec, moveOn: c.moveOn !== false };
   }
   // What students may know about the arcade: its live mode, closing time and pass rules
   function arcadeInfo(c) {
@@ -243,6 +246,7 @@ function SQ_SERVICE(store) {
           var earlier = R.coreSteps(L).filter(function (j) { return j < i && !ns.steps[j]; });
           if (earlier.length) err('Do the steps in order. Go back to step ' + (R.coreSteps(L).indexOf(earlier[0]) + 1) + ' first.');
         }
+        if (w.cls.stepCheck && !args.confirmed) err('Tick the box to say you did this step in Scratch first.');
         var wait = (w.cls.stepSec || 0) * 1000 - (now() - (st.state.paceAt || 0));
         if (wait > 0) err('Slow down! Do the step in Scratch first. You can tap "I did it!" in ' + Math.ceil(wait / 1000) + ' seconds.');
         st.state.paceAt = now();
@@ -585,7 +589,7 @@ function SQ_SERVICE(store) {
       var p = args.patch || {};
       if (p.name !== undefined) c.name = clean(p.name, 40) || c.name;
       if (p.openThrough !== undefined) c.openThrough = Math.max(1, Math.min(R.MAX_TIER, Number(p.openThrough) || 1));
-      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder', 'moveOn'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
+      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder', 'moveOn', 'stepCheck'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
       [['stepSec', 120], ['quizWait', 60], ['nudgeSec', 600]].forEach(function (x) { if (p[x[0]] !== undefined) c[x[0]] = Math.max(0, Math.min(x[1], Math.round(Number(p[x[0]]) || 0))); });
       if (p.classGoal !== undefined) c.classGoal = Math.max(0, Number(p.classGoal) || 0);
       if (p.newCode) c.code = makeCode();

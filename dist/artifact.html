@@ -1324,6 +1324,9 @@ html.hc .run-hint { border-color: #000; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .run-hint { background: #3d3200; color: #ffe9a8; border-color: #8a6a00; } }
 :root[data-theme="dark"] .run-hint { background: #3d3200; color: #ffe9a8; border-color: #8a6a00; }
 
+.step-check { margin: 14px 0 2px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg2); font-weight: 800; }
+.step-zone .lock-note { margin: 4px 0 0; }
+
 </style>
 
 <div id="app"><div style="padding:60px 16px;text-align:center;font:18px/1.5 system-ui,sans-serif;color:#555">Loading Scratch Quest…</div></div>
@@ -11778,10 +11781,13 @@ function SQ_SERVICE(store) {
     var d = { openThrough: R.MAX_TIER, requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false, sounds: true, shop: true,
       // pacing: seconds a student must spend before the next "I did it!", wait after a wrong quick-check answer,
       // whether cards must be done in order, and seconds of no activity before a nudge (0 = off)
-      stepSec: 20, quizWait: 8, inOrder: true, nudgeSec: 45,
+      // stepCheck: students must tick "I did this step in Scratch" before "I did it!" works
+      stepSec: 10, stepCheck: false, quizWait: 8, inOrder: true, nudgeSec: 45,
       // students may start the next quest while their turned-in work waits for review
       moveOn: true };
     for (var k in d) if (c[k] === undefined) c[k] = d[k];
+    // the first version of the step timer was 20 seconds; the default is now 10
+    if (c.paceV !== 2) { if (c.stepSec === 20) c.stepSec = 10; c.paceV = 2; }
     return c;
   }
   function publicClass(c) {
@@ -11789,7 +11795,7 @@ function SQ_SERVICE(store) {
     classDefaults(c);
     return { id: c.id, name: c.name, code: c.code, openThrough: c.openThrough, requireApproval: c.requireApproval,
       requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false, arcade: arcadeInfo(c),
-      stepSec: c.stepSec, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec, moveOn: c.moveOn !== false };
+      stepSec: c.stepSec, stepCheck: !!c.stepCheck, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec, moveOn: c.moveOn !== false };
   }
   // What students may know about the arcade: its live mode, closing time and pass rules
   function arcadeInfo(c) {
@@ -12000,6 +12006,7 @@ function SQ_SERVICE(store) {
           var earlier = R.coreSteps(L).filter(function (j) { return j < i && !ns.steps[j]; });
           if (earlier.length) err('Do the steps in order. Go back to step ' + (R.coreSteps(L).indexOf(earlier[0]) + 1) + ' first.');
         }
+        if (w.cls.stepCheck && !args.confirmed) err('Tick the box to say you did this step in Scratch first.');
         var wait = (w.cls.stepSec || 0) * 1000 - (now() - (st.state.paceAt || 0));
         if (wait > 0) err('Slow down! Do the step in Scratch first. You can tap "I did it!" in ' + Math.ceil(wait / 1000) + ' seconds.');
         st.state.paceAt = now();
@@ -12342,7 +12349,7 @@ function SQ_SERVICE(store) {
       var p = args.patch || {};
       if (p.name !== undefined) c.name = clean(p.name, 40) || c.name;
       if (p.openThrough !== undefined) c.openThrough = Math.max(1, Math.min(R.MAX_TIER, Number(p.openThrough) || 1));
-      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder', 'moveOn'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
+      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder', 'moveOn', 'stepCheck'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
       [['stepSec', 120], ['quizWait', 60], ['nudgeSec', 600]].forEach(function (x) { if (p[x[0]] !== undefined) c[x[0]] = Math.max(0, Math.min(x[1], Math.round(Number(p[x[0]]) || 0))); });
       if (p.classGoal !== undefined) c.classGoal = Math.max(0, Number(p.classGoal) || 0);
       if (p.newCode) c.code = makeCode();
@@ -13393,7 +13400,7 @@ var SQ_SOUND = (function () {
 })();
 
 
-var SQ_BUILD = "2026-11-19T17:13";
+var SQ_BUILD = "2026-11-19T18:20";
 var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
 
 /* Scratch Quest — page translation for students (Brazilian Portuguese).
@@ -14984,13 +14991,14 @@ var SQ_MAPART = (function () {
         (s.solo ? '<details class="p-more solo"><summary><svg class="i"><use href="#i-user"/></svg> No partner free right now?</summary><p class="say">' + s.solo + '</p></details>' : '') + (readOnly ? '' : confBtn(id, 'step', c.i)) + '</div>';
       if (readOnly || frozen) h += '<div class="p-nav">' + backBtn + (nextBtn || '<span></span>') + '</div>';
       else if (on) h += '<div class="p-done"><svg class="i"><use href="#i-check-circle"/></svg> Done! <button class="linklike" data-act="undo-step" data-node="' + id + '" data-idx="' + c.i + '">undo</button></div><div class="p-nav">' + backBtn + nextBtn + '</div>';
-      else h += '<div class="p-nav">' + backBtn + '<span class="row">' + (s.stretch ? '<button class="btn ghost" data-act="card" data-node="' + id + '" data-to="' + (k + 1) + '">Skip</button>' : '') +
+      else h += (pace && S.cls.stepCheck ? '<div class="lockzone step-zone"><label class="check step-check"><input type="checkbox" data-need="tick the box when you have done this step in Scratch"><span class="box"></span><span class="say">I did this step in Scratch, and it works.</span></label><p class="lock-note" hidden></p>' : '<div class="step-zone">') +
+        '<div class="p-nav">' + backBtn + '<span class="row">' + (s.stretch ? '<button class="btn ghost" data-act="card" data-node="' + id + '" data-to="' + (k + 1) + '">Skip</button>' : '') +
         (function () {
           // "I did it!" stays grey until the student has had time to actually do the step
           var readyAt = pace && S.cls.stepSec ? Math.max(S.cardAt, S.lastStepAt || 0) + S.cls.stepSec * 1000 : 0, wait = readyAt > Date.now();
-          return '<button class="btn primary big' + (wait ? ' locked' : '') + '"' + (wait ? ' aria-disabled="true" data-ready-at="' + readyAt + '" data-why="Do this step in Scratch first. The button turns green when you have had time to try it."' : '') +
+          return '<button data-lock-btn class="btn primary big' + (wait ? ' locked' : '') + '"' + (wait ? ' aria-disabled="true" data-ready-at="' + readyAt + '" data-why="Do this step in Scratch first. The button turns green when you have had time to try it."' : '') +
             ' data-act="did-step" data-node="' + id + '" data-idx="' + c.i + '"><svg class="i"><use href="#i-check-circle"/></svg> I did it! <small data-label="+' + R.XP.step + ' XP">' + (wait ? 'do the step first' : '+' + R.XP.step + ' XP') + '</small></button>';
-        })() + '</span></div>';
+        })() + '</span></div></div>';
     } else if (c.type === 'quiz') {
       var q = Ls.quiz[c.i], r = ns.quiz[c.i], right = r && r.correct;
       h += '<div class="quiz' + (right ? ' right' : '') + '" id="q-' + c.i + '"><div class="p-kicker">Quick check ' + (c.i + 1) + ' of ' + Ls.quiz.length + (q.blocks ? ' · <svg class="i"><use href="#i-eye"/></svg> Predict' : '') + '</div><h2 class="p-h say">' + esc(q.q) + '</h2>' +
@@ -15187,8 +15195,11 @@ var SQ_MAPART = (function () {
     document.querySelectorAll('[data-ready-at]').forEach(function (b) {
       var left = Math.ceil((+b.getAttribute('data-ready-at') - Date.now()) / 1000), sm = b.querySelector('small');
       if (left > 0) { if (sm) sm.textContent = 'ready in ' + left + 's'; return; }
-      b.removeAttribute('data-ready-at'); b.removeAttribute('aria-disabled'); b.removeAttribute('data-why'); b.classList.remove('locked');
+      b.removeAttribute('data-ready-at'); b.removeAttribute('data-why');
       if (sm) sm.textContent = sm.getAttribute('data-label');
+      var zone = b.closest('.lockzone');
+      if (zone) { lockUpdate(zone); return; } // still needs its box ticked
+      b.removeAttribute('aria-disabled'); b.classList.remove('locked');
       b.classList.add('ready-pop'); SQ_SOUND.play('ready');
     });
     nudgeTick();
@@ -15211,6 +15222,7 @@ var SQ_MAPART = (function () {
     if (r[0] === 'quest') {
       var card = document.querySelector('.pcard'); if (!card) return null;
       var need = [].filter.call(card.querySelectorAll('.lockzone [data-need]'), function (el) { return el.type === 'checkbox' ? !el.checked : !String(el.value || '').trim(); })[0];
+      if (need && need.closest('.step-zone')) return { el: need.closest('label'), text: 'Finished this step in Scratch? Tick the box, then tap I did it!', work: true, alt: card.querySelector('.p-more.hint summary') || document.querySelector('.help-btn') };
       if (need) return need.type === 'checkbox' ? { el: need.closest('label'), text: 'Check your project, then tick each box.' } : { el: need, text: 'Paste your Scratch project link here.' };
       var ch = card.querySelector('.quiz:not(.right):not(.cooling) .choices'); if (ch) return { el: ch, text: 'Pick the answer you think is right.' };
       var did = card.querySelector('[data-act="did-step"]');
@@ -15317,8 +15329,13 @@ var SQ_MAPART = (function () {
     if (missing.length) {
       btn.classList.add('locked'); btn.setAttribute('aria-disabled', 'true');
       var boxes = missing.filter(function (el) { return el.type === 'checkbox'; }).length, other = missing.filter(function (el) { return el.type !== 'checkbox'; });
-      var bits = []; if (boxes) bits.push('tick ' + boxes + ' more checklist item' + (boxes > 1 ? 's' : '')); other.forEach(function (el) { bits.push(el.getAttribute('data-need')); });
+      var bits = [], named = missing.filter(function (el) { return el.type === 'checkbox' && el.getAttribute('data-need') !== 'checklist'; });
+      boxes -= named.length;
+      if (boxes) bits.push('tick ' + boxes + ' more checklist item' + (boxes > 1 ? 's' : ''));
+      named.concat(other).forEach(function (el) { bits.push(el.getAttribute('data-need')); });
       if (note) { note.hidden = false; note.textContent = 'To go on: ' + bits.join(', ') + '.'; }
+    } else if (btn.hasAttribute('data-ready-at')) {
+      if (note) note.hidden = true; // everything is ticked; the step timer is still counting down
     } else if (btn.classList.contains('locked')) {
       btn.classList.remove('locked'); btn.removeAttribute('aria-disabled');
       if (note) note.hidden = true;
@@ -16341,6 +16358,7 @@ var SQ_MAPART = (function () {
         '<label>Class XP goal (shared team goal; 0 = hide) <input type="number" name="classGoal" min="0" step="500" value="' + c.classGoal + '"></label>' +
         '<fieldset class="pace-set"><legend>Pacing and nudges</legend>' +
         '<label>Shortest time on a step before “I did it!” works <select name="stepSec">' + [0, 10, 20, 30, 45, 60, 90].map(function (n) { return '<option value="' + n + '"' + (n === c.stepSec ? ' selected' : '') + '>' + (n ? n + ' seconds' : 'Off') + '</option>'; }).join('') + '</select></label>' +
+        '<label class="switch"><input type="checkbox" name="stepCheck"' + (c.stepCheck ? ' checked' : '') + '> Students must tick “I did this step in Scratch, and it works” before “I did it!” works</label>' +
         '<label>Wait after a wrong quick-check answer <select name="quizWait">' + [0, 5, 8, 15, 30].map(function (n) { return '<option value="' + n + '"' + (n === c.quizWait ? ' selected' : '') + '>' + (n ? n + ' seconds' : 'Off') + '</option>'; }).join('') + '</select></label>' +
         '<label class="switch"><input type="checkbox" name="inOrder"' + (c.inOrder !== false ? ' checked' : '') + '> Cards must be done in order (students can’t jump ahead to cards they haven’t reached)</label>' +
         '<label>Nudge a student who hasn’t clicked or typed for <select name="nudgeSec">' + [0, 30, 45, 60, 90, 120].map(function (n) { return '<option value="' + n + '"' + (n === c.nudgeSec ? ' selected' : '') + '>' + (n ? n + ' seconds' : 'Off') + '</option>'; }).join('') + '</select></label>' +
@@ -16436,7 +16454,7 @@ var SQ_MAPART = (function () {
     if (act === 'did-step' || act === 'undo-step' || act === 'did-chal' || act === 'undo-chal') {
       var nd = t.getAttribute('data-node'), isStep = act.indexOf('step') > 0, did = act.indexOf('did') === 0;
       var a2 = { node: nd, value: did };
-      if (isStep) a2.idx = +t.getAttribute('data-idx');
+      if (isStep) { a2.idx = +t.getAttribute('data-idx'); var cz = t.closest('.lockzone'), cb = cz && cz.querySelector('input[type=checkbox]'); a2.confirmed = !!(cb && cb.checked); }
       t.disabled = true;
       if (did) { SQ_SOUND.play(isStep ? 'step' : 'badge'); SQ_FX.burst(t, isStep ? { colors: ['#22c55e', '#86efac', '#facc15'], n: 12, spread: 60 } : { colors: ['#facc15', '#f97316', '#a855f7', '#fff'], n: 22, spread: 110 }); }
       call(isStep ? 'toggleStep' : 'setChallenge', a2).then(function (res) {
@@ -16803,7 +16821,7 @@ var SQ_MAPART = (function () {
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
     else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice, questsPerTicket: +v.questsPerTicket }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
     else if (kind === 'class-set') {
-      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop, stepSec: +v.stepSec, quizWait: +v.quizWait, nudgeSec: +v.nudgeSec, inOrder: !!v.inOrder, moveOn: !!v.moveOn };
+      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop, stepSec: +v.stepSec, quizWait: +v.quizWait, nudgeSec: +v.nudgeSec, inOrder: !!v.inOrder, moveOn: !!v.moveOn, stepCheck: !!v.stepCheck };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });
     } else if (kind === 'review') {
       var approve = btn && btn.value === '1';
