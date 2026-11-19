@@ -72,6 +72,7 @@ const { makeEnv } = require('./fake-gas');
   await t.page.waitForSelector('.gc-course');
   await t.page.locator('form[data-form=gc-import]').first().locator('button').click();
   await t.page.waitForSelector('.banner.done');
+  { const td = env.api('teacher@school.org', 'teacherData'); td.classes.forEach(c => env.api('teacher@school.org', 'updateClass', { id: c.id, patch: { stepSec: 0, quizWait: 0, nudgeSec: 0, inOrder: false } })); } // pacing and nudges are tested on their own
   ok('teacher imports a Classroom roster: ' + (await t.page.locator('.banner.done').textContent()).trim());
   await t.page.click('[data-act=gc-select]'); await t.page.click('form[data-form=gc-post] button.primary');
   await t.page.waitForSelector('.gc-tier.posted');

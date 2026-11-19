@@ -35,6 +35,7 @@ let classId;
 test('import creates a class and pre-enrolls the roster (paginated) with privacy-safe names', () => {
   const r = as(T, 'classroomImport', { courseId: '111' });
   classId = r.classId;
+  as(T, 'updateClass', { id: classId, patch: { stepSec: 0, quizWait: 0, inOrder: false } }); // pacing has its own test below
   assert.strictEqual(r.added, 3); assert.strictEqual(r.total, 3);
   const b = as('maya.lopez@school.org', 'bootstrap');
   assert.ok(b.student, 'Maya is enrolled without a class code');
@@ -213,6 +214,31 @@ test('Kart Dash: karts and upgrades cost coins, and the game has its own leaderb
   assert.strictEqual(a.me.kart.best, 420); assert.strictEqual(a.me.best, rushBest, 'the Block Rush score is separate');
   as(T, 'setArcade', { classId, mode: 'off' });
 });
+test('pacing: no clicking through steps, no rapid guessing, and steps go in order', () => {
+  const A2 = 'ava.smith@school.org', vm = require('vm');
+  vm.runInContext('var __off = 0, __realNow = Date.now; Date.now = function () { return __realNow() + __off; };', ctx);
+  const later = (sec) => vm.runInContext('__off += ' + sec * 1000, ctx);
+  assert.deepStrictEqual([20, 8, true, 45], (c => [c.stepSec, c.quizWait, c.inOrder, c.nudgeSec])(as(T, 'createClass', { name: 'Defaults' }).cls), 'new classes start with pacing on');
+  as(T, 'updateClass', { id: classId, patch: { stepSec: 20, quizWait: 8, inOrder: true } });
+  const quiz = ctx.SQ_LESSONS.t1.quiz[0], wrong = (quiz.answer + 1) % quiz.choices.length, wrong2 = (quiz.answer + 2) % quiz.choices.length;
+  assert.throws(() => as(A2, 'toggleStep', { node: 't1', idx: 2, value: true }), /in order/);
+  assert.throws(() => as(A2, 'answerQuiz', { node: 't1', q: 0, choice: quiz.answer }), /Finish the steps/);
+  as(A2, 'toggleStep', { node: 't1', idx: 0, value: true });
+  assert.throws(() => as(A2, 'toggleStep', { node: 't1', idx: 1, value: true }), /Slow down/);
+  later(12);
+  assert.throws(() => as(A2, 'toggleStep', { node: 't1', idx: 1, value: true }), /in [78] seconds/);
+  later(9);
+  as(A2, 'toggleStep', { node: 't1', idx: 1, value: true });
+  as(A2, 'toggleStep', { node: 't1', idx: 1, value: false }); // undo is always allowed
+  for (let i = 1; i < ctx.SQ_LESSONS.t1.steps.length; i++) { later(21); as(A2, 'toggleStep', { node: 't1', idx: i, value: true }); }
+  assert.strictEqual(as(A2, 'answerQuiz', { node: 't1', q: 0, choice: wrong }).correct, false);
+  assert.throws(() => as(A2, 'answerQuiz', { node: 't1', q: 0, choice: quiz.answer }), /reread/);
+  assert.throws(() => as(A2, 'answerQuiz', { node: 't1', q: 0, choice: wrong2 }), /reread/);
+  later(9);
+  assert.strictEqual(as(A2, 'answerQuiz', { node: 't1', q: 0, choice: quiz.answer }).correct, true);
+  assert.strictEqual(as(T, 'teacherData').students.find(x => x.email === A2).state.nodes.t1.quiz[0].tries, 2, 'blocked guesses do not count as tries');
+  as(T, 'updateClass', { id: classId, patch: { stepSec: 0, quizWait: 0, inOrder: false } });
+});
 test('help requests: students ask, only teachers see the list, no emails in it', () => {
   const M = 'maya.lopez@school.org', L2 = 'liam.chen@school.org';
   assert.strictEqual(as(M, 'myHelp').help.open, false);
@@ -326,6 +352,7 @@ test('data safety: combining two data sheets keeps everyone\'s work (no one goes
   const fresh = ctx.SpreadsheetApp.create('Scratch Quest Data');
   props.DB_ID = fresh.getId();
   const cls = as(T, 'createClass', { name: 'Wednesday 2' }).cls;
+  as(T, 'updateClass', { id: cls.id, patch: { stepSec: 0, quizWait: 0, inOrder: false } });
   as(M, 'joinClass', { code: cls.code, name: 'Maya L.' });
   as(M, 'toggleStep', { node: 't1', idx: 0, value: true });
   as(Z, 'joinClass', { code: cls.code, name: 'Zed N.' });

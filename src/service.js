@@ -18,7 +18,10 @@ function SQ_SERVICE(store) {
 
   function findClass(id) { return store.getClasses().filter(function (c) { return c.id === id; })[0] || null; }
   function classDefaults(c) {
-    var d = { openThrough: R.MAX_TIER, requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false, sounds: true, shop: true };
+    var d = { openThrough: R.MAX_TIER, requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false, sounds: true, shop: true,
+      // pacing: seconds a student must spend before the next "I did it!", wait after a wrong quick-check answer,
+      // whether cards must be done in order, and seconds of no activity before a nudge (0 = off)
+      stepSec: 20, quizWait: 8, inOrder: true, nudgeSec: 45 };
     for (var k in d) if (c[k] === undefined) c[k] = d[k];
     return c;
   }
@@ -26,7 +29,8 @@ function SQ_SERVICE(store) {
     if (!c) return null;
     classDefaults(c);
     return { id: c.id, name: c.name, code: c.code, openThrough: c.openThrough, requireApproval: c.requireApproval,
-      requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false, arcade: arcadeInfo(c) };
+      requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false, arcade: arcadeInfo(c),
+      stepSec: c.stepSec, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec };
   }
   // What students may know about the arcade: its live mode, closing time and pass rules
   function arcadeInfo(c) {
@@ -231,6 +235,16 @@ function SQ_SERVICE(store) {
       var i = Number(args.idx);
       if (!(i >= 0 && i < L.steps.length)) err('Bad step.');
       var ns = R.nodeState(st.state, id);
+      if (args.value && !ns.steps[i] && !user.isTeacher) {
+        // Pacing: steps are done in order, and not faster than the class's minimum time per step.
+        if (w.cls.inOrder !== false && !L.steps[i].stretch) {
+          var earlier = R.coreSteps(L).filter(function (j) { return j < i && !ns.steps[j]; });
+          if (earlier.length) err('Do the steps in order. Go back to step ' + (R.coreSteps(L).indexOf(earlier[0]) + 1) + ' first.');
+        }
+        var wait = (w.cls.stepSec || 0) * 1000 - (now() - (st.state.paceAt || 0));
+        if (wait > 0) err('Slow down! Do the step in Scratch first. You can tap "I did it!" in ' + Math.ceil(wait / 1000) + ' seconds.');
+        st.state.paceAt = now();
+      }
       ns.steps[i] = !!args.value; touch(ns);
       return { student: persist(st) };
     },
@@ -243,9 +257,17 @@ function SQ_SERVICE(store) {
       var ns = R.nodeState(st.state, id);
       var r = ns.quiz[qi] || { tries: 0, correct: false, firstTry: false };
       var correct = Number(args.choice) === Q.answer;
+      if (!r.correct && !user.isTeacher) {
+        var qcls = classDefaults(findClass(st.classId) || {});
+        if (qcls.inOrder !== false && R.coreSteps(L).some(function (j) { return !ns.steps[j]; })) err('Finish the steps before the quick check.');
+        // no rapid guessing: after a wrong answer there is a short wait
+        var qwait = (qcls.quizWait || 0) * 1000 - (now() - (r.wrongAt || 0));
+        if (qwait > 0) err('Take a moment to reread. You can answer again in ' + Math.ceil(qwait / 1000) + ' seconds.');
+      }
       if (!r.correct) {
         r.tries++;
-        if (correct) { r.correct = true; r.firstTry = r.tries === 1; }
+        if (correct) { r.correct = true; r.firstTry = r.tries === 1; delete r.wrongAt; }
+        else r.wrongAt = now();
       }
       ns.quiz[qi] = r; touch(ns);
       return { correct: correct, explain: correct ? Q.explain : null, student: persist(st) };
@@ -561,7 +583,8 @@ function SQ_SERVICE(store) {
       var p = args.patch || {};
       if (p.name !== undefined) c.name = clean(p.name, 40) || c.name;
       if (p.openThrough !== undefined) c.openThrough = Math.max(1, Math.min(R.MAX_TIER, Number(p.openThrough) || 1));
-      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
+      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
+      [['stepSec', 120], ['quizWait', 60], ['nudgeSec', 600]].forEach(function (x) { if (p[x[0]] !== undefined) c[x[0]] = Math.max(0, Math.min(x[1], Math.round(Number(p[x[0]]) || 0))); });
       if (p.classGoal !== undefined) c.classGoal = Math.max(0, Number(p.classGoal) || 0);
       if (p.newCode) c.code = makeCode();
       store.saveClass(c);

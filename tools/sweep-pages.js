@@ -29,8 +29,10 @@ const { chromium } = require('playwright');
   await pg.fill('input[name="code"]', 'DEMO1'); await pg.fill('input[name="name"]', 'Sam'); await leaks('join page');
   await pg.click('form[data-form="join"] button'); await pg.waitForSelector('.studio'); await leaks('character studio');
   await pg.click('[data-act="av-save"]'); await pg.waitForSelector('.fx-wrap'); await leaks('badge celebration'); await closeFx();
+  // this sweep clicks through quickly on purpose, so turn the pacing rules off for the demo class first
+  await pg.evaluate(async () => { SQ_API.setRole('teacher'); await SQ_API.call('updateClass', { id: 'demo1', patch: { stepSec: 0, quizWait: 0, nudgeSec: 0, inOrder: false } }); SQ_API.setRole('student'); });
   await pg.evaluate(async () => { const L = SQ_LESSONS.t1; for (let i = 0; i < L.steps.length; i++) await SQ_API.call('toggleStep', { node: 't1', idx: i, value: true }); });
-  await pg.goto(URL + '#/quest/t1'); await pg.waitForSelector('.pcard'); await pg.waitForTimeout(700); await closeFx(); await leaks('mission card');
+  await pg.goto(URL + '#/quest/t1'); await pg.reload(); await pg.waitForSelector('.pcard'); await pg.waitForTimeout(900); await closeFx(); await leaks('mission card');
   const quizIdx = await pg.$$eval('.dots .dot', d => d.findIndex(x => x.classList.contains('t-quiz')));
   await pg.click('.dots .dot >> nth=3'); await pg.waitForTimeout(400); await leaks('step card');
   await pg.click('.dots .dot >> nth=' + quizIdx); await pg.waitForTimeout(500);

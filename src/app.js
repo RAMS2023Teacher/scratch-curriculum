@@ -259,6 +259,7 @@
     csStop(); document.body.classList.remove('cs-on', 'cs-dark');
     arcStop();
     (S.polls || []).forEach(clearInterval); S.polls = [];
+    if (S.nudged) nudgeClear();
     var r = route();
     if (!S.boot) return;
     applyDisplay();
@@ -617,6 +618,18 @@
     cards.push({ type: 'turnin' });
     return cards;
   }
+  // Pacing: the furthest card a student may open. Everything up to the first unfinished core step or
+  // quick check is open; later cards unlock as the work is done. (Teachers previewing are not held back.)
+  function furthestCard(id) {
+    var ns = S.me.state.nodes[id] || { steps: [], quiz: {} }, cards = questCards(id), Ls = L[id];
+    for (var k = 1; k < cards.length; k++) {
+      var c = cards[k];
+      if (c.type === 'step' && !ns.steps[c.i] && !Ls.steps[c.i].stretch) return k;
+      if (c.type === 'quiz' && !(ns.quiz[c.i] && ns.quiz[c.i].correct)) return k;
+    }
+    return cards.length - 1;
+  }
+  function paced() { return !isTeacher(); }
   function firstOpenCard(id) {
     var st = S.me.state, ns = st.nodes[id], cards = questCards(id), Ls = L[id];
     var status = R.nodeStatus(st, id, S.cls.openThrough);
@@ -705,7 +718,10 @@
     var cards = questCards(id);
     S.card = S.card || {};
     if (S.card[id] == null) S.card[id] = readOnly ? 0 : firstOpenCard(id);
-    var k = Math.max(0, Math.min(cards.length - 1, S.card[id])), c = cards[k];
+    var pace = paced() && !readOnly && !frozen, maxK = pace && S.cls.inOrder !== false ? furthestCard(id) : cards.length - 1;
+    var k = Math.max(0, Math.min(maxK, S.card[id])), c = cards[k];
+    S.card[id] = k;
+    if (S.cardKey !== id + ':' + k) { S.cardKey = id + ':' + k; S.cardAt = Date.now(); } // when this card was opened
 
     function cardDone(cc) {
       if (cc.type === 'intro' || cc.type === 'primer') return !!ns.touched || frozen;
@@ -724,7 +740,7 @@
     cards.forEach(function (cc, j) {
       var stretch = cc.type === 'step' && Ls.steps[cc.i].stretch;
       var lbl = cc.type === 'intro' ? '<svg class="i"><use href="#i-target"/></svg>' : cc.type === 'primer' ? '<svg class="i"><use href="#i-sparkles"/></svg>' : cc.type === 'step' ? String(cc.i + 1) : cc.type === 'quiz' ? '?' : cc.type === 'challenge' ? '<svg class="i"><use href="#i-zap"/></svg>' : '<svg class="i"><use href="#i-send"/></svg>';
-      h += '<button class="dot' + (j === k ? ' now' : '') + (cardDone(cc) ? ' done' : '') + (stretch ? ' stretch' : '') + ' t-' + cc.type + '" data-act="card" data-node="' + id + '" data-to="' + j + '" aria-label="Card ' + (j + 1) + (stretch ? ' (stretch)' : '') + '">' + lbl + '</button>';
+      h += '<button class="dot' + (j === k ? ' now' : '') + (cardDone(cc) ? ' done' : '') + (stretch ? ' stretch' : '') + ' t-' + cc.type + (j > maxK ? ' locked' : '') + '"' + (j > maxK ? ' aria-disabled="true" data-why="Finish this card first. The next ones unlock as you go."' : '') + ' data-act="card" data-node="' + id + '" data-to="' + j + '" aria-label="Card ' + (j + 1) + (stretch ? ' (stretch)' : '') + '">' + lbl + '</button>';
     });
     h += '</div>';
     if (readOnly) h += '<div class="banner lock small">' + (status === 'locked' ? '<svg class="i"><use href="#i-lock"/></svg> Locked. ' + esc(lockedReason(id)) : '<svg class="i"><use href="#i-clock"/></svg> Your teacher hasn\'t opened this yet.') + ' You can peek!</div>';
@@ -762,7 +778,12 @@
       if (readOnly || frozen) h += '<div class="p-nav">' + backBtn + (nextBtn || '<span></span>') + '</div>';
       else if (on) h += '<div class="p-done"><svg class="i"><use href="#i-check-circle"/></svg> Done! <button class="linklike" data-act="undo-step" data-node="' + id + '" data-idx="' + c.i + '">undo</button></div><div class="p-nav">' + backBtn + nextBtn + '</div>';
       else h += '<div class="p-nav">' + backBtn + '<span class="row">' + (s.stretch ? '<button class="btn ghost" data-act="card" data-node="' + id + '" data-to="' + (k + 1) + '">Skip</button>' : '') +
-        '<button class="btn primary big" data-act="did-step" data-node="' + id + '" data-idx="' + c.i + '"><svg class="i"><use href="#i-check-circle"/></svg> I did it! <small>+' + R.XP.step + ' XP</small></button></span></div>';
+        (function () {
+          // "I did it!" stays grey until the student has had time to actually do the step
+          var readyAt = pace && S.cls.stepSec ? Math.max(S.cardAt, S.lastStepAt || 0) + S.cls.stepSec * 1000 : 0, wait = readyAt > Date.now();
+          return '<button class="btn primary big' + (wait ? ' locked' : '') + '"' + (wait ? ' aria-disabled="true" data-ready-at="' + readyAt + '" data-why="Do this step in Scratch first. The button turns green when you have had time to try it."' : '') +
+            ' data-act="did-step" data-node="' + id + '" data-idx="' + c.i + '"><svg class="i"><use href="#i-check-circle"/></svg> I did it! <small data-label="+' + R.XP.step + ' XP">' + (wait ? 'do the step first' : '+' + R.XP.step + ' XP') + '</small></button>';
+        })() + '</span></div>';
     } else if (c.type === 'quiz') {
       var q = Ls.quiz[c.i], r = ns.quiz[c.i], right = r && r.correct;
       h += '<div class="quiz' + (right ? ' right' : '') + '" id="q-' + c.i + '"><div class="p-kicker">Quick check ' + (c.i + 1) + ' of ' + Ls.quiz.length + (q.blocks ? ' · <svg class="i"><use href="#i-eye"/></svg> Predict' : '') + '</div><h2 class="p-h say">' + esc(q.q) + '</h2>' +
@@ -954,6 +975,75 @@
     var bg = c === 'neon' ? 'linear-gradient(135deg,#ff3cac,#784ba0,#2b86c5)' : c;
     return '<button class="sw' + (on ? ' on' : '') + (ok ? '' : ' locked') + '" style="background:' + bg + '" data-act="av-color" data-key="' + key + '" data-c="' + c + '" title="' + (ok ? c : esc(A.unlockText(A.COLOR_UNLOCK[c]))) + '" aria-label="color ' + c + '">' + (ok ? '' : '<svg class="i"><use href="#i-lock"/></svg>') + '</button>';
   }
+  // ------------------------------------------------------------ pacing timer and idle nudges
+  setInterval(function () {
+    document.querySelectorAll('[data-ready-at]').forEach(function (b) {
+      var left = Math.ceil((+b.getAttribute('data-ready-at') - Date.now()) / 1000), sm = b.querySelector('small');
+      if (left > 0) { if (sm) sm.textContent = 'ready in ' + left + 's'; return; }
+      b.removeAttribute('data-ready-at'); b.removeAttribute('aria-disabled'); b.removeAttribute('data-why'); b.classList.remove('locked');
+      if (sm) sm.textContent = sm.getAttribute('data-label');
+      b.classList.add('ready-pop'); SQ_SOUND.play('ready');
+    });
+    nudgeTick();
+  }, 1000);
+  // Nudges: when a student has not clicked, typed or scrolled for a while, the next thing to do
+  // pulses and a small tip points at it. Work steps wait much longer (students are building in Scratch).
+  S.lastAct = Date.now();
+  function nudgeClear() {
+    document.querySelectorAll('.nudge').forEach(function (e) { e.classList.remove('nudge'); });
+    var tip = document.getElementById('nudge-tip'); if (tip) tip.remove();
+    S.nudged = false;
+  }
+  function nudgeReset() { S.lastAct = Date.now(); if (S.nudged) nudgeClear(); }
+  ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(function (ev) { document.addEventListener(ev, nudgeReset, { passive: true, capture: true }); });
+  var lastMove = 0;
+  document.addEventListener('pointermove', function () { var n = Date.now(); if (n - lastMove > 1500) { lastMove = n; nudgeReset(); } }, { passive: true });
+  function nudgeTarget() {
+    var r = route();
+    if (!S.me || r[0] === 't' || S.arcRun || document.querySelector('.modal-wrap, .fx-wrap')) return null;
+    if (r[0] === 'quest') {
+      var card = document.querySelector('.pcard'); if (!card) return null;
+      var need = [].filter.call(card.querySelectorAll('.lockzone [data-need]'), function (el) { return el.type === 'checkbox' ? !el.checked : !String(el.value || '').trim(); })[0];
+      if (need) return need.type === 'checkbox' ? { el: need.closest('label'), text: 'Check your project, then tick each box.' } : { el: need, text: 'Paste your Scratch project link here.' };
+      var ch = card.querySelector('.quiz:not(.right):not(.cooling) .choices'); if (ch) return { el: ch, text: 'Pick the answer you think is right.' };
+      var did = card.querySelector('[data-act="did-step"]');
+      if (did) return did.getAttribute('aria-disabled') ? null : { el: did, text: 'Finished this step in Scratch? Tap I did it!', work: true, alt: card.querySelector('.p-more.hint summary') || document.querySelector('.help-btn') };
+      if (card.querySelector('[data-act="did-chal"]')) return { el: card.querySelector('.p-nav .row') || card.querySelector('[data-act="did-chal"]'), text: 'Try the challenge, or tap Skip to move on.', work: true };
+      var b = card.querySelector('.p-nav .btn.primary:not(.locked)') || card.querySelector('.p-nav .btn.big:not(.locked)');
+      return b ? { el: b, text: 'Tap here to keep going.' } : null;
+    }
+    if (r[0] === 'avatar') { var sv = document.querySelector('[data-act="av-save"]'); return sv && !S.me.state.avatarSet ? { el: sv, text: 'Happy with your character? Tap Save my look.' } : null; }
+    if (r[0] === 'map' || r[0] === '') { var go2 = document.querySelector('main a.btn.primary[href^="#/quest/"]'); return go2 ? { el: go2, text: 'Your next quest is ready. Tap here to open it.' } : null; }
+    return null;
+  }
+  function nudgeShow(el, text) {
+    nudgeClear();
+    var r0 = el.getBoundingClientRect();
+    if (r0.top < 70 || r0.bottom > innerHeight - 10) el.scrollIntoView({ block: 'center', behavior: document.documentElement.classList.contains('rm') ? 'auto' : 'smooth' });
+    el.classList.add('nudge');
+    var tip = document.createElement('div'); tip.id = 'nudge-tip'; tip.setAttribute('role', 'status'); tip.textContent = text;
+    document.body.appendChild(tip);
+    var place = function () {
+      if (!el.isConnected || !tip.isConnected) return;
+      var r = el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight, above = r.top > th + 24;
+      tip.style.left = Math.max(8, Math.min(innerWidth - tw - 8, r.left + r.width / 2 - tw / 2)) + 'px';
+      tip.style.top = (above ? r.top - th - 12 : r.bottom + 12) + 'px';
+      tip.classList.toggle('below', !above);
+      tip.style.setProperty('--ax', Math.max(14, Math.min(tw - 14, r.left + r.width / 2 - parseFloat(tip.style.left))) + 'px');
+    };
+    place(); setTimeout(place, 450);
+    SQ_SOUND.play('pop');
+  }
+  function nudgeTick() {
+    var sec = (S.cls && S.cls.nudgeSec) || 0;
+    if (!sec || document.hidden || !S.boot) return;
+    var tg = nudgeTarget();
+    if (!tg) { if (S.nudged) nudgeClear(); return; }
+    var idle = (Date.now() - S.lastAct) / 1000, delay = tg.work ? Math.max(120, sec * 4) : sec;
+    if (idle >= delay && !S.nudged) { nudgeShow(tg.el, tg.text); S.nudged = 'next'; }
+    else if (tg.work && tg.alt && idle >= delay * 2 && S.nudged === 'next') { nudgeShow(tg.alt, 'Stuck? Open the hint, or tap I’m stuck to ask for help.'); S.nudged = 'help'; }
+  }
+
   // ------------------------------------------------------------ help requests, feedback, locked buttons
   var FB_REASONS = [['unclear', '😵', 'The instructions were unclear'], ['broken', '🐞', 'My code didn’t work'], ['hard', '🧗', 'Too hard'], ['easy', '😴', 'Too easy'], ['other', '💬', 'Something else']];
   var FACES = ['😣', '😕', '😐', '🙂', '🤩'], FACE_WORDS = ['Not fun', 'Meh', 'OK', 'Good', 'Awesome'];
@@ -2025,6 +2115,12 @@
         '<label class="switch"><input type="checkbox" name="shop"' + (c.shop !== false ? ' checked' : '') + '> Coin shop in the Character Studio</label>' +
         '<label class="switch"><input type="checkbox" name="showLeaderboard"' + (c.showLeaderboard ? ' checked' : '') + '> Show an XP leaderboard to students (off = alphabetical hall)</label>' +
         '<label>Class XP goal (shared team goal; 0 = hide) <input type="number" name="classGoal" min="0" step="500" value="' + c.classGoal + '"></label>' +
+        '<fieldset class="pace-set"><legend>Pacing and nudges</legend>' +
+        '<label>Shortest time on a step before “I did it!” works <select name="stepSec">' + [0, 10, 20, 30, 45, 60, 90].map(function (n) { return '<option value="' + n + '"' + (n === c.stepSec ? ' selected' : '') + '>' + (n ? n + ' seconds' : 'Off') + '</option>'; }).join('') + '</select></label>' +
+        '<label>Wait after a wrong quick-check answer <select name="quizWait">' + [0, 5, 8, 15, 30].map(function (n) { return '<option value="' + n + '"' + (n === c.quizWait ? ' selected' : '') + '>' + (n ? n + ' seconds' : 'Off') + '</option>'; }).join('') + '</select></label>' +
+        '<label class="switch"><input type="checkbox" name="inOrder"' + (c.inOrder !== false ? ' checked' : '') + '> Cards must be done in order (students can’t jump ahead to cards they haven’t reached)</label>' +
+        '<label>Nudge a student who hasn’t clicked or typed for <select name="nudgeSec">' + [0, 30, 45, 60, 90, 120].map(function (n) { return '<option value="' + n + '"' + (n === c.nudgeSec ? ' selected' : '') + '>' + (n ? n + ' seconds' : 'Off') + '</option>'; }).join('') + '</select></label>' +
+        '<p class="muted small">A nudge makes the next button pulse, with a short tip. On a build step it waits 4 times longer (at least 2 minutes), because students are working in Scratch; after twice that it points to the hint and “I’m stuck”.</p></fieldset>' +
         '<label class="switch"><input type="checkbox" name="archived"' + (c.archived ? ' checked' : '') + '> Archived (hidden, code stops working)</label>' +
         '<button class="btn primary">Save changes</button></form>' +
         '<details class="p-more danger-zone"><summary><svg class="i"><use href="#i-trash"/></svg> Delete this class and all its student data</summary><form data-form="delete-class" data-id="' + c.id + '" class="row"><p class="small">Use this at the end of the year. It removes the class and every student record in it from your Sheet. It cannot be undone. Type the class code <b>' + esc(c.code) + '</b> to confirm.</p><input name="confirm" placeholder="Class code" maxlength="8" class="tiny-input"><button class="btn danger small">Delete forever</button></form></details></div>';
@@ -2086,6 +2182,16 @@
           SQ_SOUND.play('wrong'); t.classList.add('wrong'); t.disabled = true;
           var box = t.closest('.quiz').querySelector('.explain');
           box.hidden = false; box.innerHTML = '<svg class="i"><use href="#i-x"/></svg> Not quite. Reread the steps above and try again!'; box.classList.add('nope');
+          var qw = paced() ? (S.cls.quizWait || 0) : 0, qz = t.closest('.quiz');
+          if (qw) {
+            var until = Date.now() + qw * 1000, cool = document.createElement('span'); cool.className = 'cool'; box.appendChild(cool);
+            qz.classList.add('cooling');
+            var iv = setInterval(function () {
+              var left = Math.ceil((until - Date.now()) / 1000);
+              if (!qz.isConnected || left <= 0) { clearInterval(iv); qz.classList.remove('cooling'); cool.textContent = ''; return; }
+              cool.textContent = ' You can answer again in ' + left + 's.';
+            }, 250);
+          }
           S.me = res.student;
         }
       }).catch(function () { });
@@ -2111,6 +2217,7 @@
       if (did) { SQ_SOUND.play(isStep ? 'step' : 'badge'); SQ_FX.burst(t, isStep ? { colors: ['#22c55e', '#86efac', '#facc15'], n: 12, spread: 60 } : { colors: ['#facc15', '#f97316', '#a855f7', '#fff'], n: 22, spread: 110 }); }
       call(isStep ? 'toggleStep' : 'setChallenge', a2).then(function (res) {
         updateMe(res, t);
+        if (did && isStep) S.lastStepAt = Date.now();
         if (did) { S.card = S.card || {}; S.card[nd] = (S.card[nd] || 0) + 1; }
         render();
       }).catch(function () { t.disabled = false; });
@@ -2454,7 +2561,7 @@
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
     else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice, questsPerTicket: +v.questsPerTicket }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
     else if (kind === 'class-set') {
-      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop };
+      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop, stepSec: +v.stepSec, quizWait: +v.quizWait, nudgeSec: +v.nudgeSec, inOrder: !!v.inOrder };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });
     } else if (kind === 'review') {
       var approve = btn && btn.value === '1';
