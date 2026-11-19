@@ -49,6 +49,14 @@ const { chromium } = require('playwright');
   await pg.click('.dots .dot >> nth=' + (n - 2)); await pg.waitForTimeout(400); await leaks('challenge card');
   await pg.click('.dots .dot >> nth=' + (n - 1)); await pg.waitForTimeout(400); await leaks('turn-in card');
   for (const h of ['#/map', '#/badges', '#/class', '#/arcade', '#/avatar']) { await pg.goto(URL + h); await pg.waitForTimeout(900); await closeFx(); await leaks('student ' + h); }
+  // Regression: leaving the Character Studio must change the page at once, even when the server is slow.
+  // (It used to wait for the server first; a tap on the old page in that gap crashed.)
+  await pg.goto(URL + '#/avatar'); await pg.waitForSelector('.studio');
+  await pg.evaluate(() => { const real = SQ_API.call; SQ_API.call = (a, b) => a === 'bootstrap' ? new Promise(r => setTimeout(r, 2500)).then(() => real(a, b)) : real(a, b); });
+  await pg.click('nav.tabs a[href="#/map"]'); await pg.waitForTimeout(250);
+  if (await pg.$('.studio')) { bad++; console.log('  ✖ the old page stayed on screen while waiting for the server'); }
+  else console.log('  ✔ leaving the studio changes the page at once (slow server)');
+  await pg.waitForTimeout(2800);
   for (const act of ['display', 'bug']) { await pg.click('header [data-act="' + act + '"]'); await pg.waitForTimeout(250); await leaks(act + ' window'); await pg.click('.modal-x'); }
   await pg.goto(URL + '#/quest/t1'); await pg.waitForSelector('.pcard'); await pg.click('.dots .dot >> nth=3'); await pg.waitForTimeout(300);
   for (const act of ['words', 'ask-help', 'confusing']) { const el = await pg.$('.player [data-act="' + act + '"]'); if (el) { await el.click(); await pg.waitForTimeout(250); await leaks(act + ' window'); await pg.click('.modal-x'); } }

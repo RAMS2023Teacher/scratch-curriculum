@@ -1492,6 +1492,7 @@
         (res.run.power.length ? '<div class="arc-powers">' + res.run.power.map(function (id) { return puIcon(id) + '<span>' + esc(AR.POWER[id].name) + '</span>'; }).join('') + '</div>' : '') + '</div>';
       var img = new Image(), gav = Object.assign({}, S.me.state.avatar, { bg: 'solid', bgColor: 'transparent', frame: 'none' }); img.src = avatarURI(gav);
       var cv = document.getElementById('arc-canvas');
+      if (!cv) { S.arcRun = null; return; } // the student left the arcade before the game could start
       cv.scrollIntoView({ block: 'center', behavior: 'smooth' });
       var done = function (score) { arcFinish(res.run.id, score); };
       S.arcGame = G === 'kart' ? SQ_KART.create(cv, { avatar: img, kart: AR.kartStats(S.arc.me.kart.active, S.arc.me.kart.owned[S.arc.me.kart.active]), power: res.run.power, onEnd: done })
@@ -2276,6 +2277,7 @@
       }).catch(function () { t.disabled = false; });
       return;
     }
+    if (act.indexOf('av-') === 0 && !S.avatarDraft && S.me) S.avatarDraft = JSON.parse(JSON.stringify(Object.assign({}, A.DEFAULT, S.me.state.avatar || {})));
     if (act === 'av-tab') { S.avatarTab = t.getAttribute('data-tab'); S.keepScroll = true; render(); return; }
     if (act === 'av-pick' || act === 'av-color') {
       if (t.classList.contains('locked')) { SQ_SOUND.play('locked'); toast('<svg class="i"><use href="#i-lock"/></svg> ' + esc(t.getAttribute('title'))); return; }
@@ -2291,6 +2293,8 @@
         var pill = document.querySelector('.coin-pill') || document.querySelector('.me-card');
         if (pill) SQ_FX.coinFly(pill, t, 6);
         S.me = res.student; saveSeen(prof());
+        // the student may have left the studio while the purchase was being saved
+        if (!S.avatarDraft) S.avatarDraft = JSON.parse(JSON.stringify(Object.assign({}, A.DEFAULT, S.me.state.avatar || {})));
         S.avatarDraft[bc] = bid; S.studioBurst = true;
         var it = A.itemOf(bc, bid), prevAv = Object.assign({}, S.avatarDraft);
         setTimeout(function () {
@@ -2529,7 +2533,7 @@
     if (act === 'arc-reset') {
       var rid = t.getAttribute('data-id');
       ask('Start a new leaderboard round? The top 3 win coin prizes, then the board is cleared (students keep their all-time best and titles).', 'Start new round').then(function (ok) {
-        if (ok) call('setArcade', { classId: rid, resetBoard: true }).then(function (res) { S.tArcBoard[rid] = res.board; toast('New round started.' + ((res.winners || []).length ? ' Prizes: ' + res.winners.map(function (w) { return esc(w.name) + ' +' + w.coins; }).join(', ') : '')); render(); }).catch(function () { });
+        if (ok) call('setArcade', { classId: rid, resetBoard: true }).then(function (res) { S.tArcBoard = S.tArcBoard || {}; S.tArcBoard[rid] = res.board; toast('New round started.' + ((res.winners || []).length ? ' Prizes: ' + res.winners.map(function (w) { return esc(w.name) + ' +' + w.coins; }).join(', ') : '')); render(); }).catch(function () { });
       });
       return;
     }
@@ -2671,12 +2675,19 @@
     if (r[0] === 'quest' && S.card) delete S.card[r[1]];
     if (r[0] === 'map' || r[0] === '') S.scrolled = false;
     // refresh the student's own data occasionally so teacher approvals show up
-    if (S.me && !isTeacher() && (r[0] === 'map' || r[0] === '')) {
-      API.call('bootstrap').then(function (b) { var before = prof(); S.boot = b; if (b.student) { S.me = b.student; S.cls = b.cls; celebrate(before, S.me.profile, null, true); } render(); }).catch(render);
-      return;
-    }
-    if (r[0] === 't' && (r[1] === 'dash' || r[1] === 'review') && S.teacher) { loadTeacher().then(render); return; }
+    // Always draw the new page straight away. (Waiting for the server first left the OLD page on screen
+    // and clickable, which caused errors when a student tapped something on it.)
     render();
+    var here = location.hash, stillHere = function () { return location.hash === here && !document.querySelector('.modal-wrap, .fx-wrap') && !S.arcRun; };
+    if (S.me && !isTeacher() && (r[0] === 'map' || r[0] === '')) {
+      API.call('bootstrap').then(function (b) {
+        var before = prof(); S.boot = b;
+        if (b.student) { S.me = b.student; S.cls = b.cls; celebrate(before, S.me.profile, null, true); }
+        if (stillHere()) render();
+      }).catch(function () { });
+    } else if (r[0] === 't' && (r[1] === 'dash' || r[1] === 'review') && S.teacher) {
+      loadTeacher().then(function () { if (stillHere()) render(); }).catch(function () { });
+    }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
 
