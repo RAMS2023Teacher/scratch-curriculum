@@ -1322,3 +1322,20 @@ html.hc .run-hint { border-color: #000; }
 
 .step-check { margin: 14px 0 2px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg2); font-weight: 800; }
 .step-zone .lock-note { margin: 4px 0 0; }
+
+/* ===================== Calm, steady help indicators ===================== */
+/* The help button glows slowly instead of pulsing fast, and the hand on an avatar is a steady badge. */
+.cs-helpbtn { animation: helpPulse 2.6s ease-in-out infinite; }
+.cs-hand { animation: none; top: -.5em; right: -.35em; width: 1.35em; height: 1.35em; display: grid; place-items: center; font-size: .95em; line-height: 1; background: #fff; border-radius: 50%; box-shadow: 0 0 0 2px #ef4444; }
+.cs-needhelp .hand { animation-duration: 2.2s; }
+
+/* "Reduce motion" on a device: one-off animations finish at once, and NOTHING repeats.
+   (Before this, repeating animations were shortened but kept looping, which made them strobe.) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-iteration-count: 1 !important; }
+  .cs-helpbtn, .hand, .cs-hand, .nudge, .say-btn.on, .tw, .fx-lv-ring, .fx-rays { animation: none !important; }
+  /* a loading spinner still has to turn, slowly, so people can tell the page is working */
+  .spinner { animation: spin 1.4s linear infinite !important; animation-duration: 1.4s !important; animation-iteration-count: infinite !important; }
+}
+html.rm .cs-helpbtn, html.rm .hand, html.rm .cs-hand, html.rm .say-btn.on { animation: none !important; }
+html.rm .spinner { animation-duration: 1.4s !important; animation-iteration-count: infinite !important; }

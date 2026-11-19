@@ -8,6 +8,7 @@ const { chromium } = require('playwright');
   let bad = 0;
   const b = await chromium.launch();
   const pg = await b.newPage({ viewport: { width: 1280, height: 800 } });
+  await pg.emulateMedia({ reducedMotion: 'reduce' }); // the sweep runs as a device set to "reduce motion", where strobing used to happen
   const errs = []; pg.on('pageerror', e => errs.push(e.message));
   const closeFx = async () => { for (let i = 0; i < 8 && await pg.$('.fx-wrap'); i++) { await pg.click('.fx-wrap .fx-ok'); await pg.waitForTimeout(350); } };
   // any visible text or tooltip that looks like leaked markup
@@ -22,6 +23,9 @@ const { chromium } = require('playwright');
       document.querySelectorAll('[title],[placeholder],[aria-label],[alt]').forEach(e => ['title', 'placeholder', 'aria-label', 'alt'].forEach(a => { const v = e.getAttribute(a); if (v && bad.test(v)) out.push(a + ': ' + v.slice(0, 90)); }));
       return out;
     });
+    // nothing may strobe: a repeating animation faster than 5 times a second counts as a failure
+    const strobe = await pg.evaluate(() => document.getAnimations().filter(a => { const t = a.effect && a.effect.getComputedTiming(); return t && t.iterations === Infinity && t.duration < 200 && a.playState === 'running'; }).map(a => (a.effect.target && (a.effect.target.className || a.effect.target.tagName)) + ' ' + a.effect.getComputedTiming().duration + 'ms'));
+    if (strobe.length) { bad++; console.log('  ✖ STROBING on ' + where + ' -> ' + JSON.stringify(strobe.slice(0, 4))); }
     if (found.length) bad++;
     console.log((found.length ? '  ✖ LEAK ' : '  ✔ ') + where + (found.length ? ' -> ' + JSON.stringify(found.slice(0, 4)) : ''));
   };
