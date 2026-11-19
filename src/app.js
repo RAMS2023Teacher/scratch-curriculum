@@ -312,7 +312,7 @@
         var html = tokensSVG(v.members), key = JSON.stringify(v.members.map(function (m) { return [m.id, m.current, m.level, m.avatar]; }));
         if (layer.getAttribute('data-key') !== key) { layer.innerHTML = html; layer.setAttribute('data-key', key); }
       } else if (mapBox) {
-        mapBox.innerHTML = mapSVG(r[0] === 't' ? null : S.me.state, v.members, S.cls ? S.cls.openThrough : v.cls.openThrough);
+        mapBox.innerHTML = mapSVG(r[0] === 't' ? null : S.me.state, v.members, S.cls || v.cls);
         mapBox.querySelector('#tokens').setAttribute('data-key', JSON.stringify(v.members.map(function (m) { return [m.id, m.current, m.level, m.avatar]; })));
       }
       var cb = document.getElementById('class-box');
@@ -359,7 +359,7 @@
       '<div><span class="lg done"></span>Finished</div><div><span class="lg avail"></span>Ready to start</div><div><span class="lg sub"></span>Turned in (waiting)</div><div><span class="lg locked"></span>Locked</div>' +
       '<p class="muted small">Little faces show where your classmates are right now.</p></div>';
     html += '<div id="goal-box"></div>';
-    html += '</aside><section class="map-main"><div id="map-box" class="map-box">' + mapSVG(st, (S.view && S.view.members) || [], S.cls.openThrough) + '</div></section></div>';
+    html += '</aside><section class="map-main"><div id="map-box" class="map-box">' + mapSVG(st, (S.view && S.view.members) || [], S.cls) + '</div></section></div>';
     return html;
   }
 
@@ -367,12 +367,12 @@
   function suggestNext(st) {
     var started = null, t = -1;
     R.NODES.forEach(function (n) {
-      var s = R.nodeStatus(st, n.id, S.cls.openThrough);
+      var s = R.nodeStatus(st, n.id, S.cls);
       var ns = st.nodes[n.id];
       if ((s === 'started' || s === 'returned') && ns && (ns.touched || 0) > t) { t = ns.touched || 0; started = n.id; }
     });
     if (started) return { id: started, label: 'Continue your quest', started: true };
-    var avail = R.NODES.filter(function (n) { return R.nodeStatus(st, n.id, S.cls.openThrough) === 'available'; }).map(function (n) { return n.id; });
+    var avail = R.NODES.filter(function (n) { return R.nodeStatus(st, n.id, S.cls) === 'available'; }).map(function (n) { return n.id; });
     if (!avail.length) return null;
     var cur = R.currentNode(st);
     var pick = avail.indexOf(cur) >= 0 ? cur : avail[0];
@@ -382,7 +382,8 @@
     return { id: pick, label: fork ? 'Next quest (or pick a path below)' : 'Your next quest', choices: fork ? sameTier : null };
   }
 
-  function mapSVG(state, members, openThrough) {
+  function mapSVG(state, members, gate) {
+    var openThrough = gate && typeof gate === 'object' ? gate.openThrough : gate;
     var W = R.MAP.width, H = R.MAP.height;
     var o = ['<svg class="map" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Quest map">'];
     // illustrated scenery (drawn once and cached)
@@ -413,7 +414,7 @@
     // nodes
     R.NODES.forEach(function (n) {
       var B = R.BRANCHES[n.branch];
-      var s = state ? R.nodeStatus(state, n.id, openThrough) : (n.tier > openThrough ? 'gated' : 'available');
+      var s = state ? R.nodeStatus(state, n.id, gate) : (n.tier > openThrough ? 'gated' : 'available');
       var cls = 'node s-' + s + (n.id === meId ? ' current' : '');
       var clickable = state ? (s !== 'locked') : true;
       var href = state ? '#/quest/' + n.id : '#/t/lesson/' + n.id;
@@ -494,7 +495,7 @@
   function viewQuest(id, teacherPreview) {
     var Ls = L[id], n = R.NODE[id], B = br(id);
     var st = teacherPreview ? R.newState() : S.me.state;
-    var status = teacherPreview ? 'available' : R.nodeStatus(st, id, S.cls.openThrough);
+    var status = teacherPreview ? 'available' : R.nodeStatus(st, id, S.cls);
     var ns = st.nodes[id] || { steps: [], quiz: {}, challenge: false };
     var lockedUI = teacherPreview || status === 'locked' || status === 'gated';
     var frozen = status === 'done' || status === 'submitted';
@@ -632,7 +633,7 @@
   function paced() { return !isTeacher(); }
   function firstOpenCard(id) {
     var st = S.me.state, ns = st.nodes[id], cards = questCards(id), Ls = L[id];
-    var status = R.nodeStatus(st, id, S.cls.openThrough);
+    var status = R.nodeStatus(st, id, S.cls);
     if (status === 'done' || status === 'submitted' || status === 'returned') return cards.length - 1;
     if (!ns || !ns.touched) return 0;
     for (var k = 1; k < cards.length; k++) {
@@ -711,7 +712,7 @@
 
   function viewPlayer(id) {
     var Ls = L[id], n = R.NODE[id], B = br(id), st = S.me.state;
-    var status = R.nodeStatus(st, id, S.cls.openThrough);
+    var status = R.nodeStatus(st, id, S.cls);
     var ns = st.nodes[id] || { steps: [], quiz: {}, challenge: false };
     var readOnly = status === 'locked' || status === 'gated';
     var frozen = status === 'done' || status === 'submitted';
@@ -810,7 +811,7 @@
           rateBox(id) + '<div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
       } else if (status === 'submitted') {
         h += rateBox(id);
-        h += '<div class="p-celebrate"><svg class="i"><use href="#i-send"/></svg></div><h2 class="p-h center say">Turned in!</h2><p class="p-big center say">Your teacher will check it soon. You can start another quest.</p><div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
+        h += '<div class="p-celebrate"><svg class="i"><use href="#i-send"/></svg></div><h2 class="p-h center say">Turned in!</h2><p class="p-big center say">Your teacher will check it soon.' + (S.cls.moveOn !== false ? ' You can start your next quest while you wait.' : ' Your next quest opens when it is approved.') + '</p><div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
       } else if (readOnly) {
         h += '<h2 class="p-h">Turn it in</h2><p class="p-big">You can turn this in once the quest is open.</p><div class="p-nav">' + backBtn + '<span></span></div>';
       } else if (stepsLeft || quizLeft) {
@@ -1659,7 +1660,7 @@
     ss.sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (s) {
       h += '<tr><td><a class="stu" href="#/t/student/' + encodeURIComponent(s.email) + '">' + A.svg(s.state.avatar, 28) + esc(s.name) + '</a></td><td>' + s.profile.level + '</td><td>' + fmtN(s.profile.xp) + '</td>';
       R.NODES.forEach(function (n) {
-        var st = R.nodeStatus(s.state, n.id, c.openThrough);
+        var st = R.nodeStatus(s.state, n.id, c);
         var ns = s.state.nodes[n.id];
         var extra = ns && ns.challenge ? '<svg class="i"><use href="#i-zap"/></svg>' : '';
         h += '<td><span class="cell s-' + st + '" title="' + esc(title(n.id) + ': ' + statusWord(st)) + '">' + extra + '</span></td>';
@@ -1816,6 +1817,7 @@
         '<div class="cs-xp" id="cs-xp"></div>' +
         '<div class="cs-ctrl"><button class="cs-btn cs-helpbtn" id="cs-helpbtn" data-act="cs-help-jump" hidden></button>' +
         '<button class="cs-btn" id="cs-arcbtn" data-act="cs-arcade" title="Open or lock the arcade for this class"></button>' +
+        '<button class="cs-btn" id="cs-revbtn" data-act="cs-review" title="Approve turned-in quests without leaving this screen" hidden></button>' +
         '<button class="cs-btn" data-act="cs-bell" title="Test the help doorbell (also turns on sound on this computer)" aria-label="Test the doorbell">🔔</button>' +
         '<button class="cs-btn" data-act="cs-setup" title="Set up the screen"><svg class="i"><use href="#i-sliders"/></svg> <span>Set up</span></button><button class="cs-btn" data-act="cs-full" title="Full screen"><svg class="i"><use href="#i-maximize"/></svg> <span>Full screen</span></button><a class="cs-btn" href="#/t/dash" title="Exit"><svg class="i"><use href="#i-x"/></svg> <span>Exit</span></a></div></header>' +
         '<div class="cs-grid"><section class="cs-main">' +
@@ -1837,6 +1839,8 @@
     if (hb) { hb.hidden = !hl.length; csSet('cs-helpbtn', '✋ <span>' + hl.length + ' need' + (hl.length === 1 ? 's' : '') + ' help</span>'); }
     var nh = document.getElementById('cs-needhelp');
     if (nh) { nh.hidden = !hl.length; csSet('cs-needlist', hl.length ? helpListHTML(hl, d.cls.id, S.csHelp.serverNow) : ''); }
+    var rb = document.getElementById('cs-revbtn');
+    if (rb) { rb.hidden = !d.toReview; csSet('cs-revbtn', '<svg class="i"><use href="#i-inbox"/></svg> <span>' + (d.toReview || 0) + ' to review</span>'); }
     var tcl = tc(), arcOn = tcl && tcl.arcade && tcl.arcade.mode !== 'off';
     csSet('cs-arcbtn', '<svg class="i"><use href="#i-gamepad"/></svg> <span>' + (arcOn ? 'Arcade open · Lock' : 'Open arcade') + '</span>');
     var ab = document.getElementById('cs-arcbtn'); if (ab) ab.classList.toggle('on', !!arcOn);
@@ -1983,6 +1987,19 @@
       S.csHelp = res; csHelpPaint();
     }).catch(function () { });
   }
+  // Quick approve from the projector. It shows only names, quest titles and project links, and only
+  // offers Approve. Reflections, feedback and "send back" stay on the private Review tab.
+  function csReviewPanel() {
+    var list = pendingList();
+    modal('<h2><svg class="i"><use href="#i-inbox"/></svg> Turned in, waiting for you</h2>' +
+      (list.length ? '<ul class="help-list rev-list">' + list.map(function (x) {
+        return '<li>' + avatarImgTag(x.s.state.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.s.name) + '</b><div class="small">' + esc(title(x.id)) + (x.ns.link ? ' · <a href="' + esc(x.ns.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div></div>' +
+          '<button class="btn small primary" data-act="cs-approve" data-email="' + esc(x.s.email) + '" data-node="' + x.id + '"><svg class="i"><use href="#i-check"/></svg> Approve</button></li>';
+      }).join('') + '</ul><div class="row between"><span class="muted small">Only names and project links show here. To send work back with feedback, use the Review tab on your own device.</span>' +
+        (list.length > 1 ? '<button class="btn small" data-act="cs-approve-all">Approve all ' + list.length + '</button>' : '') + '</div>'
+        : '<p class="muted">Nothing is waiting. Nice!</p>') +
+      '<div class="row"><button class="btn" data-act="close-modal">Close</button></div>', 'wide');
+  }
   function csHelpPaint() { if (S.cs) csPaint(false); }
   function csStart() {
     csStop();
@@ -2110,6 +2127,7 @@
         '<label>Pacing gate — students can work up to quest tier <b class="gate-val">' + c.openThrough + '</b> <span class="muted gate-name">(' + esc(tierName(c.openThrough)) + ')</span>' +
         '<input type="range" name="openThrough" min="1" max="' + R.MAX_TIER + '" value="' + c.openThrough + '" data-act="gate"></label>' +
         '<label class="switch"><input type="checkbox" name="requireApproval"' + (c.requireApproval ? ' checked' : '') + '> Teacher approves each quest before it counts (recommended)</label>' +
+        '<label class="switch"><input type="checkbox" name="moveOn"' + (c.moveOn !== false ? ' checked' : '') + '> Students can start the next quest while their work waits for your review (XP and badges still wait for approval)</label>' +
         '<label class="switch"><input type="checkbox" name="requireLink"' + (c.requireLink ? ' checked' : '') + '> Require a Scratch project link to turn in</label>' +
         '<label class="switch"><input type="checkbox" name="sounds"' + (c.sounds !== false ? ' checked' : '') + '> Sound effects for students (they can still mute themselves)</label>' +
         '<label class="switch"><input type="checkbox" name="shop"' + (c.shop !== false ? ' checked' : '') + '> Coin shop in the Character Studio</label>' +
@@ -2150,7 +2168,7 @@
       '<button class="btn danger small" data-act="remove-stu" data-email="' + esc(email) + '">Remove student</button></div></div>';
     h += '<div class="card"><h2><svg class="i"><use href="#i-map"/></svg> Quests</h2><table class="qtable"><thead><tr><th>Quest</th><th>Status</th><th>Steps</th><th>Quick check</th><th><svg class="i"><use href="#i-zap"/></svg></th><th>Project / reflection</th><th></th></tr></thead><tbody>';
     R.NODES.forEach(function (n) {
-      var ns = s.state.nodes[n.id], st = R.nodeStatus(s.state, n.id, c.openThrough), Ls = L[n.id];
+      var ns = s.state.nodes[n.id], st = R.nodeStatus(s.state, n.id, c), Ls = L[n.id];
       if (!ns && (st === 'locked' || st === 'gated')) return;
       ns = ns || { steps: [], quiz: {} };
       var sd = Ls.steps.filter(function (_, i) { return ns.steps[i]; }).length;
@@ -2285,6 +2303,24 @@
       return;
     }
     if (act === 'cs-setup') { if (S.cs) csSetup(); return; }
+    if (act === 'cs-review') { loadTeacher().then(csReviewPanel).catch(function () { }); return; }
+    if (act === 'cs-approve') {
+      t.disabled = true;
+      call('review', { email: t.getAttribute('data-email'), node: t.getAttribute('data-node'), approve: true, feedback: '' }).then(function () {
+        SQ_SOUND.play('correct'); return loadTeacher();
+      }).then(function () { csReviewPanel(); csLoad(false); }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'cs-approve-all') {
+      var list = pendingList();
+      ask('Approve all ' + list.length + ' turned-in quests? Each student gets their XP and can see their celebration.', 'Approve all').then(function (ok) {
+        if (!ok) return;
+        var chain = Promise.resolve();
+        list.forEach(function (x) { chain = chain.then(function () { return call('review', { email: x.s.email, node: x.id, approve: true, feedback: '' }); }); });
+        chain.then(function () { return loadTeacher(); }).then(function () { toast('Approved ' + list.length + '.'); csLoad(false); }).catch(function () { });
+      });
+      return;
+    }
     if (act === 'cs-bell') { SQ_SOUND.play('doorbell'); toast('🔔 That is the sound when a student asks for help.'); return; }
     if (act === 'cs-help-jump') { var nb = document.getElementById('cs-needhelp'); if (nb) { nb.classList.remove('flash-red'); void nb.offsetWidth; nb.classList.add('flash-red'); } return; }
     if (act === 'cs-arcade') {
@@ -2561,7 +2597,7 @@
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
     else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice, questsPerTicket: +v.questsPerTicket }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
     else if (kind === 'class-set') {
-      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop, stepSec: +v.stepSec, quizWait: +v.quizWait, nudgeSec: +v.nudgeSec, inOrder: !!v.inOrder };
+      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop, stepSec: +v.stepSec, quizWait: +v.quizWait, nudgeSec: +v.nudgeSec, inOrder: !!v.inOrder, moveOn: !!v.moveOn };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });
     } else if (kind === 'review') {
       var approve = btn && btn.value === '1';

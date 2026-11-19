@@ -239,6 +239,30 @@ test('pacing: no clicking through steps, no rapid guessing, and steps go in orde
   assert.strictEqual(as(T, 'teacherData').students.find(x => x.email === A2).state.nodes.t1.quiz[0].tries, 2, 'blocked guesses do not count as tries');
   as(T, 'updateClass', { id: classId, patch: { stepSec: 0, quizWait: 0, inOrder: false } });
 });
+test('moving on: a student can start the next quest while their work waits for review', () => {
+  const N = 'noah.k@school.org';
+  const cid = as(T, 'teacherData').students.find(x => x.email === N).classId;
+  as(T, 'updateClass', { id: cid, patch: { stepSec: 0, quizWait: 0, inOrder: false, requireApproval: true, moveOn: false } });
+  const L1 = ctx.SQ_LESSONS.t1;
+  as(N, 'saveAvatar', { avatar: {} });
+  L1.steps.forEach((_, i) => as(N, 'toggleStep', { node: 't1', idx: i, value: true }));
+  L1.quiz.forEach((q, i) => as(N, 'answerQuiz', { node: 't1', q: i, choice: q.answer }));
+  const xpBefore = as(N, 'bootstrap').student.profile.xp;
+  const sub = as(N, 'submitLesson', { node: 't1', link: 'https://scratch.mit.edu/projects/123456789', reflection: 'done' });
+  assert.strictEqual(sub.student.state.nodes.t1.status, 'submitted');
+  assert.strictEqual(sub.student.profile.xp, xpBefore, 'the 100 XP for finishing waits for approval');
+  assert.throws(() => as(N, 'toggleStep', { node: 't2', idx: 0, value: true }), /still locked/, 'with the setting off, the next quest stays locked');
+  as(T, 'updateClass', { id: cid, patch: { moveOn: true } });
+  assert.ok(as(N, 'toggleStep', { node: 't2', idx: 0, value: true }).student.state.nodes.t2.steps[0], 'with the setting on, they can keep going');
+  assert.throws(() => as(N, 'toggleStep', { node: 't4', idx: 0, value: true }), /still locked/, 'but only one quest ahead of their finished work');
+  const scr = as(T, 'classScreen', { classId: cid });
+  assert.strictEqual(scr.toReview, 1, 'the Class Screen gets a count of work to review');
+  assert.ok(!/submitted|returned|reflection|scratch\.mit/.test(JSON.stringify(scr)), 'and nothing else about it');
+  const ok = as(T, 'review', { email: N, node: 't1', approve: true, feedback: '' });
+  assert.strictEqual(ok.student.profile.xp, xpBefore + 100 + 10, 'approval gives the quest XP (plus the step done on quest 2)');
+  assert.strictEqual(as(T, 'classScreen', { classId: cid }).toReview, 0);
+  assert.throws(() => as(N, 'review', { email: N, node: 't2', approve: true }), /Teachers only/);
+});
 test('help requests: students ask, only teachers see the list, no emails in it', () => {
   const M = 'maya.lopez@school.org', L2 = 'liam.chen@school.org';
   assert.strictEqual(as(M, 'myHelp').help.open, false);

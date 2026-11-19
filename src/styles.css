@@ -1303,3 +1303,10 @@ html.rm .nudge { animation: none; }
 .pace-set { border: 2px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 10px 0; display: grid; gap: 8px; }
 .pace-set legend { font-weight: 900; padding: 0 6px; }
 @media (prefers-reduced-motion: reduce) { .nudge { animation: none; } }
+
+.rev-list li { background: var(--bg2); border-color: var(--line); color: var(--ink); }
+#cs-revbtn { background: #ffd60a; color: #2a1650; }
+
+/* pop-up windows must sit above the full-screen Class Screen */
+.modal-wrap { z-index: 2200; }
+.modal-wrap .modal { position: relative; z-index: 1; }

@@ -121,18 +121,26 @@ var SQ_RULES = (function () {
     var n = state.nodes[id];
     return !!(n && n.status === 'done');
   }
-  function prereqsMet(state, id) {
+  // moveOn: when the class lets students keep going while work waits for review, a quest that is
+  // turned in (or sent back for changes) also opens the next one. XP and badges still wait for approval.
+  function passed(state, id, moveOn) {
+    var n = state.nodes[id];
+    return !!(n && (n.status === 'done' || (moveOn && (n.status === 'submitted' || n.status === 'returned'))));
+  }
+  function prereqsMet(state, id, moveOn) {
     var n = NODE[id];
     if (!n) return false;
-    var all = (n.requires || []).every(function (r) { return isDone(state, r); });
-    var any = !n.requiresAny || n.requiresAny.some(function (r) { return isDone(state, r); });
+    var all = (n.requires || []).every(function (r) { return passed(state, r, moveOn); });
+    var any = !n.requiresAny || n.requiresAny.some(function (r) { return passed(state, r, moveOn); });
     return all && any;
   }
   // status for display: locked | gated (teacher hasn't opened) | available | started | submitted | returned | done
-  function nodeStatus(state, id, openThrough) {
+  // gate: the class (uses its openThrough and moveOn settings), or just a tier number
+  function nodeStatus(state, id, gate) {
+    var openThrough = gate && typeof gate === 'object' ? gate.openThrough : gate, moveOn = !!(gate && typeof gate === 'object' && gate.moveOn !== false && gate.moveOn !== undefined);
     var ns = state.nodes[id];
     if (ns && (ns.status === 'done' || ns.status === 'submitted' || ns.status === 'returned')) return ns.status;
-    if (!prereqsMet(state, id)) return 'locked';
+    if (!prereqsMet(state, id, moveOn)) return 'locked';
     if (openThrough && NODE[id].tier > openThrough) return 'gated';
     if (ns && (ns.steps.some(Boolean) || Object.keys(ns.quiz).length)) return 'started';
     return 'available';

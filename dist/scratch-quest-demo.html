@@ -1313,6 +1313,13 @@ html.rm .nudge { animation: none; }
 .pace-set legend { font-weight: 900; padding: 0 6px; }
 @media (prefers-reduced-motion: reduce) { .nudge { animation: none; } }
 
+.rev-list li { background: var(--bg2); border-color: var(--line); color: var(--ink); }
+#cs-revbtn { background: #ffd60a; color: #2a1650; }
+
+/* pop-up windows must sit above the full-screen Class Screen */
+.modal-wrap { z-index: 2200; }
+.modal-wrap .modal { position: relative; z-index: 1; }
+
 </style>
 </head>
 <body>
@@ -11129,18 +11136,26 @@ var SQ_RULES = (function () {
     var n = state.nodes[id];
     return !!(n && n.status === 'done');
   }
-  function prereqsMet(state, id) {
+  // moveOn: when the class lets students keep going while work waits for review, a quest that is
+  // turned in (or sent back for changes) also opens the next one. XP and badges still wait for approval.
+  function passed(state, id, moveOn) {
+    var n = state.nodes[id];
+    return !!(n && (n.status === 'done' || (moveOn && (n.status === 'submitted' || n.status === 'returned'))));
+  }
+  function prereqsMet(state, id, moveOn) {
     var n = NODE[id];
     if (!n) return false;
-    var all = (n.requires || []).every(function (r) { return isDone(state, r); });
-    var any = !n.requiresAny || n.requiresAny.some(function (r) { return isDone(state, r); });
+    var all = (n.requires || []).every(function (r) { return passed(state, r, moveOn); });
+    var any = !n.requiresAny || n.requiresAny.some(function (r) { return passed(state, r, moveOn); });
     return all && any;
   }
   // status for display: locked | gated (teacher hasn't opened) | available | started | submitted | returned | done
-  function nodeStatus(state, id, openThrough) {
+  // gate: the class (uses its openThrough and moveOn settings), or just a tier number
+  function nodeStatus(state, id, gate) {
+    var openThrough = gate && typeof gate === 'object' ? gate.openThrough : gate, moveOn = !!(gate && typeof gate === 'object' && gate.moveOn !== false && gate.moveOn !== undefined);
     var ns = state.nodes[id];
     if (ns && (ns.status === 'done' || ns.status === 'submitted' || ns.status === 'returned')) return ns.status;
-    if (!prereqsMet(state, id)) return 'locked';
+    if (!prereqsMet(state, id, moveOn)) return 'locked';
     if (openThrough && NODE[id].tier > openThrough) return 'gated';
     if (ns && (ns.steps.some(Boolean) || Object.keys(ns.quiz).length)) return 'started';
     return 'available';
@@ -11759,7 +11774,9 @@ function SQ_SERVICE(store) {
     var d = { openThrough: R.MAX_TIER, requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false, sounds: true, shop: true,
       // pacing: seconds a student must spend before the next "I did it!", wait after a wrong quick-check answer,
       // whether cards must be done in order, and seconds of no activity before a nudge (0 = off)
-      stepSec: 20, quizWait: 8, inOrder: true, nudgeSec: 45 };
+      stepSec: 20, quizWait: 8, inOrder: true, nudgeSec: 45,
+      // students may start the next quest while their turned-in work waits for review
+      moveOn: true };
     for (var k in d) if (c[k] === undefined) c[k] = d[k];
     return c;
   }
@@ -11768,7 +11785,7 @@ function SQ_SERVICE(store) {
     classDefaults(c);
     return { id: c.id, name: c.name, code: c.code, openThrough: c.openThrough, requireApproval: c.requireApproval,
       requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false, arcade: arcadeInfo(c),
-      stepSec: c.stepSec, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec };
+      stepSec: c.stepSec, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec, moveOn: c.moveOn !== false };
   }
   // What students may know about the arcade: its live mode, closing time and pass rules
   function arcadeInfo(c) {
@@ -11838,7 +11855,7 @@ function SQ_SERVICE(store) {
   function workable(st, id) {
     if (!R.NODE[id]) err('Unknown quest.');
     var c = classDefaults(findClass(st.classId) || {});
-    var status = R.nodeStatus(st.state, id, c.openThrough);
+    var status = R.nodeStatus(st.state, id, c);
     if (status === 'locked') err('That quest is still locked. Finish the quests before it first!');
     if (status === 'gated') err('Your teacher has not opened that quest yet.');
     return { status: status, cls: c };
@@ -12321,7 +12338,7 @@ function SQ_SERVICE(store) {
       var p = args.patch || {};
       if (p.name !== undefined) c.name = clean(p.name, 40) || c.name;
       if (p.openThrough !== undefined) c.openThrough = Math.max(1, Math.min(R.MAX_TIER, Number(p.openThrough) || 1));
-      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
+      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder', 'moveOn'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
       [['stepSec', 120], ['quizWait', 60], ['nudgeSec', 600]].forEach(function (x) { if (p[x[0]] !== undefined) c[x[0]] = Math.max(0, Math.min(x[1], Math.round(Number(p[x[0]]) || 0))); });
       if (p.classGoal !== undefined) c.classGoal = Math.max(0, Number(p.classGoal) || 0);
       if (p.newCode) c.code = makeCode();
@@ -12446,7 +12463,9 @@ function SQ_SERVICE(store) {
       members.forEach(function (m) { delete m.xp; });
       var classXP = studs.reduce(function (a, s) { return a + R.profile(s.state).xp; }, 0);
       return { cls: { id: c.id, name: c.name, code: c.code, classGoal: c.classGoal, screen: c.screen || {}, teams: c.teams || [] },
-        members: members, wins: wins.slice(0, 10), helpers: helpers, classXP: classXP, race: race, serverNow: now() };
+        members: members, wins: wins.slice(0, 10), helpers: helpers, classXP: classXP, race: race, serverNow: now(),
+        // just a count (no names or details) so the teacher's screen can show a "to review" button
+        toReview: studs.reduce(function (a, s) { return a + Object.keys(s.state.nodes || {}).filter(function (id) { return s.state.nodes[id].status === 'submitted'; }).length; }, 0) };
     },
     saveScreen: function (user, args) {
       requireTeacher(user);
@@ -13370,7 +13389,7 @@ var SQ_SOUND = (function () {
 })();
 
 
-var SQ_BUILD = "2026-11-19T16:01";
+var SQ_BUILD = "2026-11-19T16:43";
 var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
 
 /* Scratch Quest — page translation for students (Brazilian Portuguese).
@@ -14471,7 +14490,7 @@ var SQ_MAPART = (function () {
         var html = tokensSVG(v.members), key = JSON.stringify(v.members.map(function (m) { return [m.id, m.current, m.level, m.avatar]; }));
         if (layer.getAttribute('data-key') !== key) { layer.innerHTML = html; layer.setAttribute('data-key', key); }
       } else if (mapBox) {
-        mapBox.innerHTML = mapSVG(r[0] === 't' ? null : S.me.state, v.members, S.cls ? S.cls.openThrough : v.cls.openThrough);
+        mapBox.innerHTML = mapSVG(r[0] === 't' ? null : S.me.state, v.members, S.cls || v.cls);
         mapBox.querySelector('#tokens').setAttribute('data-key', JSON.stringify(v.members.map(function (m) { return [m.id, m.current, m.level, m.avatar]; })));
       }
       var cb = document.getElementById('class-box');
@@ -14518,7 +14537,7 @@ var SQ_MAPART = (function () {
       '<div><span class="lg done"></span>Finished</div><div><span class="lg avail"></span>Ready to start</div><div><span class="lg sub"></span>Turned in (waiting)</div><div><span class="lg locked"></span>Locked</div>' +
       '<p class="muted small">Little faces show where your classmates are right now.</p></div>';
     html += '<div id="goal-box"></div>';
-    html += '</aside><section class="map-main"><div id="map-box" class="map-box">' + mapSVG(st, (S.view && S.view.members) || [], S.cls.openThrough) + '</div></section></div>';
+    html += '</aside><section class="map-main"><div id="map-box" class="map-box">' + mapSVG(st, (S.view && S.view.members) || [], S.cls) + '</div></section></div>';
     return html;
   }
 
@@ -14526,12 +14545,12 @@ var SQ_MAPART = (function () {
   function suggestNext(st) {
     var started = null, t = -1;
     R.NODES.forEach(function (n) {
-      var s = R.nodeStatus(st, n.id, S.cls.openThrough);
+      var s = R.nodeStatus(st, n.id, S.cls);
       var ns = st.nodes[n.id];
       if ((s === 'started' || s === 'returned') && ns && (ns.touched || 0) > t) { t = ns.touched || 0; started = n.id; }
     });
     if (started) return { id: started, label: 'Continue your quest', started: true };
-    var avail = R.NODES.filter(function (n) { return R.nodeStatus(st, n.id, S.cls.openThrough) === 'available'; }).map(function (n) { return n.id; });
+    var avail = R.NODES.filter(function (n) { return R.nodeStatus(st, n.id, S.cls) === 'available'; }).map(function (n) { return n.id; });
     if (!avail.length) return null;
     var cur = R.currentNode(st);
     var pick = avail.indexOf(cur) >= 0 ? cur : avail[0];
@@ -14541,7 +14560,8 @@ var SQ_MAPART = (function () {
     return { id: pick, label: fork ? 'Next quest (or pick a path below)' : 'Your next quest', choices: fork ? sameTier : null };
   }
 
-  function mapSVG(state, members, openThrough) {
+  function mapSVG(state, members, gate) {
+    var openThrough = gate && typeof gate === 'object' ? gate.openThrough : gate;
     var W = R.MAP.width, H = R.MAP.height;
     var o = ['<svg class="map" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Quest map">'];
     // illustrated scenery (drawn once and cached)
@@ -14572,7 +14592,7 @@ var SQ_MAPART = (function () {
     // nodes
     R.NODES.forEach(function (n) {
       var B = R.BRANCHES[n.branch];
-      var s = state ? R.nodeStatus(state, n.id, openThrough) : (n.tier > openThrough ? 'gated' : 'available');
+      var s = state ? R.nodeStatus(state, n.id, gate) : (n.tier > openThrough ? 'gated' : 'available');
       var cls = 'node s-' + s + (n.id === meId ? ' current' : '');
       var clickable = state ? (s !== 'locked') : true;
       var href = state ? '#/quest/' + n.id : '#/t/lesson/' + n.id;
@@ -14653,7 +14673,7 @@ var SQ_MAPART = (function () {
   function viewQuest(id, teacherPreview) {
     var Ls = L[id], n = R.NODE[id], B = br(id);
     var st = teacherPreview ? R.newState() : S.me.state;
-    var status = teacherPreview ? 'available' : R.nodeStatus(st, id, S.cls.openThrough);
+    var status = teacherPreview ? 'available' : R.nodeStatus(st, id, S.cls);
     var ns = st.nodes[id] || { steps: [], quiz: {}, challenge: false };
     var lockedUI = teacherPreview || status === 'locked' || status === 'gated';
     var frozen = status === 'done' || status === 'submitted';
@@ -14791,7 +14811,7 @@ var SQ_MAPART = (function () {
   function paced() { return !isTeacher(); }
   function firstOpenCard(id) {
     var st = S.me.state, ns = st.nodes[id], cards = questCards(id), Ls = L[id];
-    var status = R.nodeStatus(st, id, S.cls.openThrough);
+    var status = R.nodeStatus(st, id, S.cls);
     if (status === 'done' || status === 'submitted' || status === 'returned') return cards.length - 1;
     if (!ns || !ns.touched) return 0;
     for (var k = 1; k < cards.length; k++) {
@@ -14870,7 +14890,7 @@ var SQ_MAPART = (function () {
 
   function viewPlayer(id) {
     var Ls = L[id], n = R.NODE[id], B = br(id), st = S.me.state;
-    var status = R.nodeStatus(st, id, S.cls.openThrough);
+    var status = R.nodeStatus(st, id, S.cls);
     var ns = st.nodes[id] || { steps: [], quiz: {}, challenge: false };
     var readOnly = status === 'locked' || status === 'gated';
     var frozen = status === 'done' || status === 'submitted';
@@ -14969,7 +14989,7 @@ var SQ_MAPART = (function () {
           rateBox(id) + '<div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
       } else if (status === 'submitted') {
         h += rateBox(id);
-        h += '<div class="p-celebrate"><svg class="i"><use href="#i-send"/></svg></div><h2 class="p-h center say">Turned in!</h2><p class="p-big center say">Your teacher will check it soon. You can start another quest.</p><div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
+        h += '<div class="p-celebrate"><svg class="i"><use href="#i-send"/></svg></div><h2 class="p-h center say">Turned in!</h2><p class="p-big center say">Your teacher will check it soon.' + (S.cls.moveOn !== false ? ' You can start your next quest while you wait.' : ' Your next quest opens when it is approved.') + '</p><div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
       } else if (readOnly) {
         h += '<h2 class="p-h">Turn it in</h2><p class="p-big">You can turn this in once the quest is open.</p><div class="p-nav">' + backBtn + '<span></span></div>';
       } else if (stepsLeft || quizLeft) {
@@ -15818,7 +15838,7 @@ var SQ_MAPART = (function () {
     ss.sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (s) {
       h += '<tr><td><a class="stu" href="#/t/student/' + encodeURIComponent(s.email) + '">' + A.svg(s.state.avatar, 28) + esc(s.name) + '</a></td><td>' + s.profile.level + '</td><td>' + fmtN(s.profile.xp) + '</td>';
       R.NODES.forEach(function (n) {
-        var st = R.nodeStatus(s.state, n.id, c.openThrough);
+        var st = R.nodeStatus(s.state, n.id, c);
         var ns = s.state.nodes[n.id];
         var extra = ns && ns.challenge ? '<svg class="i"><use href="#i-zap"/></svg>' : '';
         h += '<td><span class="cell s-' + st + '" title="' + esc(title(n.id) + ': ' + statusWord(st)) + '">' + extra + '</span></td>';
@@ -15975,6 +15995,7 @@ var SQ_MAPART = (function () {
         '<div class="cs-xp" id="cs-xp"></div>' +
         '<div class="cs-ctrl"><button class="cs-btn cs-helpbtn" id="cs-helpbtn" data-act="cs-help-jump" hidden></button>' +
         '<button class="cs-btn" id="cs-arcbtn" data-act="cs-arcade" title="Open or lock the arcade for this class"></button>' +
+        '<button class="cs-btn" id="cs-revbtn" data-act="cs-review" title="Approve turned-in quests without leaving this screen" hidden></button>' +
         '<button class="cs-btn" data-act="cs-bell" title="Test the help doorbell (also turns on sound on this computer)" aria-label="Test the doorbell">🔔</button>' +
         '<button class="cs-btn" data-act="cs-setup" title="Set up the screen"><svg class="i"><use href="#i-sliders"/></svg> <span>Set up</span></button><button class="cs-btn" data-act="cs-full" title="Full screen"><svg class="i"><use href="#i-maximize"/></svg> <span>Full screen</span></button><a class="cs-btn" href="#/t/dash" title="Exit"><svg class="i"><use href="#i-x"/></svg> <span>Exit</span></a></div></header>' +
         '<div class="cs-grid"><section class="cs-main">' +
@@ -15996,6 +16017,8 @@ var SQ_MAPART = (function () {
     if (hb) { hb.hidden = !hl.length; csSet('cs-helpbtn', '✋ <span>' + hl.length + ' need' + (hl.length === 1 ? 's' : '') + ' help</span>'); }
     var nh = document.getElementById('cs-needhelp');
     if (nh) { nh.hidden = !hl.length; csSet('cs-needlist', hl.length ? helpListHTML(hl, d.cls.id, S.csHelp.serverNow) : ''); }
+    var rb = document.getElementById('cs-revbtn');
+    if (rb) { rb.hidden = !d.toReview; csSet('cs-revbtn', '<svg class="i"><use href="#i-inbox"/></svg> <span>' + (d.toReview || 0) + ' to review</span>'); }
     var tcl = tc(), arcOn = tcl && tcl.arcade && tcl.arcade.mode !== 'off';
     csSet('cs-arcbtn', '<svg class="i"><use href="#i-gamepad"/></svg> <span>' + (arcOn ? 'Arcade open · Lock' : 'Open arcade') + '</span>');
     var ab = document.getElementById('cs-arcbtn'); if (ab) ab.classList.toggle('on', !!arcOn);
@@ -16142,6 +16165,19 @@ var SQ_MAPART = (function () {
       S.csHelp = res; csHelpPaint();
     }).catch(function () { });
   }
+  // Quick approve from the projector. It shows only names, quest titles and project links, and only
+  // offers Approve. Reflections, feedback and "send back" stay on the private Review tab.
+  function csReviewPanel() {
+    var list = pendingList();
+    modal('<h2><svg class="i"><use href="#i-inbox"/></svg> Turned in, waiting for you</h2>' +
+      (list.length ? '<ul class="help-list rev-list">' + list.map(function (x) {
+        return '<li>' + avatarImgTag(x.s.state.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.s.name) + '</b><div class="small">' + esc(title(x.id)) + (x.ns.link ? ' · <a href="' + esc(x.ns.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div></div>' +
+          '<button class="btn small primary" data-act="cs-approve" data-email="' + esc(x.s.email) + '" data-node="' + x.id + '"><svg class="i"><use href="#i-check"/></svg> Approve</button></li>';
+      }).join('') + '</ul><div class="row between"><span class="muted small">Only names and project links show here. To send work back with feedback, use the Review tab on your own device.</span>' +
+        (list.length > 1 ? '<button class="btn small" data-act="cs-approve-all">Approve all ' + list.length + '</button>' : '') + '</div>'
+        : '<p class="muted">Nothing is waiting. Nice!</p>') +
+      '<div class="row"><button class="btn" data-act="close-modal">Close</button></div>', 'wide');
+  }
   function csHelpPaint() { if (S.cs) csPaint(false); }
   function csStart() {
     csStop();
@@ -16269,6 +16305,7 @@ var SQ_MAPART = (function () {
         '<label>Pacing gate — students can work up to quest tier <b class="gate-val">' + c.openThrough + '</b> <span class="muted gate-name">(' + esc(tierName(c.openThrough)) + ')</span>' +
         '<input type="range" name="openThrough" min="1" max="' + R.MAX_TIER + '" value="' + c.openThrough + '" data-act="gate"></label>' +
         '<label class="switch"><input type="checkbox" name="requireApproval"' + (c.requireApproval ? ' checked' : '') + '> Teacher approves each quest before it counts (recommended)</label>' +
+        '<label class="switch"><input type="checkbox" name="moveOn"' + (c.moveOn !== false ? ' checked' : '') + '> Students can start the next quest while their work waits for your review (XP and badges still wait for approval)</label>' +
         '<label class="switch"><input type="checkbox" name="requireLink"' + (c.requireLink ? ' checked' : '') + '> Require a Scratch project link to turn in</label>' +
         '<label class="switch"><input type="checkbox" name="sounds"' + (c.sounds !== false ? ' checked' : '') + '> Sound effects for students (they can still mute themselves)</label>' +
         '<label class="switch"><input type="checkbox" name="shop"' + (c.shop !== false ? ' checked' : '') + '> Coin shop in the Character Studio</label>' +
@@ -16309,7 +16346,7 @@ var SQ_MAPART = (function () {
       '<button class="btn danger small" data-act="remove-stu" data-email="' + esc(email) + '">Remove student</button></div></div>';
     h += '<div class="card"><h2><svg class="i"><use href="#i-map"/></svg> Quests</h2><table class="qtable"><thead><tr><th>Quest</th><th>Status</th><th>Steps</th><th>Quick check</th><th><svg class="i"><use href="#i-zap"/></svg></th><th>Project / reflection</th><th></th></tr></thead><tbody>';
     R.NODES.forEach(function (n) {
-      var ns = s.state.nodes[n.id], st = R.nodeStatus(s.state, n.id, c.openThrough), Ls = L[n.id];
+      var ns = s.state.nodes[n.id], st = R.nodeStatus(s.state, n.id, c), Ls = L[n.id];
       if (!ns && (st === 'locked' || st === 'gated')) return;
       ns = ns || { steps: [], quiz: {} };
       var sd = Ls.steps.filter(function (_, i) { return ns.steps[i]; }).length;
@@ -16444,6 +16481,24 @@ var SQ_MAPART = (function () {
       return;
     }
     if (act === 'cs-setup') { if (S.cs) csSetup(); return; }
+    if (act === 'cs-review') { loadTeacher().then(csReviewPanel).catch(function () { }); return; }
+    if (act === 'cs-approve') {
+      t.disabled = true;
+      call('review', { email: t.getAttribute('data-email'), node: t.getAttribute('data-node'), approve: true, feedback: '' }).then(function () {
+        SQ_SOUND.play('correct'); return loadTeacher();
+      }).then(function () { csReviewPanel(); csLoad(false); }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'cs-approve-all') {
+      var list = pendingList();
+      ask('Approve all ' + list.length + ' turned-in quests? Each student gets their XP and can see their celebration.', 'Approve all').then(function (ok) {
+        if (!ok) return;
+        var chain = Promise.resolve();
+        list.forEach(function (x) { chain = chain.then(function () { return call('review', { email: x.s.email, node: x.id, approve: true, feedback: '' }); }); });
+        chain.then(function () { return loadTeacher(); }).then(function () { toast('Approved ' + list.length + '.'); csLoad(false); }).catch(function () { });
+      });
+      return;
+    }
     if (act === 'cs-bell') { SQ_SOUND.play('doorbell'); toast('🔔 That is the sound when a student asks for help.'); return; }
     if (act === 'cs-help-jump') { var nb = document.getElementById('cs-needhelp'); if (nb) { nb.classList.remove('flash-red'); void nb.offsetWidth; nb.classList.add('flash-red'); } return; }
     if (act === 'cs-arcade') {
@@ -16720,7 +16775,7 @@ var SQ_MAPART = (function () {
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
     else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice, questsPerTicket: +v.questsPerTicket }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
     else if (kind === 'class-set') {
-      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop, stepSec: +v.stepSec, quizWait: +v.quizWait, nudgeSec: +v.nudgeSec, inOrder: !!v.inOrder };
+      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop, stepSec: +v.stepSec, quizWait: +v.quizWait, nudgeSec: +v.nudgeSec, inOrder: !!v.inOrder, moveOn: !!v.moveOn };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });
     } else if (kind === 'review') {
       var approve = btn && btn.value === '1';

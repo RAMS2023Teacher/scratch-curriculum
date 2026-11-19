@@ -21,7 +21,9 @@ function SQ_SERVICE(store) {
     var d = { openThrough: R.MAX_TIER, requireApproval: true, requireLink: false, showLeaderboard: false, classGoal: 25000, archived: false, sounds: true, shop: true,
       // pacing: seconds a student must spend before the next "I did it!", wait after a wrong quick-check answer,
       // whether cards must be done in order, and seconds of no activity before a nudge (0 = off)
-      stepSec: 20, quizWait: 8, inOrder: true, nudgeSec: 45 };
+      stepSec: 20, quizWait: 8, inOrder: true, nudgeSec: 45,
+      // students may start the next quest while their turned-in work waits for review
+      moveOn: true };
     for (var k in d) if (c[k] === undefined) c[k] = d[k];
     return c;
   }
@@ -30,7 +32,7 @@ function SQ_SERVICE(store) {
     classDefaults(c);
     return { id: c.id, name: c.name, code: c.code, openThrough: c.openThrough, requireApproval: c.requireApproval,
       requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false, arcade: arcadeInfo(c),
-      stepSec: c.stepSec, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec };
+      stepSec: c.stepSec, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec, moveOn: c.moveOn !== false };
   }
   // What students may know about the arcade: its live mode, closing time and pass rules
   function arcadeInfo(c) {
@@ -100,7 +102,7 @@ function SQ_SERVICE(store) {
   function workable(st, id) {
     if (!R.NODE[id]) err('Unknown quest.');
     var c = classDefaults(findClass(st.classId) || {});
-    var status = R.nodeStatus(st.state, id, c.openThrough);
+    var status = R.nodeStatus(st.state, id, c);
     if (status === 'locked') err('That quest is still locked. Finish the quests before it first!');
     if (status === 'gated') err('Your teacher has not opened that quest yet.');
     return { status: status, cls: c };
@@ -583,7 +585,7 @@ function SQ_SERVICE(store) {
       var p = args.patch || {};
       if (p.name !== undefined) c.name = clean(p.name, 40) || c.name;
       if (p.openThrough !== undefined) c.openThrough = Math.max(1, Math.min(R.MAX_TIER, Number(p.openThrough) || 1));
-      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
+      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder', 'moveOn'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
       [['stepSec', 120], ['quizWait', 60], ['nudgeSec', 600]].forEach(function (x) { if (p[x[0]] !== undefined) c[x[0]] = Math.max(0, Math.min(x[1], Math.round(Number(p[x[0]]) || 0))); });
       if (p.classGoal !== undefined) c.classGoal = Math.max(0, Number(p.classGoal) || 0);
       if (p.newCode) c.code = makeCode();
@@ -708,7 +710,9 @@ function SQ_SERVICE(store) {
       members.forEach(function (m) { delete m.xp; });
       var classXP = studs.reduce(function (a, s) { return a + R.profile(s.state).xp; }, 0);
       return { cls: { id: c.id, name: c.name, code: c.code, classGoal: c.classGoal, screen: c.screen || {}, teams: c.teams || [] },
-        members: members, wins: wins.slice(0, 10), helpers: helpers, classXP: classXP, race: race, serverNow: now() };
+        members: members, wins: wins.slice(0, 10), helpers: helpers, classXP: classXP, race: race, serverNow: now(),
+        // just a count (no names or details) so the teacher's screen can show a "to review" button
+        toReview: studs.reduce(function (a, s) { return a + Object.keys(s.state.nodes || {}).filter(function (id) { return s.state.nodes[id].status === 'submitted'; }).length; }, 0) };
     },
     saveScreen: function (user, args) {
       requireTeacher(user);
