@@ -418,7 +418,18 @@ var SQ_AVATAR = (function () {
     return '<polygon points="' + pts.join(' ') + '" fill="' + fill + '"' + (stroke ? ' stroke="' + stroke + '" stroke-width="1.5"' : '') + '/>';
   }
 
+  // A title worn on the Class Screen is shown as a "card": an emoji plus the title.
+  // kind says how it was won, so the board can colour it: earned (free or by level/badge),
+  // bought (coin shop), game (arcade score).
+  var TITLE_ICON = { rookie: '🌱', ace: '🕹️', champ: '🏆', myth: '👾', sprite: '🐱', loops: '🔁', bugs: '🐞', pixel: '🎨', games: '🎮', stories: '📖',
+    apps: '📱', racer: '🏎️', drift: '💨', pit: '🔧', wizard: '🧙', legend: '👑' };
+  function titleCard(av) {
+    var t = itemOf('title', (av || {}).title);
+    if (!t || t.id === 'none') return null;
+    var u = t.unlock || {};
+    return { t: (TITLE_ICON[t.id] || '⭐') + ' ' + t.name, k: u.price ? 'bought' : u.arcade ? 'game' : 'earned' };
+  }
   function titleText(av) { var t = itemOf('title', (av || {}).title); return t && t.id !== 'none' ? t.name : ''; }
-  return { RARITY: RARITY, SHOP: SHOP, priceOf: priceOf, itemOf: itemOf, coinsFor: coinsFor, titleText: titleText, CATALOG: CATALOG, COLORS: COLORS, COLOR_UNLOCK: COLOR_UNLOCK, DEFAULT: DEFAULT, svg: svg,
+  return { RARITY: RARITY, SHOP: SHOP, priceOf: priceOf, itemOf: itemOf, coinsFor: coinsFor, titleText: titleText, titleCard: titleCard, CATALOG: CATALOG, COLORS: COLORS, COLOR_UNLOCK: COLOR_UNLOCK, DEFAULT: DEFAULT, svg: svg,
     isUnlocked: isUnlocked, unlockText: unlockText, sanitize: sanitize, randomAvatar: randomAvatar, allUnlockables: allUnlockables };
 })();

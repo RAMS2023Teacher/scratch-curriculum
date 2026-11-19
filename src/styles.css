@@ -677,11 +677,11 @@ body.cs-on.cs-dark { background: #12112a; }
 .cs-st.finish .cs-st-kids { background: rgba(31, 157, 85, .12); min-height: 5em; }
 .cs-kid { display: flex; flex-direction: column; align-items: center; min-width: 0; }
 .cs-kid-av { width: 2.1em; height: 2.1em; border-radius: 50%; background: #fff; display: block; box-shadow: 0 0 0 .1em var(--cs-line); }
-.cs-kid span { font-size: .62em; font-weight: 600; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs-kid > .cs-kid-txt { font-size: .62em; font-weight: 600; max-width: 100%; }
 .cs-track.tight .cs-kid-av { width: 1.6em; height: 1.6em; }
-.cs-track.tight .cs-kid span { font-size: .55em; }
+.cs-track.tight .cs-kid > .cs-kid-txt { font-size: .55em; }
 .cs-track.tiny .cs-st-kids { grid-template-columns: repeat(auto-fill, minmax(1.5em, 1fr)); gap: .2em .1em; }
-.cs-track.tiny .cs-kid span { display: none; }
+.cs-track.tiny .cs-kid > .cs-kid-txt { display: none; }
 .cs-track.tiny .cs-kid-av { width: 1.3em; height: 1.3em; }
 .cs-others { font-size: .8em; color: var(--cs-muted); display: flex; flex-wrap: wrap; gap: .35em; align-items: center; margin-top: .4em; }
 .cs-others:empty { display: none; }
@@ -1339,3 +1339,38 @@ html.hc .run-hint { border-color: #000; }
 }
 html.rm .cs-helpbtn, html.rm .hand, html.rm .cs-hand, html.rm .say-btn.on { animation: none !important; }
 html.rm .spinner { animation-duration: 1.4s !important; animation-iteration-count: infinite !important; }
+
+/* ===================== Class Screen: students with their title cards (three layouts) ===================== */
+.cs-kid-pic { position: relative; display: block; flex: none; line-height: 0; }
+.cs-kid-av { width: var(--av, 2.1em); height: var(--av, 2.1em); }
+.cs-track.tight .cs-kid-av, .cs-track.tiny .cs-kid-av { width: var(--av, 1.6em); height: var(--av, 1.6em); }
+.cs-kid-txt { display: block; min-width: 0; max-width: 100%; }
+.cs-kid .cs-kid-txt { font-size: .62em; font-weight: 700; }
+.cs-kid .cs-kid-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: clip; max-width: 100%; }
+.cs-kid .cs-hand { font-size: .95em; }
+/* the card text */
+.cs-kid .cs-tcard { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; white-space: normal; text-overflow: clip; max-width: 100%; font-size: .9em; font-weight: 800; line-height: 1.15; margin-top: .15em; padding: .12em .45em; border-radius: .5em; }
+.cs-tcard.k-earned { background: #17335c; color: #ffe9a8; box-shadow: inset 0 0 0 1.5px #ffd166; }
+.cs-tcard.k-bought { background: linear-gradient(135deg, #ffd60a, #ff7ab8); color: #3b1040; }
+.cs-tcard.k-game { background: #111; color: #fff; box-shadow: inset 0 0 0 1.5px #ff5fa2; }
+/* the emoji badge on the avatar's corner */
+.cs-kid .cs-badge { position: absolute; right: -.2em; bottom: -.15em; width: calc(var(--av, 2.1em) * .2 + 9px); height: calc(var(--av, 2.1em) * .2 + 9px); border-radius: 50%; display: none; place-items: center; font-style: normal; font-size: calc((var(--av, 2.1em) * .2 + 9px) * .62); line-height: 1; overflow: hidden; max-width: none; }
+.cs-badge.k-earned { background: #17335c; box-shadow: 0 0 0 1.5px #ffd166; }
+.cs-badge.k-bought { background: linear-gradient(135deg, #ffd60a, #ff7ab8); box-shadow: 0 0 0 1.5px #fff; }
+.cs-badge.k-game { background: #111; box-shadow: 0 0 0 1.5px #ff5fa2; }
+/* 1. stacked */
+.cs-track.m-stack .cs-st-kids { grid-template-columns: repeat(auto-fill, minmax(calc(var(--av) + 1.6em), 1fr)); gap: .5em .3em; }
+.cs-track.m-stack .cs-kid { text-align: center; }
+.cs-track.m-stack .cs-kid .cs-kid-txt { font-size: .8em; margin-top: .25em; }
+.cs-track.m-stack .n-first, .cs-track.m-rows .n-first { display: none; }
+/* 2. rows */
+.cs-track.m-rows .cs-st-kids { grid-template-columns: minmax(0, 1fr); gap: .3em; }
+.cs-track.m-rows .cs-kid { flex-direction: row; align-items: center; gap: .4em; text-align: left; }
+.cs-track.m-rows .cs-kid .cs-kid-txt { flex: 1; font-size: .6em; }
+.cs-track.m-rows .cs-kid .cs-tcard { -webkit-line-clamp: 2; display: -webkit-inline-box; }
+/* 3. badge */
+.cs-track.m-badge .n-full, .cs-track.m-badge .cs-tcard { display: none; }
+.cs-track.m-badge .cs-kid .cs-badge { display: grid; }
+.cs-track.m-badge .cs-st-kids { grid-template-columns: repeat(auto-fill, minmax(calc(var(--av) + .5em), 1fr)); }
+.cs-track.tiny .cs-kid .cs-kid-txt { display: none; }
+.cs-track.tiny .cs-kid .cs-badge { display: none; }

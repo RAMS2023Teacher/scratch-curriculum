@@ -681,11 +681,11 @@ body.cs-on.cs-dark { background: #12112a; }
 .cs-st.finish .cs-st-kids { background: rgba(31, 157, 85, .12); min-height: 5em; }
 .cs-kid { display: flex; flex-direction: column; align-items: center; min-width: 0; }
 .cs-kid-av { width: 2.1em; height: 2.1em; border-radius: 50%; background: #fff; display: block; box-shadow: 0 0 0 .1em var(--cs-line); }
-.cs-kid span { font-size: .62em; font-weight: 600; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs-kid > .cs-kid-txt { font-size: .62em; font-weight: 600; max-width: 100%; }
 .cs-track.tight .cs-kid-av { width: 1.6em; height: 1.6em; }
-.cs-track.tight .cs-kid span { font-size: .55em; }
+.cs-track.tight .cs-kid > .cs-kid-txt { font-size: .55em; }
 .cs-track.tiny .cs-st-kids { grid-template-columns: repeat(auto-fill, minmax(1.5em, 1fr)); gap: .2em .1em; }
-.cs-track.tiny .cs-kid span { display: none; }
+.cs-track.tiny .cs-kid > .cs-kid-txt { display: none; }
 .cs-track.tiny .cs-kid-av { width: 1.3em; height: 1.3em; }
 .cs-others { font-size: .8em; color: var(--cs-muted); display: flex; flex-wrap: wrap; gap: .35em; align-items: center; margin-top: .4em; }
 .cs-others:empty { display: none; }
@@ -1343,6 +1343,41 @@ html.hc .run-hint { border-color: #000; }
 }
 html.rm .cs-helpbtn, html.rm .hand, html.rm .cs-hand, html.rm .say-btn.on { animation: none !important; }
 html.rm .spinner { animation-duration: 1.4s !important; animation-iteration-count: infinite !important; }
+
+/* ===================== Class Screen: students with their title cards (three layouts) ===================== */
+.cs-kid-pic { position: relative; display: block; flex: none; line-height: 0; }
+.cs-kid-av { width: var(--av, 2.1em); height: var(--av, 2.1em); }
+.cs-track.tight .cs-kid-av, .cs-track.tiny .cs-kid-av { width: var(--av, 1.6em); height: var(--av, 1.6em); }
+.cs-kid-txt { display: block; min-width: 0; max-width: 100%; }
+.cs-kid .cs-kid-txt { font-size: .62em; font-weight: 700; }
+.cs-kid .cs-kid-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: clip; max-width: 100%; }
+.cs-kid .cs-hand { font-size: .95em; }
+/* the card text */
+.cs-kid .cs-tcard { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; white-space: normal; text-overflow: clip; max-width: 100%; font-size: .9em; font-weight: 800; line-height: 1.15; margin-top: .15em; padding: .12em .45em; border-radius: .5em; }
+.cs-tcard.k-earned { background: #17335c; color: #ffe9a8; box-shadow: inset 0 0 0 1.5px #ffd166; }
+.cs-tcard.k-bought { background: linear-gradient(135deg, #ffd60a, #ff7ab8); color: #3b1040; }
+.cs-tcard.k-game { background: #111; color: #fff; box-shadow: inset 0 0 0 1.5px #ff5fa2; }
+/* the emoji badge on the avatar's corner */
+.cs-kid .cs-badge { position: absolute; right: -.2em; bottom: -.15em; width: calc(var(--av, 2.1em) * .2 + 9px); height: calc(var(--av, 2.1em) * .2 + 9px); border-radius: 50%; display: none; place-items: center; font-style: normal; font-size: calc((var(--av, 2.1em) * .2 + 9px) * .62); line-height: 1; overflow: hidden; max-width: none; }
+.cs-badge.k-earned { background: #17335c; box-shadow: 0 0 0 1.5px #ffd166; }
+.cs-badge.k-bought { background: linear-gradient(135deg, #ffd60a, #ff7ab8); box-shadow: 0 0 0 1.5px #fff; }
+.cs-badge.k-game { background: #111; box-shadow: 0 0 0 1.5px #ff5fa2; }
+/* 1. stacked */
+.cs-track.m-stack .cs-st-kids { grid-template-columns: repeat(auto-fill, minmax(calc(var(--av) + 1.6em), 1fr)); gap: .5em .3em; }
+.cs-track.m-stack .cs-kid { text-align: center; }
+.cs-track.m-stack .cs-kid .cs-kid-txt { font-size: .8em; margin-top: .25em; }
+.cs-track.m-stack .n-first, .cs-track.m-rows .n-first { display: none; }
+/* 2. rows */
+.cs-track.m-rows .cs-st-kids { grid-template-columns: minmax(0, 1fr); gap: .3em; }
+.cs-track.m-rows .cs-kid { flex-direction: row; align-items: center; gap: .4em; text-align: left; }
+.cs-track.m-rows .cs-kid .cs-kid-txt { flex: 1; font-size: .6em; }
+.cs-track.m-rows .cs-kid .cs-tcard { -webkit-line-clamp: 2; display: -webkit-inline-box; }
+/* 3. badge */
+.cs-track.m-badge .n-full, .cs-track.m-badge .cs-tcard { display: none; }
+.cs-track.m-badge .cs-kid .cs-badge { display: grid; }
+.cs-track.m-badge .cs-st-kids { grid-template-columns: repeat(auto-fill, minmax(calc(var(--av) + .5em), 1fr)); }
+.cs-track.tiny .cs-kid .cs-kid-txt { display: none; }
+.cs-track.tiny .cs-kid .cs-badge { display: none; }
 
 </style>
 
@@ -11690,8 +11725,19 @@ var SQ_AVATAR = (function () {
     return '<polygon points="' + pts.join(' ') + '" fill="' + fill + '"' + (stroke ? ' stroke="' + stroke + '" stroke-width="1.5"' : '') + '/>';
   }
 
+  // A title worn on the Class Screen is shown as a "card": an emoji plus the title.
+  // kind says how it was won, so the board can colour it: earned (free or by level/badge),
+  // bought (coin shop), game (arcade score).
+  var TITLE_ICON = { rookie: '🌱', ace: '🕹️', champ: '🏆', myth: '👾', sprite: '🐱', loops: '🔁', bugs: '🐞', pixel: '🎨', games: '🎮', stories: '📖',
+    apps: '📱', racer: '🏎️', drift: '💨', pit: '🔧', wizard: '🧙', legend: '👑' };
+  function titleCard(av) {
+    var t = itemOf('title', (av || {}).title);
+    if (!t || t.id === 'none') return null;
+    var u = t.unlock || {};
+    return { t: (TITLE_ICON[t.id] || '⭐') + ' ' + t.name, k: u.price ? 'bought' : u.arcade ? 'game' : 'earned' };
+  }
   function titleText(av) { var t = itemOf('title', (av || {}).title); return t && t.id !== 'none' ? t.name : ''; }
-  return { RARITY: RARITY, SHOP: SHOP, priceOf: priceOf, itemOf: itemOf, coinsFor: coinsFor, titleText: titleText, CATALOG: CATALOG, COLORS: COLORS, COLOR_UNLOCK: COLOR_UNLOCK, DEFAULT: DEFAULT, svg: svg,
+  return { RARITY: RARITY, SHOP: SHOP, priceOf: priceOf, itemOf: itemOf, coinsFor: coinsFor, titleText: titleText, titleCard: titleCard, CATALOG: CATALOG, COLORS: COLORS, COLOR_UNLOCK: COLOR_UNLOCK, DEFAULT: DEFAULT, svg: svg,
     isUnlocked: isUnlocked, unlockText: unlockText, sanitize: sanitize, randomAvatar: randomAvatar, allUnlockables: allUnlockables };
 })();
 
@@ -12438,7 +12484,7 @@ function SQ_SERVICE(store) {
       var members = studs.map(function (s) {
         var p = R.profile(s.state);
         return { key: s.email, name: s.name, avatar: s.state.avatar || A.DEFAULT, level: p.level, current: p.current, done: Object.keys(p.done),
-          doneCount: p.doneCount, hid: memberId(s.email), team: teamOf[s.email] || null, helper: p.badges.indexOf('helper') >= 0, xp: p.xp };
+          doneCount: p.doneCount, hid: memberId(s.email), card: A.titleCard(s.state.avatar), team: teamOf[s.email] || null, helper: p.badges.indexOf('helper') >= 0, xp: p.xp };
       });
       // recent wins across the class (newest first, last 7 days)
       var since = now() - 7 * 864e5, wins = [];
@@ -13417,7 +13463,7 @@ var SQ_SOUND = (function () {
 })();
 
 
-var SQ_BUILD = "2026-11-19T19:01";
+var SQ_BUILD = "2026-11-19T19:07";
 var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
 
 /* Scratch Quest — page translation for students (Brazilian Portuguese).
@@ -16124,7 +16170,9 @@ var SQ_MAPART = (function () {
     if (stations) {
       var max = 0; stations.forEach(function (s) { max = Math.max(max, (groups[s.key] || []).length); });
       // busy stations get wider columns so more characters (with names) fit side by side
-      var wts = stations.map(function (s) { var n = (groups[s.key] || []).length; return n > 6 ? Math.min(3, 1 + Math.ceil((n - 6) / 6)) : 1; });
+      // with a small group, steps that have students get double width, so names and title cards have room
+      var few = d.members.length <= 14;
+      var wts = stations.map(function (s) { var n = (groups[s.key] || []).length; return n > 6 ? Math.min(3, 1 + Math.ceil((n - 6) / 6)) : (n && few ? 2 : 1); });
       var tot = wts.reduce(function (a, b) { return a + b; }, 0);
       var cols = wts.map(function (w) { return 'minmax(0,' + w + 'fr)'; }).join(' ');
       var edgeL = (wts[0] / tot * 50).toFixed(2) + '%', edgeR = (wts[wts.length - 1] / tot * 50).toFixed(2) + '%';
@@ -16132,7 +16180,12 @@ var SQ_MAPART = (function () {
         var kids = (groups[s.key] || []).sort(function (a, b) { return a.name.localeCompare(b.name); });
         return '<div class="cs-st' + (s.finish ? ' finish' : '') + '"><div class="cs-st-dot" style="--c:' + s.color + '">' + s.icon + '</div><div class="cs-st-l">' + esc(s.label) + '</div>' +
           '<div class="cs-st-kids' + (kids.length ? ' has' : '') + '">' + kids.map(function (m) {
-            return '<div class="cs-kid' + (csNeeds[m.hid] ? ' needs-help' : '') + '">' + avatarImgTag(m.avatar, 'cs-kid-av') + (csNeeds[m.hid] ? '<i class="cs-hand">✋</i>' : '') + '<span>' + esc(m.name.split(' ')[0]) + '</span></div>';
+            // name + title card; csFit() then picks the layout that shows the most without cutting anything off
+            var cd = m.card, em = cd ? cd.t.split(' ')[0] : '';
+            return '<div class="cs-kid' + (csNeeds[m.hid] ? ' needs-help' : '') + '"><span class="cs-kid-pic">' + avatarImgTag(m.avatar, 'cs-kid-av') +
+              (cd ? '<i class="cs-badge k-' + cd.k + '" title="' + esc(cd.t) + '">' + esc(em) + '</i>' : '') + (csNeeds[m.hid] ? '<i class="cs-hand">✋</i>' : '') + '</span>' +
+              '<span class="cs-kid-txt"><span class="cs-kid-name"><span class="n-first">' + esc(m.name.split(' ')[0]) + '</span><span class="n-full">' + esc(m.name) + '</span></span>' +
+              (cd ? '<span class="cs-tcard k-' + cd.k + '" title="' + esc(cd.t) + '">' + esc(cd.t) + '</span>' : '') + '</span></div>';
           }).join('') + '</div></div>';
       }).join('') + '</div>');
     } else {
@@ -16179,16 +16232,54 @@ var SQ_MAPART = (function () {
     csTick();
   }
   // Projector screens can't scroll: shrink the characters, and drop whole list items that don't fit.
+  // Students on the track: three layouts, tried best-first, each time starting again from the top
+  // so the board can move back up when the track empties out.
+  //   1. stacked: big avatar, full name, whole title card under it
+  //   2. rows: one student per row, avatar on the left, name and card beside it
+  //   3. badge: the compact grid; the card becomes an emoji badge on the avatar's corner
+  // A layout is used only if it fits, the avatars stay big enough, and no card is cut off.
+  function csFitTrack(rc, tr) {
+    var fs = parseFloat(getComputedStyle(rc).fontSize) || 16, unit = fs / 18.4; // thresholds are written for an 18.4px board
+    // fits = the track is not too tall, and no student tile spills out of its own step's column
+    var fits = function () {
+      return rc.scrollHeight <= rc.clientHeight + 2 && tr.scrollWidth <= tr.clientWidth + 2 &&
+        ![].some.call(tr.querySelectorAll('.cs-st-kids'), function (k) { return k.scrollWidth > k.clientWidth + 1; });
+    };
+    var cut = function () { return [].some.call(tr.querySelectorAll('.cs-tcard'), function (c) { return c.scrollWidth > c.clientWidth + 1 || c.scrollHeight > c.clientHeight + 1; }); };
+    var avPx = function () { var a = tr.querySelector('.cs-kid-av'); return a ? a.getBoundingClientRect().width : 999; };
+    var set = function (mode, av) { tr.classList.remove('m-stack', 'm-rows', 'm-badge', 'tight', 'tiny'); tr.classList.add(mode); tr.style.setProperty('--av', av + 'em'); };
+    var plans = [['m-stack', [4.6, 4.1, 3.6, 3.2], 56], ['m-rows', [2.8, 2.5, 2.2, 1.9], 34]], done = false;
+    if (tr.querySelector('.cs-kid')) plans.forEach(function (p) {
+      if (done) return;
+      for (var i = 0; i < p[1].length && !done; i++) {
+        set(p[0], p[1][i]);
+        // avatars must stay big enough on small projectors too (never under 48px stacked, 32px in rows)
+        if (fits() && avPx() >= Math.max(p[2] * unit, p[0] === 'm-stack' ? 48 : 32) - 0.5 && !cut()) done = true;
+      }
+    });
+    if (!done) {
+      // badge layout: biggest avatars that fit, then the older tighter grids as a last resort
+      var sizes = [2.9, 2.5, 2.1];
+      for (var j = 0; j < sizes.length && !done; j++) { set('m-badge', sizes[j]); if (fits()) done = true; }
+      if (!done) { tr.classList.add('tight'); tr.style.setProperty('--av', '1.6em'); if (!fits()) { tr.classList.add('tiny'); tr.style.setProperty('--av', '1.3em'); } }
+    }
+    // names are never cut with "…": shrink a name that is too wide, a little at a time
+    [].forEach.call(tr.querySelectorAll('.cs-kid-name'), function (n) {
+      n.style.fontSize = '';
+      var size = 1;
+      while (n.scrollWidth > n.clientWidth && size > 0.42) { size -= 0.06; n.style.fontSize = size + 'em'; }
+    });
+  }
   function csFit() {
     if (window.innerWidth <= 1100) return;
     var rc = document.getElementById('cs-race');
     if (rc) {
       var tr = rc.firstElementChild;
-      if (tr) {
+      if (tr && tr.classList.contains('cs-teams')) {
         tr.classList.remove('tight', 'tiny', 'compact');
-        var cls = tr.classList.contains('cs-teams') ? ['compact', 'tiny'] : ['tight', 'tiny'];
+        var cls = ['compact', 'tiny'];
         for (var k = 0; k < cls.length && rc.scrollHeight > rc.clientHeight + 2; k++) tr.classList.add(cls[k]);
-      }
+      } else if (tr) csFitTrack(rc, tr);
     }
     [['cs-winsbox', '#cs-wins li'], ['cs-helpbox', '.cs-tip, #cs-help li']].forEach(function (x) {
       var card = document.getElementById(x[0]);
@@ -16244,6 +16335,8 @@ var SQ_MAPART = (function () {
   function csHelpPaint() { if (S.cs) csPaint(false); }
   function csStart() {
     csStop();
+    try { document.fonts.ready.then(function () { if (document.getElementById('cs-race')) csFit(); }); } catch (e) { }
+    setTimeout(function () { if (document.getElementById('cs-race')) csFit(); }, 600);
     S.csHelpLoaded = false;
     csLoad(true);
     csHelpLoad();

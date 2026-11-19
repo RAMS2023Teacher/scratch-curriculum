@@ -661,7 +661,7 @@ function SQ_SERVICE(store) {
       var members = studs.map(function (s) {
         var p = R.profile(s.state);
         return { key: s.email, name: s.name, avatar: s.state.avatar || A.DEFAULT, level: p.level, current: p.current, done: Object.keys(p.done),
-          doneCount: p.doneCount, hid: memberId(s.email), team: teamOf[s.email] || null, helper: p.badges.indexOf('helper') >= 0, xp: p.xp };
+          doneCount: p.doneCount, hid: memberId(s.email), card: A.titleCard(s.state.avatar), team: teamOf[s.email] || null, helper: p.badges.indexOf('helper') >= 0, xp: p.xp };
       });
       // recent wins across the class (newest first, last 7 days)
       var since = now() - 7 * 864e5, wins = [];

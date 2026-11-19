@@ -1918,7 +1918,9 @@
     if (stations) {
       var max = 0; stations.forEach(function (s) { max = Math.max(max, (groups[s.key] || []).length); });
       // busy stations get wider columns so more characters (with names) fit side by side
-      var wts = stations.map(function (s) { var n = (groups[s.key] || []).length; return n > 6 ? Math.min(3, 1 + Math.ceil((n - 6) / 6)) : 1; });
+      // with a small group, steps that have students get double width, so names and title cards have room
+      var few = d.members.length <= 14;
+      var wts = stations.map(function (s) { var n = (groups[s.key] || []).length; return n > 6 ? Math.min(3, 1 + Math.ceil((n - 6) / 6)) : (n && few ? 2 : 1); });
       var tot = wts.reduce(function (a, b) { return a + b; }, 0);
       var cols = wts.map(function (w) { return 'minmax(0,' + w + 'fr)'; }).join(' ');
       var edgeL = (wts[0] / tot * 50).toFixed(2) + '%', edgeR = (wts[wts.length - 1] / tot * 50).toFixed(2) + '%';
@@ -1926,7 +1928,12 @@
         var kids = (groups[s.key] || []).sort(function (a, b) { return a.name.localeCompare(b.name); });
         return '<div class="cs-st' + (s.finish ? ' finish' : '') + '"><div class="cs-st-dot" style="--c:' + s.color + '">' + s.icon + '</div><div class="cs-st-l">' + esc(s.label) + '</div>' +
           '<div class="cs-st-kids' + (kids.length ? ' has' : '') + '">' + kids.map(function (m) {
-            return '<div class="cs-kid' + (csNeeds[m.hid] ? ' needs-help' : '') + '">' + avatarImgTag(m.avatar, 'cs-kid-av') + (csNeeds[m.hid] ? '<i class="cs-hand">✋</i>' : '') + '<span>' + esc(m.name.split(' ')[0]) + '</span></div>';
+            // name + title card; csFit() then picks the layout that shows the most without cutting anything off
+            var cd = m.card, em = cd ? cd.t.split(' ')[0] : '';
+            return '<div class="cs-kid' + (csNeeds[m.hid] ? ' needs-help' : '') + '"><span class="cs-kid-pic">' + avatarImgTag(m.avatar, 'cs-kid-av') +
+              (cd ? '<i class="cs-badge k-' + cd.k + '" title="' + esc(cd.t) + '">' + esc(em) + '</i>' : '') + (csNeeds[m.hid] ? '<i class="cs-hand">✋</i>' : '') + '</span>' +
+              '<span class="cs-kid-txt"><span class="cs-kid-name"><span class="n-first">' + esc(m.name.split(' ')[0]) + '</span><span class="n-full">' + esc(m.name) + '</span></span>' +
+              (cd ? '<span class="cs-tcard k-' + cd.k + '" title="' + esc(cd.t) + '">' + esc(cd.t) + '</span>' : '') + '</span></div>';
           }).join('') + '</div></div>';
       }).join('') + '</div>');
     } else {
@@ -1973,16 +1980,54 @@
     csTick();
   }
   // Projector screens can't scroll: shrink the characters, and drop whole list items that don't fit.
+  // Students on the track: three layouts, tried best-first, each time starting again from the top
+  // so the board can move back up when the track empties out.
+  //   1. stacked: big avatar, full name, whole title card under it
+  //   2. rows: one student per row, avatar on the left, name and card beside it
+  //   3. badge: the compact grid; the card becomes an emoji badge on the avatar's corner
+  // A layout is used only if it fits, the avatars stay big enough, and no card is cut off.
+  function csFitTrack(rc, tr) {
+    var fs = parseFloat(getComputedStyle(rc).fontSize) || 16, unit = fs / 18.4; // thresholds are written for an 18.4px board
+    // fits = the track is not too tall, and no student tile spills out of its own step's column
+    var fits = function () {
+      return rc.scrollHeight <= rc.clientHeight + 2 && tr.scrollWidth <= tr.clientWidth + 2 &&
+        ![].some.call(tr.querySelectorAll('.cs-st-kids'), function (k) { return k.scrollWidth > k.clientWidth + 1; });
+    };
+    var cut = function () { return [].some.call(tr.querySelectorAll('.cs-tcard'), function (c) { return c.scrollWidth > c.clientWidth + 1 || c.scrollHeight > c.clientHeight + 1; }); };
+    var avPx = function () { var a = tr.querySelector('.cs-kid-av'); return a ? a.getBoundingClientRect().width : 999; };
+    var set = function (mode, av) { tr.classList.remove('m-stack', 'm-rows', 'm-badge', 'tight', 'tiny'); tr.classList.add(mode); tr.style.setProperty('--av', av + 'em'); };
+    var plans = [['m-stack', [4.6, 4.1, 3.6, 3.2], 56], ['m-rows', [2.8, 2.5, 2.2, 1.9], 34]], done = false;
+    if (tr.querySelector('.cs-kid')) plans.forEach(function (p) {
+      if (done) return;
+      for (var i = 0; i < p[1].length && !done; i++) {
+        set(p[0], p[1][i]);
+        // avatars must stay big enough on small projectors too (never under 48px stacked, 32px in rows)
+        if (fits() && avPx() >= Math.max(p[2] * unit, p[0] === 'm-stack' ? 48 : 32) - 0.5 && !cut()) done = true;
+      }
+    });
+    if (!done) {
+      // badge layout: biggest avatars that fit, then the older tighter grids as a last resort
+      var sizes = [2.9, 2.5, 2.1];
+      for (var j = 0; j < sizes.length && !done; j++) { set('m-badge', sizes[j]); if (fits()) done = true; }
+      if (!done) { tr.classList.add('tight'); tr.style.setProperty('--av', '1.6em'); if (!fits()) { tr.classList.add('tiny'); tr.style.setProperty('--av', '1.3em'); } }
+    }
+    // names are never cut with "…": shrink a name that is too wide, a little at a time
+    [].forEach.call(tr.querySelectorAll('.cs-kid-name'), function (n) {
+      n.style.fontSize = '';
+      var size = 1;
+      while (n.scrollWidth > n.clientWidth && size > 0.42) { size -= 0.06; n.style.fontSize = size + 'em'; }
+    });
+  }
   function csFit() {
     if (window.innerWidth <= 1100) return;
     var rc = document.getElementById('cs-race');
     if (rc) {
       var tr = rc.firstElementChild;
-      if (tr) {
+      if (tr && tr.classList.contains('cs-teams')) {
         tr.classList.remove('tight', 'tiny', 'compact');
-        var cls = tr.classList.contains('cs-teams') ? ['compact', 'tiny'] : ['tight', 'tiny'];
+        var cls = ['compact', 'tiny'];
         for (var k = 0; k < cls.length && rc.scrollHeight > rc.clientHeight + 2; k++) tr.classList.add(cls[k]);
-      }
+      } else if (tr) csFitTrack(rc, tr);
     }
     [['cs-winsbox', '#cs-wins li'], ['cs-helpbox', '.cs-tip, #cs-help li']].forEach(function (x) {
       var card = document.getElementById(x[0]);
@@ -2038,6 +2083,8 @@
   function csHelpPaint() { if (S.cs) csPaint(false); }
   function csStart() {
     csStop();
+    try { document.fonts.ready.then(function () { if (document.getElementById('cs-race')) csFit(); }); } catch (e) { }
+    setTimeout(function () { if (document.getElementById('cs-race')) csFit(); }, 600);
     S.csHelpLoaded = false;
     csLoad(true);
     csHelpLoad();
