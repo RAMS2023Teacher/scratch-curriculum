@@ -141,6 +141,16 @@ var SQ_FX = (function () {
           '<h2 class="fx-title">' + esc(o.name) + '</h2><p class="fx-sub">' + esc(o.sub || 'It is yours to keep.') + '</p>',
         after: function () { play('reveal'); play(o.rarity === 'legendary' ? 'legendary' : big ? 'fanfare' : 'buy', 650); play('sparkle', 900); } });
     },
+    // an arcade ticket was earned (n = how many the student has now)
+    ticket: function (o) {
+      show({ kind: 'ticket', color: '#7b2ff7', label: 'Arcade ticket earned', ok: 'Nice!', parts: 34, colors: ['#ffd60a', '#f72585', '#7b2ff7', '#fff'],
+        extra: o.open ? '<a class="btn big" href="#/arcade" data-fx-close>Go to the arcade</a>' : '',
+        html: '<div class="fx-eyebrow">You earned ' + (o.got > 1 ? o.got + ' arcade tickets!' : 'an arcade ticket!') + '</div>' +
+          '<div class="fx-tk"><span class="ft-stub"><b>' + o.minutes + '</b><small>MIN</small></span><span class="ft-main"><b>ARCADE</b><small>Block Rush · Kart Dash</small></span></div>' +
+          '<h2 class="fx-title">' + o.have + ' ticket' + (o.have === 1 ? '' : 's') + ' ready</h2>' +
+          '<p class="fx-sub">' + esc(o.open ? 'The arcade is open. Use a ticket to play for ' + o.minutes + ' minutes.' : 'Save it for when your teacher opens the arcade.') + '</p>',
+        after: function () { play('whoosh'); play('fanfare', 350); play('sparkle', 800); } });
+    },
     sent: function (o) {
       show({ kind: 'sent', color: '#3a86ff', label: 'Turned in', ok: 'OK!', parts: 0, auto: 4200,
         html: '<div class="fx-plane"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M4 30L60 6 44 58 30 38z" fill="#fff"/><path d="M30 38L60 6 22 34z" fill="#cfe1ff"/><path d="M30 38l-4 14 8-10z" fill="#9dbfff"/></svg></div>' +

@@ -1477,3 +1477,13 @@ html.hc .side-btn, html.hc .side-card { border-color: #000; }
 .rev-acts { display: flex; gap: 6px; flex: none; }
 .rev-back { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .rev-back select { max-width: 100%; font: inherit; padding: 4px 8px; border-radius: 8px; border: 2px solid var(--line); }
+
+/* arcade ticket celebration */
+.fx-tk { display: flex; margin: 10px 0 6px; filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .45)); animation: fxTicket .9s cubic-bezier(.2, 1.5, .4, 1) .1s both; }
+.fx-tk > span { display: grid; place-items: center; align-content: center; padding: 18px 20px; background: linear-gradient(160deg, #ffd60a, #ffb703); color: #3b1a00; }
+.fx-tk .ft-stub { border-radius: 14px 6px 6px 14px; border-right: 4px dashed #b45309; min-width: 84px; }
+.fx-tk .ft-main { border-radius: 6px 14px 14px 6px; min-width: 190px; }
+.fx-tk b { font: 400 2rem/1 var(--display, "Titan One"), sans-serif; }
+.fx-tk .ft-stub b { font-size: 2.6rem; }
+.fx-tk small { font: 900 .75rem Nunito, sans-serif; letter-spacing: .12em; }
+@keyframes fxTicket { 0% { transform: translateY(160px) rotate(-25deg) scale(.4); opacity: 0; } 70% { transform: translateY(0) rotate(4deg) scale(1.05); opacity: 1; } 100% { transform: rotate(-3deg); } }

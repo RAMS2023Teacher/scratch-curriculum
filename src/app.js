@@ -131,7 +131,8 @@
     newDone.forEach(function (id) {
       var st = questStars(id), n = R.NODE[id];
       if (shown++ >= MAX) return toast('<svg class="i"><use href="#i-check"/></svg> <b>Quest complete:</b> ' + esc(title(id)), 't-badge');
-      SQ_FX.quest({ title: title(id), approved: away, stars: st.n, starNote: st.note, color: n ? R.BRANCHES[n.branch].color : '#7b2ff7',
+      var perQ = Math.max(1, ((S.cls && S.cls.arcade) || {}).questsPerTicket || 1), toGo = perQ - (Object.keys(after.done || {}).length % perQ);
+      SQ_FX.quest({ title: title(id), approved: away, stars: st.n, starNote: st.note + (toGo < perQ ? ' · ' + toGo + ' more quest' + (toGo === 1 ? '' : 's') + ' to your next arcade ticket' : ''), color: n ? R.BRANCHES[n.branch].color : '#7b2ff7',
         xp: newDone.length === 1 ? Math.max(0, gain) : R.XP.lesson, coins: newDone.length === 1 ? Math.max(0, coinGain) : 0 });
     });
     newBadges.forEach(function (b, i) {
@@ -141,6 +142,10 @@
       if (shown++ >= MAX) return toast('<span class="t-ico">' + B.icon + '</span><div><b>Badge earned: ' + esc(B.name) + '</b><br>' + esc(B.desc) + '</div>', 't-badge');
       SQ_FX.badge({ icon: B.icon, name: B.name, desc: B.desc, teacher: teacher, note: aw && aw.note, xp: teacher ? R.XP.award : 0, color: BADGE_COLORS[(b.length + i) % BADGE_COLORS.length] });
     });
+    var arcI = (S.cls && S.cls.arcade) || {}, per = Math.max(1, arcI.questsPerTicket || 1);
+    var dBefore = Object.keys(before.done || {}).length, dAfter = Object.keys(after.done || {}).length;
+    var gotT = Math.floor(dAfter / per) - Math.floor(dBefore / per);
+    if (gotT > 0 && shown < MAX + 1) SQ_FX.ticket({ got: gotT, have: AR.tickets((S.me.state.arcade || {}), dAfter, per), minutes: arcI.passMin || 5, open: arcI.mode === 'earned' });
     if (leveled) {
       SQ_FX.level({ from: before.level, to: after.level, rank: after.rank, unlocks: newly.map(function (u) { return u.name; }) });
       setTimeout(confetti, 300);
