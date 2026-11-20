@@ -355,7 +355,7 @@ main.projector { max-width: none; padding: 16px; }
 .player { max-width: 680px; margin: 0 auto; }
 .p-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .p-back { font-weight: 800; text-decoration: none; }
-.p-title { flex: 1; min-width: 0; font: 600 1.1rem "Nunito", sans-serif; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-title { flex: 1 1 auto; min-width: min(100%, 11em); font: 600 1.1rem "Nunito", sans-serif; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-tools { display: flex; gap: 6px; }
 .dots { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 .dot { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); background: var(--card); color: var(--muted); font: 700 .85rem "Nunito", sans-serif; cursor: pointer; padding: 0; display: grid; place-items: center; transition: transform .15s; }
@@ -1374,3 +1374,89 @@ html.rm .spinner { animation-duration: 1.4s !important; animation-iteration-coun
 .cs-track.m-badge .cs-st-kids { grid-template-columns: repeat(auto-fill, minmax(calc(var(--av) + .5em), 1fr)); }
 .cs-track.tiny .cs-kid .cs-kid-txt { display: none; }
 .cs-track.tiny .cs-kid .cs-badge { display: none; }
+
+/* ===================== The big "Open Scratch" button ===================== */
+.p-tools { align-items: center; flex-wrap: wrap; }
+.scratch-go { position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 8px 12px; border-radius: 16px; text-decoration: none; color: #fff; overflow: hidden;
+  background: linear-gradient(180deg, #ffb13d, #ff8c1a); border: 3px solid #fff; box-shadow: 0 5px 0 #c96a06, 0 8px 18px rgba(255, 140, 26, .35); transition: transform .12s, box-shadow .12s; }
+.scratch-go:hover { transform: translateY(-2px) rotate(-1.5deg); box-shadow: 0 7px 0 #c96a06, 0 12px 22px rgba(255, 140, 26, .45); }
+.scratch-go:active { transform: translateY(4px); box-shadow: 0 1px 0 #c96a06; }
+.scratch-go:focus-visible { outline: 4px solid #2a1650; outline-offset: 3px; }
+.scratch-go .sg-t { display: grid; line-height: 1.05; text-align: left; }
+.scratch-go b { font: 400 1.25rem var(--display), sans-serif; letter-spacing: .3px; text-shadow: 0 2px 0 rgba(0, 0, 0, .18); }
+.scratch-go small { font-weight: 800; font-size: .72rem; opacity: .95; }
+.scratch-go .i { width: 18px; height: 18px; }
+/* three little code blocks that hop */
+.sg-blocks { display: grid; gap: 3px; width: 30px; }
+.sg-blocks i { display: block; height: 8px; border-radius: 3px; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .2); }
+.sg-blocks i:nth-child(1) { background: #4c97ff; width: 22px; }
+.sg-blocks i:nth-child(2) { background: #9966ff; width: 30px; }
+.sg-blocks i:nth-child(3) { background: #59c059; width: 18px; }
+/* a shine that sweeps across now and then */
+.scratch-go::after { content: ""; position: absolute; top: -20%; left: -40%; width: 30%; height: 140%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); transform: rotate(18deg); pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .scratch-go::after { animation: sgShine 4.5s ease-in-out infinite; }
+  .scratch-go:hover .sg-blocks i { animation: sgHop .5s ease-in-out; }
+  .scratch-go:hover .sg-blocks i:nth-child(2) { animation-delay: .08s; }
+  .scratch-go:hover .sg-blocks i:nth-child(3) { animation-delay: .16s; }
+  @keyframes sgShine { 0%, 70% { left: -40%; } 100% { left: 130%; } }
+  @keyframes sgHop { 50% { transform: translateY(-4px); } }
+}
+html.rm .scratch-go::after { animation: none; }
+html.hc .scratch-go { border-color: #000; }
+@media (max-width: 560px) { .scratch-go small { display: none; } .scratch-go b { font-size: 1.05rem; } }
+
+/* "Too easy? Level up" fold on a step */
+.p-more.boost { background: #f3e8ff; border: 2px dashed #a855f7; }
+.p-more.boost summary { color: #6b21a8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .p-more.boost { background: #33204d; } :root:not([data-theme="light"]) .p-more.boost summary { color: #e9d5ff; } }
+:root[data-theme="dark"] .p-more.boost { background: #33204d; }
+:root[data-theme="dark"] .p-more.boost summary { color: #e9d5ff; }
+
+.tip.boost-tip { background: #f3e8ff; border-color: #a855f7; color: #4a1772; }
+
+/* ===================== Quest page: big actions in a right-hand column ===================== */
+.p-side { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; margin: 0 0 12px; }
+.p-side .scratch-go, .p-side .help-big { flex: 1 1 200px; }
+.help-big { position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 8px 12px; border-radius: 16px; cursor: pointer; text-align: left; color: #5c3d00;
+  background: linear-gradient(180deg, #fff3c4, #ffe07a); border: 3px solid #fff; box-shadow: 0 5px 0 #d9a514, 0 8px 18px rgba(217, 165, 20, .3); transition: transform .12s, box-shadow .12s; font-family: inherit; }
+.help-big:hover { transform: translateY(-2px) rotate(1.5deg); box-shadow: 0 7px 0 #d9a514, 0 12px 22px rgba(217, 165, 20, .4); }
+.help-big:active { transform: translateY(4px); box-shadow: 0 1px 0 #d9a514; }
+.help-big:focus-visible { outline: 4px solid #2a1650; outline-offset: 3px; }
+.help-big .sg-t { display: grid; line-height: 1.05; }
+.help-big b { font: 400 1.25rem var(--display), sans-serif; letter-spacing: .3px; }
+.help-big small { font-weight: 800; font-size: .72rem; }
+.help-big .hb-hand { font-size: 1.7rem; line-height: 1; }
+.help-big.on { background: linear-gradient(180deg, #ffd60a, #ffb703); }
+html.hc .help-big { border-color: #000; }
+/* wide window: the card on the left, the actions stacked on the right */
+@media (min-width: 980px) {
+  .player { max-width: 970px; display: grid; grid-template-columns: minmax(0, 680px) 250px; column-gap: 26px; align-items: start; justify-content: center; }
+  .player > * { grid-column: 1; }
+  .player > .p-side { grid-column: 2; grid-row: 2 / span 12; flex-direction: column; flex-wrap: nowrap; position: sticky; top: 16px; margin: 0; }
+  .player > .p-side .scratch-go, .player > .p-side .help-big { flex: none; width: 100%; padding-top: 14px; padding-bottom: 14px; }
+}
+
+.p-side .scratch-go b, .p-side .help-big b { white-space: nowrap; }
+
+/* side column extras: Words button and the progress card */
+.side-btn { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px 8px 14px; border-radius: 16px; cursor: pointer; text-align: left; color: #3b2a73; background: #fff; border: 3px solid #d9d0f2; box-shadow: 0 5px 0 #c4b7ea; font-family: inherit; transition: transform .12s; flex: 1 1 140px; }
+.side-btn:hover { transform: translateY(-2px); }
+.side-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #c4b7ea; }
+.side-btn .i { width: 26px; height: 26px; color: #7b2ff7; flex: none; }
+.side-btn .sg-t { display: grid; line-height: 1.05; }
+.side-btn b { font: 400 1.15rem var(--display), sans-serif; }
+.side-btn small { font-weight: 800; font-size: .72rem; color: var(--muted); }
+.side-card { display: none; }
+@media (min-width: 980px) {
+  .player > .p-side .side-btn { flex: none; width: 100%; padding-top: 11px; padding-bottom: 11px; }
+  .side-card { display: grid; gap: 6px; padding: 14px; border-radius: 16px; background: var(--card); border: 3px solid var(--line); box-shadow: 0 5px 0 var(--line); font-size: .9rem; }
+  .sc-h { font: 400 1rem var(--display), sans-serif; color: var(--ink); }
+  .sc-h2 { margin-top: 8px; padding-top: 10px; border-top: 2px dashed var(--line); }
+  .sc-h2 span { font: 800 .8rem Nunito, sans-serif; color: var(--muted); }
+  .sc-row { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-weight: 700; }
+  .sc-row b { color: var(--ink); }
+  .side-card .xpbar { height: 10px; }
+  .side-card .xpbar.lvl i { background: linear-gradient(90deg, #ffc83d, #ff8a1f); }
+}
+html.hc .side-btn, html.hc .side-card { border-color: #000; }

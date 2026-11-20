@@ -364,7 +364,7 @@ main.projector { max-width: none; padding: 16px; }
 .player { max-width: 680px; margin: 0 auto; }
 .p-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .p-back { font-weight: 800; text-decoration: none; }
-.p-title { flex: 1; min-width: 0; font: 600 1.1rem "Nunito", sans-serif; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-title { flex: 1 1 auto; min-width: min(100%, 11em); font: 600 1.1rem "Nunito", sans-serif; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-tools { display: flex; gap: 6px; }
 .dots { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 .dot { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); background: var(--card); color: var(--muted); font: 700 .85rem "Nunito", sans-serif; cursor: pointer; padding: 0; display: grid; place-items: center; transition: transform .15s; }
@@ -1383,6 +1383,92 @@ html.rm .spinner { animation-duration: 1.4s !important; animation-iteration-coun
 .cs-track.m-badge .cs-st-kids { grid-template-columns: repeat(auto-fill, minmax(calc(var(--av) + .5em), 1fr)); }
 .cs-track.tiny .cs-kid .cs-kid-txt { display: none; }
 .cs-track.tiny .cs-kid .cs-badge { display: none; }
+
+/* ===================== The big "Open Scratch" button ===================== */
+.p-tools { align-items: center; flex-wrap: wrap; }
+.scratch-go { position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 8px 12px; border-radius: 16px; text-decoration: none; color: #fff; overflow: hidden;
+  background: linear-gradient(180deg, #ffb13d, #ff8c1a); border: 3px solid #fff; box-shadow: 0 5px 0 #c96a06, 0 8px 18px rgba(255, 140, 26, .35); transition: transform .12s, box-shadow .12s; }
+.scratch-go:hover { transform: translateY(-2px) rotate(-1.5deg); box-shadow: 0 7px 0 #c96a06, 0 12px 22px rgba(255, 140, 26, .45); }
+.scratch-go:active { transform: translateY(4px); box-shadow: 0 1px 0 #c96a06; }
+.scratch-go:focus-visible { outline: 4px solid #2a1650; outline-offset: 3px; }
+.scratch-go .sg-t { display: grid; line-height: 1.05; text-align: left; }
+.scratch-go b { font: 400 1.25rem var(--display), sans-serif; letter-spacing: .3px; text-shadow: 0 2px 0 rgba(0, 0, 0, .18); }
+.scratch-go small { font-weight: 800; font-size: .72rem; opacity: .95; }
+.scratch-go .i { width: 18px; height: 18px; }
+/* three little code blocks that hop */
+.sg-blocks { display: grid; gap: 3px; width: 30px; }
+.sg-blocks i { display: block; height: 8px; border-radius: 3px; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .2); }
+.sg-blocks i:nth-child(1) { background: #4c97ff; width: 22px; }
+.sg-blocks i:nth-child(2) { background: #9966ff; width: 30px; }
+.sg-blocks i:nth-child(3) { background: #59c059; width: 18px; }
+/* a shine that sweeps across now and then */
+.scratch-go::after { content: ""; position: absolute; top: -20%; left: -40%; width: 30%; height: 140%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); transform: rotate(18deg); pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .scratch-go::after { animation: sgShine 4.5s ease-in-out infinite; }
+  .scratch-go:hover .sg-blocks i { animation: sgHop .5s ease-in-out; }
+  .scratch-go:hover .sg-blocks i:nth-child(2) { animation-delay: .08s; }
+  .scratch-go:hover .sg-blocks i:nth-child(3) { animation-delay: .16s; }
+  @keyframes sgShine { 0%, 70% { left: -40%; } 100% { left: 130%; } }
+  @keyframes sgHop { 50% { transform: translateY(-4px); } }
+}
+html.rm .scratch-go::after { animation: none; }
+html.hc .scratch-go { border-color: #000; }
+@media (max-width: 560px) { .scratch-go small { display: none; } .scratch-go b { font-size: 1.05rem; } }
+
+/* "Too easy? Level up" fold on a step */
+.p-more.boost { background: #f3e8ff; border: 2px dashed #a855f7; }
+.p-more.boost summary { color: #6b21a8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .p-more.boost { background: #33204d; } :root:not([data-theme="light"]) .p-more.boost summary { color: #e9d5ff; } }
+:root[data-theme="dark"] .p-more.boost { background: #33204d; }
+:root[data-theme="dark"] .p-more.boost summary { color: #e9d5ff; }
+
+.tip.boost-tip { background: #f3e8ff; border-color: #a855f7; color: #4a1772; }
+
+/* ===================== Quest page: big actions in a right-hand column ===================== */
+.p-side { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; margin: 0 0 12px; }
+.p-side .scratch-go, .p-side .help-big { flex: 1 1 200px; }
+.help-big { position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 8px 12px; border-radius: 16px; cursor: pointer; text-align: left; color: #5c3d00;
+  background: linear-gradient(180deg, #fff3c4, #ffe07a); border: 3px solid #fff; box-shadow: 0 5px 0 #d9a514, 0 8px 18px rgba(217, 165, 20, .3); transition: transform .12s, box-shadow .12s; font-family: inherit; }
+.help-big:hover { transform: translateY(-2px) rotate(1.5deg); box-shadow: 0 7px 0 #d9a514, 0 12px 22px rgba(217, 165, 20, .4); }
+.help-big:active { transform: translateY(4px); box-shadow: 0 1px 0 #d9a514; }
+.help-big:focus-visible { outline: 4px solid #2a1650; outline-offset: 3px; }
+.help-big .sg-t { display: grid; line-height: 1.05; }
+.help-big b { font: 400 1.25rem var(--display), sans-serif; letter-spacing: .3px; }
+.help-big small { font-weight: 800; font-size: .72rem; }
+.help-big .hb-hand { font-size: 1.7rem; line-height: 1; }
+.help-big.on { background: linear-gradient(180deg, #ffd60a, #ffb703); }
+html.hc .help-big { border-color: #000; }
+/* wide window: the card on the left, the actions stacked on the right */
+@media (min-width: 980px) {
+  .player { max-width: 970px; display: grid; grid-template-columns: minmax(0, 680px) 250px; column-gap: 26px; align-items: start; justify-content: center; }
+  .player > * { grid-column: 1; }
+  .player > .p-side { grid-column: 2; grid-row: 2 / span 12; flex-direction: column; flex-wrap: nowrap; position: sticky; top: 16px; margin: 0; }
+  .player > .p-side .scratch-go, .player > .p-side .help-big { flex: none; width: 100%; padding-top: 14px; padding-bottom: 14px; }
+}
+
+.p-side .scratch-go b, .p-side .help-big b { white-space: nowrap; }
+
+/* side column extras: Words button and the progress card */
+.side-btn { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px 8px 14px; border-radius: 16px; cursor: pointer; text-align: left; color: #3b2a73; background: #fff; border: 3px solid #d9d0f2; box-shadow: 0 5px 0 #c4b7ea; font-family: inherit; transition: transform .12s; flex: 1 1 140px; }
+.side-btn:hover { transform: translateY(-2px); }
+.side-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #c4b7ea; }
+.side-btn .i { width: 26px; height: 26px; color: #7b2ff7; flex: none; }
+.side-btn .sg-t { display: grid; line-height: 1.05; }
+.side-btn b { font: 400 1.15rem var(--display), sans-serif; }
+.side-btn small { font-weight: 800; font-size: .72rem; color: var(--muted); }
+.side-card { display: none; }
+@media (min-width: 980px) {
+  .player > .p-side .side-btn { flex: none; width: 100%; padding-top: 11px; padding-bottom: 11px; }
+  .side-card { display: grid; gap: 6px; padding: 14px; border-radius: 16px; background: var(--card); border: 3px solid var(--line); box-shadow: 0 5px 0 var(--line); font-size: .9rem; }
+  .sc-h { font: 400 1rem var(--display), sans-serif; color: var(--ink); }
+  .sc-h2 { margin-top: 8px; padding-top: 10px; border-top: 2px dashed var(--line); }
+  .sc-h2 span { font: 800 .8rem Nunito, sans-serif; color: var(--muted); }
+  .sc-row { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-weight: 700; }
+  .sc-row b { color: var(--ink); }
+  .side-card .xpbar { height: 10px; }
+  .side-card .xpbar.lvl i { background: linear-gradient(90deg, #ffc83d, #ff8a1f); }
+}
+html.hc .side-btn, html.hc .side-card { border-color: #000; }
 
 </style>
 </head>
@@ -10488,20 +10574,22 @@ SQ_LESSONS.t1 = {
     {
       title: "Open Scratch and sign in",
       short: "Go to the Scratch website, sign in, and click Create.",
-      text: "Go to <b>scratch.mit.edu</b> and click <b>Sign in</b>. Use your class account. Then click <b>Create</b> at the top. You now have a new project with one sprite: the cat, called <b>Sprite1</b>.",
-      tip: "Always sign in first. If you are not signed in, Scratch cannot save your work to your account. Look for your username in the top right corner."
+      text: "Tap the orange <b>Open Scratch</b> button at the top of this page (or go to <b>scratch.mit.edu</b>). Click <b>Sign in</b> in the top right corner and type the username and password your teacher gave you. Then click <b>Create</b> at the top. You now have a new project with one sprite: the cat, called <b>Sprite1</b>.",
+      tip: "Always sign in first. If you are not signed in, Scratch cannot save your work to your account. Look for your username in the top right corner. Forgot your password, or do not have an account yet? Tap I\u2019m stuck and your teacher will help."
     },
     {
       title: "Tour the map",
-      short: "Find the four parts: blocks, code area, Stage, and sprite list.",
-      text: "Find the four main areas:<br><b>1. Block palette</b> (left side): all the blocks, sorted by color.<br><b>2. Code area</b> (middle): where you build scripts.<br><b>3. Stage</b> (top right): where your project plays.<br><b>4. Sprite list</b> (bottom right): all your sprites.<br>Click each color circle on the far left (Motion, Looks, Sound, Events) and watch the palette jump to that color.",
+      short: "Find the four parts of Scratch. Nothing to build yet: just look around.",
+      boost: "Scavenger hunt: which color has the <b>say Hello!</b> block? Which color has <b>play sound</b>? Which has <b>when green flag clicked</b>? Find all three.",
+      text: "You do not build anything in this step. Just find the four main areas:<br><b>1. Block palette</b> (left side): all the blocks, sorted by color.<br><b>2. Code area</b> (middle): where you build scripts.<br><b>3. Stage</b> (top right): where your project plays.<br><b>4. Sprite list</b> (bottom right): all your sprites.<br>Click each color circle on the far left (Motion, Looks, Sound, Events) and watch the palette jump to that color.",
       tip: "Every block color is a category. Blue is Motion, purple is Looks, yellow is Events, orange is Control.",
       shots: ["tour"]
     },
     {
       title: "Your first move",
       short: "Drag a move block into the code area. Then click the block to run it.",
-      text: "Click <b>Motion</b>. Drag a <code>move (10) steps</code> block into the code area. <b>Click the block</b> to run it. The sprite moves! A block only runs when you click it, and it glows yellow while it runs. Click it again and again. Now change 10 to 50 and click it. Then try a negative number, like -50. Which way does it go now?",
+      text: "Click <b>Motion</b>. Drag a <code>move (10) steps</code> block into the code area. <b>Click the block</b> to run it. The sprite moves! A block only runs when you click it, and it glows yellow while it runs. Click it again and again.<br><b>To change a number:</b> click the white bubble in the block, type the new number, then click the block again to run it. Change 10 to 50 and click it. Then try a minus number, like -50 (use the minus key). Which way does it go now?",
+      boost: "The Stage is 480 steps wide. Put your sprite on the left edge. What ONE number moves it exactly to the right edge in a single click? Guess first, then test.",
       where: "Sprite1",
       change: "new",
       scaffold: "full",
@@ -10510,8 +10598,9 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Turn and spin",
-      short: "Snap a turn block under your move block. Then click the stack to run both.",
-      text: "Drag a <code>turn cw (15) degrees</code> block into the code area. Snap it <b>under</b> your move block. You will feel it click into place. Now the two blocks are one <b>script</b>. Click the script: both blocks run, top to bottom. Change 15 to 90 and click it four times. What shape did the sprite make?",
+      short: "Find the turn block in Motion. Snap it under your move block. Click the stack.",
+      text: "<b>1.</b> Stay in <b>Motion</b> (blue). Find the <b>turn</b> block with the curved arrow. It is near the top, under move.<br><b>2.</b> Drag it into the code area and let go right <b>under</b> your move block. It snaps on, like a puzzle piece.<br><b>3.</b> Now the two blocks are one <b>script</b>. Click anywhere on it: both blocks run, top to bottom.<br><b>4.</b> Click the white bubbles and change the numbers to match the picture: 50 steps and 90 degrees. Click the script four times. What shape did the sprite walk?",
+      boost: "Spin while moving! Change the numbers to move 10 and turn 15. Click the script again and again, fast. What path does your sprite follow? How many clicks to get all the way around?",
       where: "Sprite1",
       change: "add",
       changeNote: "Snap the turn block under the move block from the last step.",
@@ -10522,7 +10611,8 @@ SQ_LESSONS.t1 = {
     {
       title: "The x and y treasure map",
       short: "Type numbers into a go to block. Then click the block to run it.",
-      text: "Drag your sprite around the Stage with the mouse. Watch the <b>x</b> and <b>y</b> numbers under the Stage change.<br>Now use <code>go to x: () y: ()</code> to jump your sprite to a spot. Type the numbers, then click the block.<br>Can you find all four corners? Hint: x is 240 or -240. y is 180 or -180. The center is x: 0, y: 0.",
+      text: "Every spot on the Stage has two numbers. <b>x</b> is how far left or right. <b>y</b> is how far up or down. The center is x: 0, y: 0.<br><b>Minus numbers go left or down.</b> Plain numbers go right or up.<br><b>1.</b> Drag your sprite around the Stage with the mouse. Watch the x and y numbers under the Stage change.<br><b>2.</b> In <b>Motion</b>, find <code>go to x: () y: ()</code> and drag it into the code area.<br><b>3.</b> Click each white bubble and type a number. Then click the block. Your sprite jumps there!<br><b>4.</b> Find all four corners. Hint: x is 240 or -240. y is 180 or -180.",
+      boost: "No dragging allowed! Use only go to blocks to put your sprite: in the exact middle of the top edge, then halfway between the center and the bottom left corner. Write down your numbers first, then test.",
       where: "Sprite1",
       change: "new",
       scaffold: "full",
@@ -10538,7 +10628,8 @@ SQ_LESSONS.t1 = {
       change: "new",
       scaffold: "full",
       blocks: "go to x: (-200) y: (0)\nglide (1) secs to x: (0) y: (100)\nglide (1) secs to x: (200) y: (0)\nglide (1) secs to x: (0) y: (-100)",
-      tip: "Make the first number bigger to glide slower. Try 3 seconds."
+      tip: "Make the first number bigger to glide slower. Try 3 seconds. Tired of dragging? Right-click a glide block and choose Duplicate. Then you only change the numbers.",
+      boost: "Make your sprite glide a zigzag with five glides, where each glide is faster than the one before. Then make it glide a triangle and stop exactly where it started."
     },
     {
       title: "Corner tour",
@@ -10548,12 +10639,13 @@ SQ_LESSONS.t1 = {
       change: "new",
       scaffold: "goal",
       blocks: "go to x: (0) y: (0)\nglide (1) secs to x: (-200) y: (150)\nglide (1) secs to x: (200) y: (150)\nglide (1) secs to x: (200) y: (-150)\nglide (1) secs to x: (-200) y: (-150)\nglide (1) secs to x: (0) y: (0)",
-      tip: "Use numbers a little smaller than the edges, like 200 and 150, so you can still see the sprite in the corner."
+      tip: "Use numbers a little smaller than the edges, like 200 and 150, so you can still see the sprite in the corner. Right-click a glide block and choose Duplicate to save time: then you only change the numbers.",
+      boost: "Speed run: make the whole tour finish in under 3 seconds. Then snap a turn block after each glide, so your sprite spins a little at every corner. Can it end facing the same way it started?"
     },
     {
       title: "Name it, save it, share it",
       short: "Name your project, save it, and click Share.",
-      text: "Click the title box above the code area and type a name for your project. Name it anything you like. Click <b>File</b>, then <b>Save now</b>. Then click the orange <b>Share</b> button. Copy the link from the address bar at the top of your browser. That link is what you turn in.",
+      text: "<b>1.</b> Click the title box above the code area and type a name for your project. Name it anything you like.<br><b>2.</b> Click <b>File</b>, then <b>Save now</b>.<br><b>3.</b> Click the orange <b>Share</b> button at the top. You are not sending it to a person. Share just means other people are allowed to open your project, so your teacher can see it.<br><b>4.</b> Copy the link from the address bar at the top of your browser. On the last card of this quest, you paste that link to turn it in.",
       tip: "If the Share button is grey and you cannot click it, your account email may not be confirmed yet. Tell your teacher. Never put your last name or other personal information in a project."
     }
   ],
@@ -10573,10 +10665,10 @@ SQ_LESSONS.t1 = {
     }
   ],
   challenge: {
-    title: "Walk a square",
-    short: "Make your sprite walk a square and end where it started.",
-    text: "Make your sprite walk in a square path and stop exactly where it started, facing the same way. Use only <b>move</b> and <b>turn</b> blocks. How many of each do you need? How many degrees is each turn?",
-    answer: "move (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees"
+    title: "Shape master",
+    short: "Walk a square. Then a triangle. Then, if you dare, a star.",
+    text: "Use only <b>move</b> and <b>turn</b> blocks. Your sprite must stop exactly where it started, facing the same way.<br><b>Level 1: Square.</b> How many moves and turns? How many degrees is each turn?<br><b>Level 2: Triangle.</b> Three sides. The turn is NOT 60 degrees. Test until it closes up.<br><b>Level 3: Star.</b> Five points. The secret turn is between 140 and 150 degrees.<br>Finish Level 1 to count the challenge as done. Levels 2 and 3 are for bragging rights.",
+    answer: "move (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\n\nmove (120) steps\nturn cw (120) degrees\nmove (120) steps\nturn cw (120) degrees\nmove (120) steps\nturn cw (120) degrees\n\nmove (150) steps\nturn cw (144) degrees\nmove (150) steps\nturn cw (144) degrees\nmove (150) steps\nturn cw (144) degrees\nmove (150) steps\nturn cw (144) degrees\nmove (150) steps\nturn cw (144) degrees"
   },
   checklist: [
     "My sprite moves and turns with a script.",
@@ -13469,7 +13561,7 @@ var SQ_SOUND = (function () {
 })();
 
 
-var SQ_BUILD = "2026-11-19T19:07";
+var SQ_BUILD = "2026-11-20T18:21";
 var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
 
 /* Scratch Quest — page translation for students (Brazilian Portuguese).
@@ -14797,6 +14889,7 @@ var SQ_MAPART = (function () {
       var on = !!ns.steps[i];
       h += '<li class="step' + (on ? ' on' : '') + '"><label class="check"><input type="checkbox" data-act="step" data-node="' + id + '" data-idx="' + i + '"' + (on ? ' checked' : '') + (lockedUI || frozen ? ' disabled' : '') + '><span class="box"></span><span class="step-title">' + (i + 1) + '. ' + esc(s.title) + (s.stretch ? ' <span class="stretch-tag"><svg class="i"><use href="#i-star"/></svg> Stretch</span>' : '') + '</span></label>' +
         '<div class="step-body"><p><b>' + (s.short || '') + '</b></p><p>' + s.text + '</p>' + stepBody(id, i, true) + (s.tip ? '<div class="tip"><svg class="i"><use href="#i-bulb"/></svg> ' + s.tip + '</div>' : '') +
+        (s.boost ? '<div class="tip boost-tip"><svg class="i"><use href="#i-zap"/></svg> <b>Too easy? Level up:</b> ' + s.boost + '</div>' : '') +
         (s.solo ? '<div class="tip solo-tip"><svg class="i"><use href="#i-user"/></svg> <b>Solo option:</b> ' + s.solo + '</div>' : '') + '</div></li>';
     });
     h += '</ol></section>';
@@ -14942,7 +15035,8 @@ var SQ_MAPART = (function () {
     flag: '<svg viewBox="0 0 44 36" aria-hidden="true"><path d="M13 4v29" stroke="#3b7d2a" stroke-width="3.5" stroke-linecap="round"/><path d="M13 6c6-4 11 4 19 0v15c-8 4-13-4-19 0z" fill="#4cbf56" stroke="#3b7d2a" stroke-width="2" stroke-linejoin="round"/></svg>',
     key: '<svg viewBox="0 0 44 36" aria-hidden="true"><rect x="6" y="7" width="32" height="24" rx="6" fill="#fff" stroke="#241145" stroke-width="2.2"/><rect x="6" y="7" width="32" height="19" rx="6" fill="#f1edfb" stroke="#241145" stroke-width="2.2"/><path d="M16 17h12" stroke="#241145" stroke-width="2.4" stroke-linecap="round"/></svg>'
   };
-  function runHint(blocks, change) {
+  // noHats: this quest has no scripts that start with a 'when...' block yet (Lesson 1), so everything is run by clicking
+  function runHint(blocks, change, noHats) {
     var tops = String(blocks || '').split(/\n\s*\n/).map(function (sc) { return sc.trim().split('\n')[0] || ''; }).filter(Boolean);
     if (!tops.length) return '';
     var out = [], seen = {}, add = function (icon, text) { if (!seen[text]) { seen[text] = 1; out.push([icon, text]); } }, m;
@@ -14952,7 +15046,7 @@ var SQ_MAPART = (function () {
       else if (/^when this sprite clicked/i.test(t)) add('click', 'click the <b>sprite</b> on the Stage.');
       else if (/^when (I receive|I start as a clone|backdrop switches)/i.test(t) || /^define /i.test(t)) add('flag', 'start your project with the <b>green flag</b>. This script runs when the rest of your code calls it.');
       else if (/^when /i.test(t)) add('flag', 'do what the yellow block on top says.');
-      else if (change === 'add' || change === 'replace') add('flag', 'put these blocks into your script, then start that script the usual way (the <b>green flag</b>, if it has one).');
+      else if ((change === 'add' || change === 'replace') && !noHats) add('flag', 'put these blocks into your script, then start that script the usual way (the <b>green flag</b>, if it has one).');
       else add('click', '<b>click the stack of blocks</b>. It glows yellow while it runs. Nothing happens until you click it!');
     });
     // when the step also has a green-flag script, that one line is enough
@@ -14961,6 +15055,7 @@ var SQ_MAPART = (function () {
   }
   function stepBody(id, i, teacher) {
     var s = L[id].steps[i], h = '';
+    var noHats = !L[id].steps.some(function (x) { return /(^|\n)\s*(when |define )/.test(String(x.blocks || '') + '\n' + (x.options || []).map(function (o) { return o.blocks; }).join('\n')); });
     h += whereFor(s) + shotsFor(s.shots);
     if (s.options && s.options.length) {
       var key = id + '.' + i;
@@ -14975,11 +15070,11 @@ var SQ_MAPART = (function () {
       }).join('') + '</div>';
       s.options.forEach(function (o, j) {
         if (!teacher && j !== pick) return;
-        h += '<div class="opt-body">' + (teacher ? '<b>' + esc(o.label) + ':</b> ' : '') + '<p class="say">' + esc(o.short) + '</p>' + codeFor(s.scaffold, o.blocks, key + j, teacher) + runHint(o.blocks, s.change) + '</div>';
+        h += '<div class="opt-body">' + (teacher ? '<b>' + esc(o.label) + ':</b> ' : '') + '<p class="say">' + esc(o.short) + '</p>' + codeFor(s.scaffold, o.blocks, key + j, teacher) + runHint(o.blocks, s.change, noHats) + '</div>';
       });
       h += '</div>';
     } else {
-      h += codeFor(s.scaffold, s.blocks, id + '.' + i, teacher) + runHint(s.blocks, s.change);
+      h += codeFor(s.scaffold, s.blocks, id + '.' + i, teacher) + runHint(s.blocks, s.change, noHats);
     }
     if (s.frame) h += frameBox(s.frame);
     return h;
@@ -15015,10 +15110,23 @@ var SQ_MAPART = (function () {
     }
     var h = '<div class="player" style="--c:' + B.color + '">';
     h += '<div class="p-top"><a class="p-back" href="#/map" aria-label="Back to map"><svg class="i"><use href="#i-arrow-left"/></svg> Map</a><div class="p-title"><span class="p-ico">' + SQ_ICONS.branch(n.branch) + '</span>' + esc(Ls.title) + '</div>' +
-      '<div class="p-tools"><button class="btn small ghost" data-act="words" data-node="' + id + '" title="Word bank"><svg class="i"><use href="#i-book"/></svg> Words</button>' +
-      '<a class="btn small" href="https://scratch.mit.edu/projects/editor/" target="scratchwin" rel="noopener"><svg class="i"><use href="#i-external"/></svg> Scratch <svg class="i"><use href="#i-external"/></svg></a>' +
-      '<button class="btn small ghost" data-act="split-help" title="Put Scratch and this side by side"><svg class="i"><use href="#i-columns"/></svg></button>' +
-      (readOnly ? '' : '<button class="btn small help-btn' + (S.help && S.help.open ? ' on' : '') + '" data-act="ask-help" data-node="' + id + '" data-step="' + (helpWhere(c) == null ? '' : helpWhere(c)) + '">✋ I’m stuck</button>') + '</div></div>';
+      '<div class="p-tools"><button class="btn small ghost" data-act="split-help" title="Put Scratch and this side by side"><svg class="i"><use href="#i-columns"/></svg></button></div></div>';
+    // the two big actions sit in their own column on the right (above the card on a narrow window)
+    h += '<aside class="p-side"><a class="scratch-go" href="https://scratch.mit.edu/projects/editor/" target="scratchwin" rel="noopener" title="Opens Scratch in its own window">' +
+        '<span class="sg-blocks" aria-hidden="true"><i></i><i></i><i></i></span><span class="sg-t"><b>Open Scratch</b><small>build it here</small></span><svg class="i"><use href="#i-external"/></svg></a>' +
+      (readOnly ? '' : '<button class="help-big help-btn' + (S.help && S.help.open ? ' on' : '') + '" data-act="ask-help" data-node="' + id + '" data-step="' + (helpWhere(c) == null ? '' : helpWhere(c)) + '"><span class="hb-hand" aria-hidden="true">✋</span><span class="sg-t"><b>I’m stuck</b><small>' + (S.help && S.help.open ? 'help is on the way' : 'ask for help') + '</small></span></button>') +
+      '<button class="side-btn" data-act="words" data-node="' + id + '"><svg class="i"><use href="#i-book"/></svg><span class="sg-t"><b>Words</b><small>word bank</small></span></button>' +
+      (function () {
+        // a small "how am I doing" card: this quest's progress, and the student's level
+        var core = R.coreSteps(Ls), sd = core.filter(function (i) { return ns.steps[i]; }).length, qd = Ls.quiz.filter(function (_, i) { return ns.quiz[i] && ns.quiz[i].correct; }).length, pp = prof();
+        var lv = Math.min(100, Math.round((pp.xp - pp.levelStart) / (pp.levelNext - pp.levelStart) * 100));
+        return '<div class="side-card"><div class="sc-h">This quest</div>' +
+          '<div class="sc-row"><span>Steps</span><b>' + sd + ' of ' + core.length + '</b></div><div class="xpbar"><i style="width:' + Math.round(sd / Math.max(1, core.length) * 100) + '%"></i></div>' +
+          '<div class="sc-row"><span>Quick checks</span><b>' + qd + ' of ' + Ls.quiz.length + '</b></div>' +
+          '<div class="sc-h sc-h2">Level ' + pp.level + ' <span class="notr">· ' + esc(pp.rank) + '</span></div><div class="xpbar lvl"><i style="width:' + lv + '%"></i></div>' +
+          '<div class="sc-row"><span>' + fmtN(pp.xp) + ' XP</span><b>' + fmtN(Math.max(0, pp.levelNext - pp.xp)) + ' to next level</b></div></div>';
+      })() +
+      '</aside>';
     h += '<div class="dots" role="tablist">';
     cards.forEach(function (cc, j) {
       var stretch = cc.type === 'step' && Ls.steps[cc.i].stretch;
@@ -15057,6 +15165,7 @@ var SQ_MAPART = (function () {
         '<p class="p-say say">' + (s.short || s.text) + '</p>' + stepBody(id, c.i) +
         '<div class="p-extras">' + (s.short ? '<details class="p-more"><summary><svg class="i"><use href="#i-book"/></svg> Tell me more</summary><div class="p-text say">' + s.text + '</div></details>' : '') +
         (s.tip ? '<details class="p-more hint"><summary><svg class="i"><use href="#i-bulb"/></svg> Need a hint?</summary><p class="say">' + s.tip + '</p></details>' : '') +
+        (s.boost ? '<details class="p-more boost"><summary><svg class="i"><use href="#i-zap"/></svg> Too easy? Level up</summary><p class="say">' + s.boost + '</p></details>' : '') +
         (s.solo ? '<details class="p-more solo"><summary><svg class="i"><use href="#i-user"/></svg> No partner free right now?</summary><p class="say">' + s.solo + '</p></details>' : '') + (readOnly ? '' : confBtn(id, 'step', c.i)) + '</div>';
       if (readOnly || frozen) h += '<div class="p-nav">' + backBtn + (nextBtn || '<span></span>') + '</div>';
       else if (on) h += '<div class="p-done"><svg class="i"><use href="#i-check-circle"/></svg> Done! <button class="linklike" data-act="undo-step" data-node="' + id + '" data-idx="' + c.i + '">undo</button></div><div class="p-nav">' + backBtn + nextBtn + '</div>';

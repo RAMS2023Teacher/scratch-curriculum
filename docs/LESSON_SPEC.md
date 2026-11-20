@@ -72,6 +72,7 @@ SQ_LESSONS.g1 = {
   options: [ { label, short, blocks } ],  // OPTIONAL instead of blocks: 2 mechanic choices (e.g. "Falling" vs "Dodging"). Each has full solution blocks. Same scaffold applies.
   shots: ["make-variable"],         // OPTIONAL screenshot keys (list below) for "where to click" steps
   tip: "...",                       // hint: anticipate the #1 confusion at this step (most code steps should have one)
+  boost: "...",                     // OPTIONAL "Too easy? Level up": a harder twist on THIS step for fast finishers, using only blocks taught so far. Not required, earns no XP.
   stretch: true,                    // OPTIONAL: step is "if you have time". Max 2 per lesson; never needed for the checklist.
   solo: "...",                      // REQUIRED if the step involves a partner/neighbor/friend: what to do if nobody is free
   frame: "..."                      // OPTIONAL writing template / sentence frames for any writing task (use \n for lines)

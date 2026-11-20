@@ -19,20 +19,22 @@ SQ_LESSONS.t1 = {
     {
       title: "Open Scratch and sign in",
       short: "Go to the Scratch website, sign in, and click Create.",
-      text: "Go to <b>scratch.mit.edu</b> and click <b>Sign in</b>. Use your class account. Then click <b>Create</b> at the top. You now have a new project with one sprite: the cat, called <b>Sprite1</b>.",
-      tip: "Always sign in first. If you are not signed in, Scratch cannot save your work to your account. Look for your username in the top right corner."
+      text: "Tap the orange <b>Open Scratch</b> button at the top of this page (or go to <b>scratch.mit.edu</b>). Click <b>Sign in</b> in the top right corner and type the username and password your teacher gave you. Then click <b>Create</b> at the top. You now have a new project with one sprite: the cat, called <b>Sprite1</b>.",
+      tip: "Always sign in first. If you are not signed in, Scratch cannot save your work to your account. Look for your username in the top right corner. Forgot your password, or do not have an account yet? Tap I\u2019m stuck and your teacher will help."
     },
     {
       title: "Tour the map",
-      short: "Find the four parts: blocks, code area, Stage, and sprite list.",
-      text: "Find the four main areas:<br><b>1. Block palette</b> (left side): all the blocks, sorted by color.<br><b>2. Code area</b> (middle): where you build scripts.<br><b>3. Stage</b> (top right): where your project plays.<br><b>4. Sprite list</b> (bottom right): all your sprites.<br>Click each color circle on the far left (Motion, Looks, Sound, Events) and watch the palette jump to that color.",
+      short: "Find the four parts of Scratch. Nothing to build yet: just look around.",
+      boost: "Scavenger hunt: which color has the <b>say Hello!</b> block? Which color has <b>play sound</b>? Which has <b>when green flag clicked</b>? Find all three.",
+      text: "You do not build anything in this step. Just find the four main areas:<br><b>1. Block palette</b> (left side): all the blocks, sorted by color.<br><b>2. Code area</b> (middle): where you build scripts.<br><b>3. Stage</b> (top right): where your project plays.<br><b>4. Sprite list</b> (bottom right): all your sprites.<br>Click each color circle on the far left (Motion, Looks, Sound, Events) and watch the palette jump to that color.",
       tip: "Every block color is a category. Blue is Motion, purple is Looks, yellow is Events, orange is Control.",
       shots: ["tour"]
     },
     {
       title: "Your first move",
       short: "Drag a move block into the code area. Then click the block to run it.",
-      text: "Click <b>Motion</b>. Drag a <code>move (10) steps</code> block into the code area. <b>Click the block</b> to run it. The sprite moves! A block only runs when you click it, and it glows yellow while it runs. Click it again and again. Now change 10 to 50 and click it. Then try a negative number, like -50. Which way does it go now?",
+      text: "Click <b>Motion</b>. Drag a <code>move (10) steps</code> block into the code area. <b>Click the block</b> to run it. The sprite moves! A block only runs when you click it, and it glows yellow while it runs. Click it again and again.<br><b>To change a number:</b> click the white bubble in the block, type the new number, then click the block again to run it. Change 10 to 50 and click it. Then try a minus number, like -50 (use the minus key). Which way does it go now?",
+      boost: "The Stage is 480 steps wide. Put your sprite on the left edge. What ONE number moves it exactly to the right edge in a single click? Guess first, then test.",
       where: "Sprite1",
       change: "new",
       scaffold: "full",
@@ -41,8 +43,9 @@ SQ_LESSONS.t1 = {
     },
     {
       title: "Turn and spin",
-      short: "Snap a turn block under your move block. Then click the stack to run both.",
-      text: "Drag a <code>turn cw (15) degrees</code> block into the code area. Snap it <b>under</b> your move block. You will feel it click into place. Now the two blocks are one <b>script</b>. Click the script: both blocks run, top to bottom. Change 15 to 90 and click it four times. What shape did the sprite make?",
+      short: "Find the turn block in Motion. Snap it under your move block. Click the stack.",
+      text: "<b>1.</b> Stay in <b>Motion</b> (blue). Find the <b>turn</b> block with the curved arrow. It is near the top, under move.<br><b>2.</b> Drag it into the code area and let go right <b>under</b> your move block. It snaps on, like a puzzle piece.<br><b>3.</b> Now the two blocks are one <b>script</b>. Click anywhere on it: both blocks run, top to bottom.<br><b>4.</b> Click the white bubbles and change the numbers to match the picture: 50 steps and 90 degrees. Click the script four times. What shape did the sprite walk?",
+      boost: "Spin while moving! Change the numbers to move 10 and turn 15. Click the script again and again, fast. What path does your sprite follow? How many clicks to get all the way around?",
       where: "Sprite1",
       change: "add",
       changeNote: "Snap the turn block under the move block from the last step.",
@@ -53,7 +56,8 @@ SQ_LESSONS.t1 = {
     {
       title: "The x and y treasure map",
       short: "Type numbers into a go to block. Then click the block to run it.",
-      text: "Drag your sprite around the Stage with the mouse. Watch the <b>x</b> and <b>y</b> numbers under the Stage change.<br>Now use <code>go to x: () y: ()</code> to jump your sprite to a spot. Type the numbers, then click the block.<br>Can you find all four corners? Hint: x is 240 or -240. y is 180 or -180. The center is x: 0, y: 0.",
+      text: "Every spot on the Stage has two numbers. <b>x</b> is how far left or right. <b>y</b> is how far up or down. The center is x: 0, y: 0.<br><b>Minus numbers go left or down.</b> Plain numbers go right or up.<br><b>1.</b> Drag your sprite around the Stage with the mouse. Watch the x and y numbers under the Stage change.<br><b>2.</b> In <b>Motion</b>, find <code>go to x: () y: ()</code> and drag it into the code area.<br><b>3.</b> Click each white bubble and type a number. Then click the block. Your sprite jumps there!<br><b>4.</b> Find all four corners. Hint: x is 240 or -240. y is 180 or -180.",
+      boost: "No dragging allowed! Use only go to blocks to put your sprite: in the exact middle of the top edge, then halfway between the center and the bottom left corner. Write down your numbers first, then test.",
       where: "Sprite1",
       change: "new",
       scaffold: "full",
@@ -69,7 +73,8 @@ SQ_LESSONS.t1 = {
       change: "new",
       scaffold: "full",
       blocks: "go to x: (-200) y: (0)\nglide (1) secs to x: (0) y: (100)\nglide (1) secs to x: (200) y: (0)\nglide (1) secs to x: (0) y: (-100)",
-      tip: "Make the first number bigger to glide slower. Try 3 seconds."
+      tip: "Make the first number bigger to glide slower. Try 3 seconds. Tired of dragging? Right-click a glide block and choose Duplicate. Then you only change the numbers.",
+      boost: "Make your sprite glide a zigzag with five glides, where each glide is faster than the one before. Then make it glide a triangle and stop exactly where it started."
     },
     {
       title: "Corner tour",
@@ -79,12 +84,13 @@ SQ_LESSONS.t1 = {
       change: "new",
       scaffold: "goal",
       blocks: "go to x: (0) y: (0)\nglide (1) secs to x: (-200) y: (150)\nglide (1) secs to x: (200) y: (150)\nglide (1) secs to x: (200) y: (-150)\nglide (1) secs to x: (-200) y: (-150)\nglide (1) secs to x: (0) y: (0)",
-      tip: "Use numbers a little smaller than the edges, like 200 and 150, so you can still see the sprite in the corner."
+      tip: "Use numbers a little smaller than the edges, like 200 and 150, so you can still see the sprite in the corner. Right-click a glide block and choose Duplicate to save time: then you only change the numbers.",
+      boost: "Speed run: make the whole tour finish in under 3 seconds. Then snap a turn block after each glide, so your sprite spins a little at every corner. Can it end facing the same way it started?"
     },
     {
       title: "Name it, save it, share it",
       short: "Name your project, save it, and click Share.",
-      text: "Click the title box above the code area and type a name for your project. Name it anything you like. Click <b>File</b>, then <b>Save now</b>. Then click the orange <b>Share</b> button. Copy the link from the address bar at the top of your browser. That link is what you turn in.",
+      text: "<b>1.</b> Click the title box above the code area and type a name for your project. Name it anything you like.<br><b>2.</b> Click <b>File</b>, then <b>Save now</b>.<br><b>3.</b> Click the orange <b>Share</b> button at the top. You are not sending it to a person. Share just means other people are allowed to open your project, so your teacher can see it.<br><b>4.</b> Copy the link from the address bar at the top of your browser. On the last card of this quest, you paste that link to turn it in.",
       tip: "If the Share button is grey and you cannot click it, your account email may not be confirmed yet. Tell your teacher. Never put your last name or other personal information in a project."
     }
   ],
@@ -104,10 +110,10 @@ SQ_LESSONS.t1 = {
     }
   ],
   challenge: {
-    title: "Walk a square",
-    short: "Make your sprite walk a square and end where it started.",
-    text: "Make your sprite walk in a square path and stop exactly where it started, facing the same way. Use only <b>move</b> and <b>turn</b> blocks. How many of each do you need? How many degrees is each turn?",
-    answer: "move (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees"
+    title: "Shape master",
+    short: "Walk a square. Then a triangle. Then, if you dare, a star.",
+    text: "Use only <b>move</b> and <b>turn</b> blocks. Your sprite must stop exactly where it started, facing the same way.<br><b>Level 1: Square.</b> How many moves and turns? How many degrees is each turn?<br><b>Level 2: Triangle.</b> Three sides. The turn is NOT 60 degrees. Test until it closes up.<br><b>Level 3: Star.</b> Five points. The secret turn is between 140 and 150 degrees.<br>Finish Level 1 to count the challenge as done. Levels 2 and 3 are for bragging rights.",
+    answer: "move (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\nmove (100) steps\nturn cw (90) degrees\n\nmove (120) steps\nturn cw (120) degrees\nmove (120) steps\nturn cw (120) degrees\nmove (120) steps\nturn cw (120) degrees\n\nmove (150) steps\nturn cw (144) degrees\nmove (150) steps\nturn cw (144) degrees\nmove (150) steps\nturn cw (144) degrees\nmove (150) steps\nturn cw (144) degrees\nmove (150) steps\nturn cw (144) degrees"
   },
   checklist: [
     "My sprite moves and turns with a script.",

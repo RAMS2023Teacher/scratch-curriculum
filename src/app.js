@@ -539,6 +539,7 @@
       var on = !!ns.steps[i];
       h += '<li class="step' + (on ? ' on' : '') + '"><label class="check"><input type="checkbox" data-act="step" data-node="' + id + '" data-idx="' + i + '"' + (on ? ' checked' : '') + (lockedUI || frozen ? ' disabled' : '') + '><span class="box"></span><span class="step-title">' + (i + 1) + '. ' + esc(s.title) + (s.stretch ? ' <span class="stretch-tag"><svg class="i"><use href="#i-star"/></svg> Stretch</span>' : '') + '</span></label>' +
         '<div class="step-body"><p><b>' + (s.short || '') + '</b></p><p>' + s.text + '</p>' + stepBody(id, i, true) + (s.tip ? '<div class="tip"><svg class="i"><use href="#i-bulb"/></svg> ' + s.tip + '</div>' : '') +
+        (s.boost ? '<div class="tip boost-tip"><svg class="i"><use href="#i-zap"/></svg> <b>Too easy? Level up:</b> ' + s.boost + '</div>' : '') +
         (s.solo ? '<div class="tip solo-tip"><svg class="i"><use href="#i-user"/></svg> <b>Solo option:</b> ' + s.solo + '</div>' : '') + '</div></li>';
     });
     h += '</ol></section>';
@@ -684,7 +685,8 @@
     flag: '<svg viewBox="0 0 44 36" aria-hidden="true"><path d="M13 4v29" stroke="#3b7d2a" stroke-width="3.5" stroke-linecap="round"/><path d="M13 6c6-4 11 4 19 0v15c-8 4-13-4-19 0z" fill="#4cbf56" stroke="#3b7d2a" stroke-width="2" stroke-linejoin="round"/></svg>',
     key: '<svg viewBox="0 0 44 36" aria-hidden="true"><rect x="6" y="7" width="32" height="24" rx="6" fill="#fff" stroke="#241145" stroke-width="2.2"/><rect x="6" y="7" width="32" height="19" rx="6" fill="#f1edfb" stroke="#241145" stroke-width="2.2"/><path d="M16 17h12" stroke="#241145" stroke-width="2.4" stroke-linecap="round"/></svg>'
   };
-  function runHint(blocks, change) {
+  // noHats: this quest has no scripts that start with a 'when...' block yet (Lesson 1), so everything is run by clicking
+  function runHint(blocks, change, noHats) {
     var tops = String(blocks || '').split(/\n\s*\n/).map(function (sc) { return sc.trim().split('\n')[0] || ''; }).filter(Boolean);
     if (!tops.length) return '';
     var out = [], seen = {}, add = function (icon, text) { if (!seen[text]) { seen[text] = 1; out.push([icon, text]); } }, m;
@@ -694,7 +696,7 @@
       else if (/^when this sprite clicked/i.test(t)) add('click', 'click the <b>sprite</b> on the Stage.');
       else if (/^when (I receive|I start as a clone|backdrop switches)/i.test(t) || /^define /i.test(t)) add('flag', 'start your project with the <b>green flag</b>. This script runs when the rest of your code calls it.');
       else if (/^when /i.test(t)) add('flag', 'do what the yellow block on top says.');
-      else if (change === 'add' || change === 'replace') add('flag', 'put these blocks into your script, then start that script the usual way (the <b>green flag</b>, if it has one).');
+      else if ((change === 'add' || change === 'replace') && !noHats) add('flag', 'put these blocks into your script, then start that script the usual way (the <b>green flag</b>, if it has one).');
       else add('click', '<b>click the stack of blocks</b>. It glows yellow while it runs. Nothing happens until you click it!');
     });
     // when the step also has a green-flag script, that one line is enough
@@ -703,6 +705,7 @@
   }
   function stepBody(id, i, teacher) {
     var s = L[id].steps[i], h = '';
+    var noHats = !L[id].steps.some(function (x) { return /(^|\n)\s*(when |define )/.test(String(x.blocks || '') + '\n' + (x.options || []).map(function (o) { return o.blocks; }).join('\n')); });
     h += whereFor(s) + shotsFor(s.shots);
     if (s.options && s.options.length) {
       var key = id + '.' + i;
@@ -717,11 +720,11 @@
       }).join('') + '</div>';
       s.options.forEach(function (o, j) {
         if (!teacher && j !== pick) return;
-        h += '<div class="opt-body">' + (teacher ? '<b>' + esc(o.label) + ':</b> ' : '') + '<p class="say">' + esc(o.short) + '</p>' + codeFor(s.scaffold, o.blocks, key + j, teacher) + runHint(o.blocks, s.change) + '</div>';
+        h += '<div class="opt-body">' + (teacher ? '<b>' + esc(o.label) + ':</b> ' : '') + '<p class="say">' + esc(o.short) + '</p>' + codeFor(s.scaffold, o.blocks, key + j, teacher) + runHint(o.blocks, s.change, noHats) + '</div>';
       });
       h += '</div>';
     } else {
-      h += codeFor(s.scaffold, s.blocks, id + '.' + i, teacher) + runHint(s.blocks, s.change);
+      h += codeFor(s.scaffold, s.blocks, id + '.' + i, teacher) + runHint(s.blocks, s.change, noHats);
     }
     if (s.frame) h += frameBox(s.frame);
     return h;
@@ -757,10 +760,23 @@
     }
     var h = '<div class="player" style="--c:' + B.color + '">';
     h += '<div class="p-top"><a class="p-back" href="#/map" aria-label="Back to map"><svg class="i"><use href="#i-arrow-left"/></svg> Map</a><div class="p-title"><span class="p-ico">' + SQ_ICONS.branch(n.branch) + '</span>' + esc(Ls.title) + '</div>' +
-      '<div class="p-tools"><button class="btn small ghost" data-act="words" data-node="' + id + '" title="Word bank"><svg class="i"><use href="#i-book"/></svg> Words</button>' +
-      '<a class="btn small" href="https://scratch.mit.edu/projects/editor/" target="scratchwin" rel="noopener"><svg class="i"><use href="#i-external"/></svg> Scratch <svg class="i"><use href="#i-external"/></svg></a>' +
-      '<button class="btn small ghost" data-act="split-help" title="Put Scratch and this side by side"><svg class="i"><use href="#i-columns"/></svg></button>' +
-      (readOnly ? '' : '<button class="btn small help-btn' + (S.help && S.help.open ? ' on' : '') + '" data-act="ask-help" data-node="' + id + '" data-step="' + (helpWhere(c) == null ? '' : helpWhere(c)) + '">✋ I’m stuck</button>') + '</div></div>';
+      '<div class="p-tools"><button class="btn small ghost" data-act="split-help" title="Put Scratch and this side by side"><svg class="i"><use href="#i-columns"/></svg></button></div></div>';
+    // the two big actions sit in their own column on the right (above the card on a narrow window)
+    h += '<aside class="p-side"><a class="scratch-go" href="https://scratch.mit.edu/projects/editor/" target="scratchwin" rel="noopener" title="Opens Scratch in its own window">' +
+        '<span class="sg-blocks" aria-hidden="true"><i></i><i></i><i></i></span><span class="sg-t"><b>Open Scratch</b><small>build it here</small></span><svg class="i"><use href="#i-external"/></svg></a>' +
+      (readOnly ? '' : '<button class="help-big help-btn' + (S.help && S.help.open ? ' on' : '') + '" data-act="ask-help" data-node="' + id + '" data-step="' + (helpWhere(c) == null ? '' : helpWhere(c)) + '"><span class="hb-hand" aria-hidden="true">✋</span><span class="sg-t"><b>I’m stuck</b><small>' + (S.help && S.help.open ? 'help is on the way' : 'ask for help') + '</small></span></button>') +
+      '<button class="side-btn" data-act="words" data-node="' + id + '"><svg class="i"><use href="#i-book"/></svg><span class="sg-t"><b>Words</b><small>word bank</small></span></button>' +
+      (function () {
+        // a small "how am I doing" card: this quest's progress, and the student's level
+        var core = R.coreSteps(Ls), sd = core.filter(function (i) { return ns.steps[i]; }).length, qd = Ls.quiz.filter(function (_, i) { return ns.quiz[i] && ns.quiz[i].correct; }).length, pp = prof();
+        var lv = Math.min(100, Math.round((pp.xp - pp.levelStart) / (pp.levelNext - pp.levelStart) * 100));
+        return '<div class="side-card"><div class="sc-h">This quest</div>' +
+          '<div class="sc-row"><span>Steps</span><b>' + sd + ' of ' + core.length + '</b></div><div class="xpbar"><i style="width:' + Math.round(sd / Math.max(1, core.length) * 100) + '%"></i></div>' +
+          '<div class="sc-row"><span>Quick checks</span><b>' + qd + ' of ' + Ls.quiz.length + '</b></div>' +
+          '<div class="sc-h sc-h2">Level ' + pp.level + ' <span class="notr">· ' + esc(pp.rank) + '</span></div><div class="xpbar lvl"><i style="width:' + lv + '%"></i></div>' +
+          '<div class="sc-row"><span>' + fmtN(pp.xp) + ' XP</span><b>' + fmtN(Math.max(0, pp.levelNext - pp.xp)) + ' to next level</b></div></div>';
+      })() +
+      '</aside>';
     h += '<div class="dots" role="tablist">';
     cards.forEach(function (cc, j) {
       var stretch = cc.type === 'step' && Ls.steps[cc.i].stretch;
@@ -799,6 +815,7 @@
         '<p class="p-say say">' + (s.short || s.text) + '</p>' + stepBody(id, c.i) +
         '<div class="p-extras">' + (s.short ? '<details class="p-more"><summary><svg class="i"><use href="#i-book"/></svg> Tell me more</summary><div class="p-text say">' + s.text + '</div></details>' : '') +
         (s.tip ? '<details class="p-more hint"><summary><svg class="i"><use href="#i-bulb"/></svg> Need a hint?</summary><p class="say">' + s.tip + '</p></details>' : '') +
+        (s.boost ? '<details class="p-more boost"><summary><svg class="i"><use href="#i-zap"/></svg> Too easy? Level up</summary><p class="say">' + s.boost + '</p></details>' : '') +
         (s.solo ? '<details class="p-more solo"><summary><svg class="i"><use href="#i-user"/></svg> No partner free right now?</summary><p class="say">' + s.solo + '</p></details>' : '') + (readOnly ? '' : confBtn(id, 'step', c.i)) + '</div>';
       if (readOnly || frozen) h += '<div class="p-nav">' + backBtn + (nextBtn || '<span></span>') + '</div>';
       else if (on) h += '<div class="p-done"><svg class="i"><use href="#i-check-circle"/></svg> Done! <button class="linklike" data-act="undo-step" data-node="' + id + '" data-idx="' + c.i + '">undo</button></div><div class="p-nav">' + backBtn + nextBtn + '</div>';
