@@ -1528,3 +1528,30 @@ html.fs-l { --z: 1.12; } html.fs-xl { --z: 1.25; } html.fs-xxl { --z: 1.42; } ht
 .modal { max-height: calc(92vh / var(--z, 1)); }
 .modal-wrap { overflow: auto; }
 html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .p-h, html.font-easy .logo, html.font-easy .sg-t b, html.font-easy .sc-h, html.font-easy .node-title { font-weight: 700 !important; }
+
+/* ---- dark mode: keep text readable ---- */
+/* cards with their own pale background keep dark text, whatever the theme */
+.p-bigq, .p-bigq b, .p-bigq p { color: #4a3200; }
+.side-btn small { color: #6e6290; }
+:root[data-theme="dark"] .badge em, :root[data-theme="dark"] .p-more summary, :root[data-theme="dark"] .tg-label, :root[data-theme="dark"] .st-on, :root[data-theme="dark"] .p-back, :root[data-theme="dark"] main a:not(.btn):not(.scratch-go) { color: #c3b1ff; }
+:root[data-theme="dark"] .coin-tag { color: #ffd23f; }
+:root[data-theme="dark"] .coin-tag.big { color: #ffe27a; }
+:root[data-theme="dark"] .coin-tag.cant { color: #ff8fa8; }
+:root[data-theme="dark"] .coin-tag.can { color: #6ee7a0; }
+:root[data-theme="dark"] .st-own { color: #6ee7a0; }
+:root[data-theme="dark"] .st-try { color: #fbbf24; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .badge em, :root:not([data-theme="light"]) .p-more summary, :root:not([data-theme="light"]) .tg-label, :root:not([data-theme="light"]) .st-on, :root:not([data-theme="light"]) .p-back, :root:not([data-theme="light"]) main a:not(.btn):not(.scratch-go) { color: #c3b1ff; }
+  :root:not([data-theme="light"]) .coin-tag { color: #ffd23f; }
+  :root:not([data-theme="light"]) .coin-tag.big { color: #ffe27a; }
+  :root:not([data-theme="light"]) .coin-tag.cant { color: #ff8fa8; }
+  :root:not([data-theme="light"]) .coin-tag.can { color: #6ee7a0; }
+  :root:not([data-theme="light"]) .st-own { color: #6ee7a0; }
+  :root:not([data-theme="light"]) .st-try { color: #fbbf24; }
+}
+:root[data-theme="dark"] .p-more.hint summary { color: #7a5200; }
+:root[data-theme="dark"] .btn .coin-tag { color: inherit; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .p-more.hint summary { color: #7a5200; }
+  :root:not([data-theme="light"]) .btn .coin-tag { color: inherit; }
+}
