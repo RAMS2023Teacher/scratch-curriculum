@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Scratch Quest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;700;800;900&family=Lexend:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;700;800;900&family=Lexend:wght@400;600;800&family=Lexend+Exa:wght@400;600;800&family=Lexend+Giga:wght@400;600;800&family=Atkinson+Hyperlegible:wght@400;700&family=Comic+Neue:wght@400;700&display=swap">
 <style>
 :root {
   --bg: #f4f1ea; --bg2: #fffdf8; --card: #ffffff; --ink: #2b2235; --muted: #6b6475; --line: #e7e1d6;
@@ -1230,8 +1230,10 @@ body.cs-on { background: #5b2bd6; }
 /* ===================== Display settings (per student) ===================== */
 html.fs-l body { zoom: 1.12; }
 html.fs-xl body { zoom: 1.25; }
-html.font-easy { --display: "Lexend", system-ui, sans-serif; }
-html.font-easy body, html.font-easy button, html.font-easy input, html.font-easy select, html.font-easy textarea, html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .btn { font-family: "Lexend", system-ui, sans-serif !important; letter-spacing: .01em; }
+html.fs-s body { zoom: .9; }
+html.fs-xxl body { zoom: 1.42; }
+html.font-easy { --display: var(--rf, "Lexend"), system-ui, sans-serif; }
+html.font-easy body, html.font-easy button, html.font-easy input, html.font-easy select, html.font-easy textarea, html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .btn { font-family: var(--rf, "Lexend"), system-ui, sans-serif !important; letter-spacing: .01em; }
 html.font-easy body { line-height: 1.7; }
 html.hc { --ink: #000000; --muted: #2b2b2b; --line: #3a3a3a; --card: #ffffff; --bg2: #ffffff; }
 html.hc .card, html.hc .pcard, html.hc .btn, html.hc input, html.hc select, html.hc textarea { border-color: #000 !important; }
@@ -1517,6 +1519,24 @@ html.hc .side-btn, html.hc .side-card { border-color: #000; }
 .banner.helpwait .grow { flex: 1; min-width: 200px; }
 .banner.helpwait .row { margin-left: auto; flex-wrap: wrap; gap: 6px; }
 .banner.helpwait .row .btn { margin-left: 0; }
+
+/* ---- more display settings: spacing, color themes ---- */
+html.ls-w body, html.ls-w p, html.ls-w li, html.ls-w label, html.ls-w .say, html.ls-w .choice { line-height: 1.95 !important; }
+html.ls-x body, html.ls-x p, html.ls-x li, html.ls-x label, html.ls-x .say, html.ls-x .choice { line-height: 2.4 !important; }
+html.lt-w body, html.lt-w button, html.lt-w input, html.lt-w select { letter-spacing: .05em !important; word-spacing: .14em !important; }
+html.lt-x body, html.lt-x button, html.lt-x input, html.lt-x select { letter-spacing: .11em !important; word-spacing: .3em !important; }
+html.tint-cream { --bg: #f3e6c4; --bg2: #f8eed4; --card: #fdf6e0; --line: #e2d3a8; }
+html.tint-blue { --bg: #d6e6f5; --bg2: #e3eef9; --card: #eef5fc; --line: #bcd3ea; }
+html.tint-green { --bg: #d8ecd9; --bg2: #e4f2e4; --card: #eff8ef; --line: #bedcc0; }
+html.tint-pink { --bg: #f6dce8; --bg2: #f9e6ee; --card: #fdf0f5; --line: #ecc3d5; }
+html[class*="tint-"] .side-btn, html[class*="tint-"] .side-card, html[class*="tint-"] .pcard, html[class*="tint-"] .modal { background: var(--card); }
+.disp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+@media (max-width: 560px) { .disp-grid { grid-template-columns: 1fr; } }
+/* zoomed text sizes: keep pop-up windows inside the screen so their buttons can be reached */
+html.fs-l { --z: 1.12; } html.fs-xl { --z: 1.25; } html.fs-xxl { --z: 1.42; } html.fs-s { --z: .9; }
+.modal { max-height: calc(92vh / var(--z, 1)); }
+.modal-wrap { overflow: auto; }
+html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .p-h, html.font-easy .logo, html.font-easy .sg-t b, html.font-easy .sc-h, html.font-easy .node-title { font-weight: 700 !important; }
 
 </style>
 </head>
@@ -12164,7 +12184,10 @@ function SQ_SERVICE(store) {
   // Display settings a student (or their teacher) can choose
   function cleanDisplay(d) {
     d = d || {};
-    return { size: ['m', 'l', 'xl'].indexOf(d.size) >= 0 ? d.size : 'm', font: d.font === 'easy' ? 'easy' : 'default',
+    function one(v, list) { return list.indexOf(v) >= 0 ? v : list[0]; }
+    return { size: one(d.size, ['m', 's', 'l', 'xl', 'xxl']), font: one(d.font === 'easy' ? 'lexend' : d.font, ['default', 'lexend', 'lexwide', 'lexxwide', 'atkinson', 'comic']),
+      line: one(d.line, ['n', 'w', 'x']), letters: one(d.letters, ['n', 'w', 'x']), theme: one(d.theme, ['auto', 'light', 'dark', 'cream', 'blue', 'green', 'pink']),
+      speak: one(d.speak, ['normal', 'slow', 'fast']),
       contrast: !!d.contrast, motion: !!d.motion, lang: LANGS.indexOf(d.lang) >= 0 ? d.lang : 'en' };
   }
   var LANGS = ['en', 'pt'];
@@ -13754,7 +13777,7 @@ var SQ_SOUND = (function () {
 })();
 
 
-var SQ_BUILD = "2026-11-20T19:43";
+var SQ_BUILD = "2026-11-20T22:34";
 var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
 
 /* Scratch Quest — page translation for students (Brazilian Portuguese).
@@ -15460,7 +15483,7 @@ var SQ_MAPART = (function () {
     if (ch.length && !card.querySelector('.quiz.right')) parts.push('Your choices are: ' + Array.prototype.map.call(ch, function (b) { return b.textContent; }).join('. Or, '));
     var text = parts.join('. ').replace(/[✅📨📖💡🎯🔥⚡]/gu, '').replace(/→|➜/g, ', then ').replace(/[\[\]()]/g, '').replace(/\s+/g, ' ').replace(/\.\s*\./g, '.');
     var u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.92; u.pitch = 1.05; u.lang = 'en-US';
+    u.rate = ({ slow: 0.72, fast: 1.15 })[disp().speak] || 0.92; u.pitch = 1.05; u.lang = 'en-US';
     var v = pickVoice();
     if (SQ_I18N.lang() === 'pt') { u.lang = 'pt-BR'; v = (speech.getVoices() || []).filter(function (x) { return /^pt/i.test(x.lang); }).sort(function (a, b) { return /BR/i.test(b.lang) - /BR/i.test(a.lang); })[0] || null; }
     if (v) u.voice = v;
@@ -15884,19 +15907,40 @@ var SQ_MAPART = (function () {
   function disp() { return (S.me && S.me.state.display) || {}; }
   function applyDisplay() {
     var d = route()[0] === 't' ? {} : disp(), h = document.documentElement;
-    h.classList.toggle('fs-l', d.size === 'l'); h.classList.toggle('fs-xl', d.size === 'xl');
-    h.classList.toggle('font-easy', d.font === 'easy'); h.classList.toggle('hc', !!d.contrast); h.classList.toggle('rm', !!d.motion);
+    applyLook(d);
     SQ_I18N.set(d.lang === 'pt' ? 'pt' : 'en', function (lang, items) { return API.call('translate', { lang: lang, items: items }).then(function (r) { return r.out; }); });
   }
+  // Everything about how the page looks (not the language): sizes, fonts, spacing, colors, movement
+  var FONTS = { lexend: '"Lexend"', lexwide: '"Lexend Exa"', lexxwide: '"Lexend Giga"', atkinson: '"Atkinson Hyperlegible"', comic: '"Comic Neue"' };
+  var DISPLAY_OPTS = {
+    size: ['Text size', [['s', 'Small'], ['m', 'Normal'], ['l', 'Large'], ['xl', 'Extra large'], ['xxl', 'Huge']]],
+    font: ['Letters', [['default', 'Scratch Quest (default)'], ['lexend', 'Lexend (easy to read)'], ['lexwide', 'Lexend, wide'], ['lexxwide', 'Lexend, extra wide'], ['atkinson', 'Atkinson Hyperlegible'], ['comic', 'Comic Neue (handwriting style)']]],
+    line: ['Space between lines', [['n', 'Normal'], ['w', 'More'], ['x', 'A lot more']]],
+    letters: ['Space between letters and words', [['n', 'Normal'], ['w', 'More'], ['x', 'A lot more']]],
+    theme: ['Colors', [['auto', 'Match my device'], ['light', 'Light'], ['dark', 'Dark'], ['cream', 'Cream paper'], ['blue', 'Soft blue'], ['green', 'Soft green'], ['pink', 'Soft pink']]],
+    speak: ['Read to me speed', [['slow', 'Slow'], ['normal', 'Normal'], ['fast', 'Fast']]]
+  };
+  function applyLook(d) {
+    var h = document.documentElement, font = d.font === 'easy' ? 'lexend' : d.font, theme = d.theme || 'auto';
+    ['s', 'l', 'xl', 'xxl'].forEach(function (x) { h.classList.toggle('fs-' + x, d.size === x); });
+    h.classList.toggle('font-easy', !!FONTS[font]); h.style.setProperty('--rf', FONTS[font] || '"Lexend"');
+    ['w', 'x'].forEach(function (x) { h.classList.toggle('ls-' + x, d.line === x); h.classList.toggle('lt-' + x, d.letters === x); });
+    ['cream', 'blue', 'green', 'pink'].forEach(function (x) { h.classList.toggle('tint-' + x, theme === x); });
+    if (theme === 'auto') h.removeAttribute('data-theme'); else h.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+    h.classList.toggle('hc', !!d.contrast); h.classList.toggle('rm', !!d.motion);
+  }
   function displayFields(d) {
-    d = d || {};
-    return '<label>Text size <select name="size">' + [['m', 'Normal'], ['l', 'Large'], ['xl', 'Extra large']].map(function (x) { return '<option value="' + x[0] + '"' + ((d.size || 'm') === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label>' +
-      '<label>Language <select name="lang" class="notr"><option value="en"' + (d.lang !== 'pt' ? ' selected' : '') + '>English</option><option value="pt"' + (d.lang === 'pt' ? ' selected' : '') + '>Português (Brasil)</option></select></label>' +
-      '<label class="switch"><input type="checkbox" name="font"' + (d.font === 'easy' ? ' checked' : '') + '> Easy-to-read letters</label>' +
+    d = Object.assign({}, d || {}); if (d.font === 'easy') d.font = 'lexend';
+    function sel(k) {
+      var o = DISPLAY_OPTS[k], cur = d[k] || (k === 'size' ? 'm' : k === 'speak' ? 'normal' : o[1][0][0]);
+      return '<label>' + o[0] + ' <select name="' + k + '">' + o[1].map(function (x) { return '<option value="' + x[0] + '"' + (cur === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label>';
+    }
+    return '<div class="disp-grid"><label>Language <select name="lang" class="notr"><option value="en"' + (d.lang !== 'pt' ? ' selected' : '') + '>English</option><option value="pt"' + (d.lang === 'pt' ? ' selected' : '') + '>Português (Brasil)</option></select></label>' +
+      sel('size') + sel('font') + sel('theme') + sel('line') + sel('letters') + sel('speak') + '</div>' +
       '<label class="switch"><input type="checkbox" name="contrast"' + (d.contrast ? ' checked' : '') + '> Stronger contrast (darker text and outlines)</label>' +
       '<label class="switch"><input type="checkbox" name="motion"' + (d.motion ? ' checked' : '') + '> Less movement (calmer animations)</label>';
   }
-  function displayFrom(v) { return { size: v.size, lang: v.lang, font: v.font ? 'easy' : 'default', contrast: !!v.contrast, motion: !!v.motion }; }
+  function displayFrom(v) { return { size: v.size, lang: v.lang, font: v.font, line: v.line, letters: v.letters, theme: v.theme, speak: v.speak, contrast: !!v.contrast, motion: !!v.motion }; }
   // remember the last few errors so a bug report can include them
   var ERRS = [], AUTO = {};
   function noteError(msg) {
@@ -17161,8 +17205,8 @@ var SQ_MAPART = (function () {
     }
     if (act === 'data-backup') { t.disabled = true; call('dataBackupNow', {}).then(function (d) { S.dataInfo = d; toast('Backup saved to your Google Drive'); render(); }).catch(function () { t.disabled = false; }); return; }
     if (act === 'display') {
-      modal('<h2><svg class="i"><use href="#i-sliders"/></svg> Display</h2><p class="muted">Make Scratch Quest easier for you to read.</p><form data-form="display" class="stack accom-form">' + displayFields(disp()) +
-        '<button class="btn primary big">Save</button></form>');
+      modal('<h2><svg class="i"><use href="#i-sliders"/></svg> Display</h2><p class="muted">Make Scratch Quest easier for you to read. Changes show right away so you can try them. Tap Save to keep them.</p><form data-form="display" class="stack accom-form">' + displayFields(disp()) +
+        '<div class="row"><button class="btn primary big">Save</button><button type="button" class="btn" data-act="display-reset">Back to normal</button></div></form>', 'wide');
       return;
     }
     if (act === 'bug') {
@@ -17182,6 +17226,10 @@ var SQ_MAPART = (function () {
       modal('<h2><span class="hand">✋</span> Ask for help</h2><p class="muted">Your teacher will see where you are. Keep trying while you wait!</p><form data-form="ask-help" data-node="' + t.getAttribute('data-node') + '" data-step="' + esc(hs) + '" class="stack">' +
         '<label>What are you stuck on? <span class="muted">(optional)</span><input name="note" maxlength="140" placeholder="e.g. my sprite won’t move"></label><button class="btn primary big">Ask for help</button></form>');
       return;
+    }
+    if (act === 'display-reset') {
+      var df = t.closest('form'); df.querySelectorAll('select').forEach(function (s) { if (s.name !== 'lang') s.value = s.name === 'size' ? 'm' : s.name === 'speak' ? 'normal' : s.options[0].value; });
+      df.querySelectorAll('input[type=checkbox]').forEach(function (c) { c.checked = false; }); applyLook({}); return;
     }
     if (act === 'test-out') { testOutModal(t.getAttribute('data-node')); return; }
     if (act === 'wizard' || act === 'wizard-sw') {
@@ -17320,6 +17368,9 @@ var SQ_MAPART = (function () {
     gf.querySelectorAll('.gc-num').forEach(function (el, i) { el.textContent = (gf.elements.unit.value.trim() ? gf.elements.unit.value.trim() + '.' : '') + (i + 1); });
   });
   document.addEventListener('change', function (e) {
+    // the student's Display window shows each change right away (the language changes when it is saved)
+    var dfm = e.target.closest && e.target.closest('form[data-form="display"]');
+    if (dfm) { var dv = {}; new FormData(dfm).forEach(function (val, k) { dv[k] = val; }); applyLook(displayFrom(dv)); }
     if (e.target.getAttribute && e.target.getAttribute('data-act') === 'cs-quest') csSave({ raceQuest: e.target.value }).catch(function () { });
   });
   ['input', 'change'].forEach(function (ev) {

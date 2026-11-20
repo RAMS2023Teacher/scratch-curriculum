@@ -1221,8 +1221,10 @@ body.cs-on { background: #5b2bd6; }
 /* ===================== Display settings (per student) ===================== */
 html.fs-l body { zoom: 1.12; }
 html.fs-xl body { zoom: 1.25; }
-html.font-easy { --display: "Lexend", system-ui, sans-serif; }
-html.font-easy body, html.font-easy button, html.font-easy input, html.font-easy select, html.font-easy textarea, html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .btn { font-family: "Lexend", system-ui, sans-serif !important; letter-spacing: .01em; }
+html.fs-s body { zoom: .9; }
+html.fs-xxl body { zoom: 1.42; }
+html.font-easy { --display: var(--rf, "Lexend"), system-ui, sans-serif; }
+html.font-easy body, html.font-easy button, html.font-easy input, html.font-easy select, html.font-easy textarea, html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .btn { font-family: var(--rf, "Lexend"), system-ui, sans-serif !important; letter-spacing: .01em; }
 html.font-easy body { line-height: 1.7; }
 html.hc { --ink: #000000; --muted: #2b2b2b; --line: #3a3a3a; --card: #ffffff; --bg2: #ffffff; }
 html.hc .card, html.hc .pcard, html.hc .btn, html.hc input, html.hc select, html.hc textarea { border-color: #000 !important; }
@@ -1508,3 +1510,21 @@ html.hc .side-btn, html.hc .side-card { border-color: #000; }
 .banner.helpwait .grow { flex: 1; min-width: 200px; }
 .banner.helpwait .row { margin-left: auto; flex-wrap: wrap; gap: 6px; }
 .banner.helpwait .row .btn { margin-left: 0; }
+
+/* ---- more display settings: spacing, color themes ---- */
+html.ls-w body, html.ls-w p, html.ls-w li, html.ls-w label, html.ls-w .say, html.ls-w .choice { line-height: 1.95 !important; }
+html.ls-x body, html.ls-x p, html.ls-x li, html.ls-x label, html.ls-x .say, html.ls-x .choice { line-height: 2.4 !important; }
+html.lt-w body, html.lt-w button, html.lt-w input, html.lt-w select { letter-spacing: .05em !important; word-spacing: .14em !important; }
+html.lt-x body, html.lt-x button, html.lt-x input, html.lt-x select { letter-spacing: .11em !important; word-spacing: .3em !important; }
+html.tint-cream { --bg: #f3e6c4; --bg2: #f8eed4; --card: #fdf6e0; --line: #e2d3a8; }
+html.tint-blue { --bg: #d6e6f5; --bg2: #e3eef9; --card: #eef5fc; --line: #bcd3ea; }
+html.tint-green { --bg: #d8ecd9; --bg2: #e4f2e4; --card: #eff8ef; --line: #bedcc0; }
+html.tint-pink { --bg: #f6dce8; --bg2: #f9e6ee; --card: #fdf0f5; --line: #ecc3d5; }
+html[class*="tint-"] .side-btn, html[class*="tint-"] .side-card, html[class*="tint-"] .pcard, html[class*="tint-"] .modal { background: var(--card); }
+.disp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+@media (max-width: 560px) { .disp-grid { grid-template-columns: 1fr; } }
+/* zoomed text sizes: keep pop-up windows inside the screen so their buttons can be reached */
+html.fs-l { --z: 1.12; } html.fs-xl { --z: 1.25; } html.fs-xxl { --z: 1.42; } html.fs-s { --z: .9; }
+.modal { max-height: calc(92vh / var(--z, 1)); }
+.modal-wrap { overflow: auto; }
+html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .p-h, html.font-easy .logo, html.font-easy .sg-t b, html.font-easy .sc-h, html.font-easy .node-title { font-weight: 700 !important; }

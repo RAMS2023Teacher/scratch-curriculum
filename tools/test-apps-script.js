@@ -329,8 +329,8 @@ test('bug reports: anyone in a class can send one; only teachers can read them',
 });
 test('display settings and translation', () => {
   const M = 'maya.lopez@school.org';
-  const d = as(M, 'setDisplay', { display: { size: 'xl', font: 'easy', contrast: true, motion: true, lang: 'pt', junk: 1 } }).student.state.display;
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(d)), { size: 'xl', font: 'easy', contrast: true, motion: true, lang: 'pt' });
+  const d = as(M, 'setDisplay', { display: { size: 'xxl', font: 'easy', line: 'w', letters: 'x', theme: 'cream', speak: 'slow', contrast: true, motion: true, lang: 'pt', junk: 1 } }).student.state.display;
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(d)), { size: 'xxl', font: 'lexend', line: 'w', letters: 'x', theme: 'cream', speak: 'slow', contrast: true, motion: true, lang: 'pt' });
   assert.strictEqual(as(M, 'setDisplay', { display: { size: 'huge', lang: 'xx' } }).student.state.display.size, 'm');
   as(T, 'updateStudent', { email: M, display: { size: 'l', lang: 'pt' } });
   assert.strictEqual(as(M, 'bootstrap').student.state.display.lang, 'pt', 'a teacher can set it for a student');

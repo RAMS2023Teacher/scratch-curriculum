@@ -907,7 +907,7 @@
     if (ch.length && !card.querySelector('.quiz.right')) parts.push('Your choices are: ' + Array.prototype.map.call(ch, function (b) { return b.textContent; }).join('. Or, '));
     var text = parts.join('. ').replace(/[✅📨📖💡🎯🔥⚡]/gu, '').replace(/→|➜/g, ', then ').replace(/[\[\]()]/g, '').replace(/\s+/g, ' ').replace(/\.\s*\./g, '.');
     var u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.92; u.pitch = 1.05; u.lang = 'en-US';
+    u.rate = ({ slow: 0.72, fast: 1.15 })[disp().speak] || 0.92; u.pitch = 1.05; u.lang = 'en-US';
     var v = pickVoice();
     if (SQ_I18N.lang() === 'pt') { u.lang = 'pt-BR'; v = (speech.getVoices() || []).filter(function (x) { return /^pt/i.test(x.lang); }).sort(function (a, b) { return /BR/i.test(b.lang) - /BR/i.test(a.lang); })[0] || null; }
     if (v) u.voice = v;
@@ -1331,19 +1331,40 @@
   function disp() { return (S.me && S.me.state.display) || {}; }
   function applyDisplay() {
     var d = route()[0] === 't' ? {} : disp(), h = document.documentElement;
-    h.classList.toggle('fs-l', d.size === 'l'); h.classList.toggle('fs-xl', d.size === 'xl');
-    h.classList.toggle('font-easy', d.font === 'easy'); h.classList.toggle('hc', !!d.contrast); h.classList.toggle('rm', !!d.motion);
+    applyLook(d);
     SQ_I18N.set(d.lang === 'pt' ? 'pt' : 'en', function (lang, items) { return API.call('translate', { lang: lang, items: items }).then(function (r) { return r.out; }); });
   }
+  // Everything about how the page looks (not the language): sizes, fonts, spacing, colors, movement
+  var FONTS = { lexend: '"Lexend"', lexwide: '"Lexend Exa"', lexxwide: '"Lexend Giga"', atkinson: '"Atkinson Hyperlegible"', comic: '"Comic Neue"' };
+  var DISPLAY_OPTS = {
+    size: ['Text size', [['s', 'Small'], ['m', 'Normal'], ['l', 'Large'], ['xl', 'Extra large'], ['xxl', 'Huge']]],
+    font: ['Letters', [['default', 'Scratch Quest (default)'], ['lexend', 'Lexend (easy to read)'], ['lexwide', 'Lexend, wide'], ['lexxwide', 'Lexend, extra wide'], ['atkinson', 'Atkinson Hyperlegible'], ['comic', 'Comic Neue (handwriting style)']]],
+    line: ['Space between lines', [['n', 'Normal'], ['w', 'More'], ['x', 'A lot more']]],
+    letters: ['Space between letters and words', [['n', 'Normal'], ['w', 'More'], ['x', 'A lot more']]],
+    theme: ['Colors', [['auto', 'Match my device'], ['light', 'Light'], ['dark', 'Dark'], ['cream', 'Cream paper'], ['blue', 'Soft blue'], ['green', 'Soft green'], ['pink', 'Soft pink']]],
+    speak: ['Read to me speed', [['slow', 'Slow'], ['normal', 'Normal'], ['fast', 'Fast']]]
+  };
+  function applyLook(d) {
+    var h = document.documentElement, font = d.font === 'easy' ? 'lexend' : d.font, theme = d.theme || 'auto';
+    ['s', 'l', 'xl', 'xxl'].forEach(function (x) { h.classList.toggle('fs-' + x, d.size === x); });
+    h.classList.toggle('font-easy', !!FONTS[font]); h.style.setProperty('--rf', FONTS[font] || '"Lexend"');
+    ['w', 'x'].forEach(function (x) { h.classList.toggle('ls-' + x, d.line === x); h.classList.toggle('lt-' + x, d.letters === x); });
+    ['cream', 'blue', 'green', 'pink'].forEach(function (x) { h.classList.toggle('tint-' + x, theme === x); });
+    if (theme === 'auto') h.removeAttribute('data-theme'); else h.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+    h.classList.toggle('hc', !!d.contrast); h.classList.toggle('rm', !!d.motion);
+  }
   function displayFields(d) {
-    d = d || {};
-    return '<label>Text size <select name="size">' + [['m', 'Normal'], ['l', 'Large'], ['xl', 'Extra large']].map(function (x) { return '<option value="' + x[0] + '"' + ((d.size || 'm') === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label>' +
-      '<label>Language <select name="lang" class="notr"><option value="en"' + (d.lang !== 'pt' ? ' selected' : '') + '>English</option><option value="pt"' + (d.lang === 'pt' ? ' selected' : '') + '>Português (Brasil)</option></select></label>' +
-      '<label class="switch"><input type="checkbox" name="font"' + (d.font === 'easy' ? ' checked' : '') + '> Easy-to-read letters</label>' +
+    d = Object.assign({}, d || {}); if (d.font === 'easy') d.font = 'lexend';
+    function sel(k) {
+      var o = DISPLAY_OPTS[k], cur = d[k] || (k === 'size' ? 'm' : k === 'speak' ? 'normal' : o[1][0][0]);
+      return '<label>' + o[0] + ' <select name="' + k + '">' + o[1].map(function (x) { return '<option value="' + x[0] + '"' + (cur === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label>';
+    }
+    return '<div class="disp-grid"><label>Language <select name="lang" class="notr"><option value="en"' + (d.lang !== 'pt' ? ' selected' : '') + '>English</option><option value="pt"' + (d.lang === 'pt' ? ' selected' : '') + '>Português (Brasil)</option></select></label>' +
+      sel('size') + sel('font') + sel('theme') + sel('line') + sel('letters') + sel('speak') + '</div>' +
       '<label class="switch"><input type="checkbox" name="contrast"' + (d.contrast ? ' checked' : '') + '> Stronger contrast (darker text and outlines)</label>' +
       '<label class="switch"><input type="checkbox" name="motion"' + (d.motion ? ' checked' : '') + '> Less movement (calmer animations)</label>';
   }
-  function displayFrom(v) { return { size: v.size, lang: v.lang, font: v.font ? 'easy' : 'default', contrast: !!v.contrast, motion: !!v.motion }; }
+  function displayFrom(v) { return { size: v.size, lang: v.lang, font: v.font, line: v.line, letters: v.letters, theme: v.theme, speak: v.speak, contrast: !!v.contrast, motion: !!v.motion }; }
   // remember the last few errors so a bug report can include them
   var ERRS = [], AUTO = {};
   function noteError(msg) {
@@ -2608,8 +2629,8 @@
     }
     if (act === 'data-backup') { t.disabled = true; call('dataBackupNow', {}).then(function (d) { S.dataInfo = d; toast('Backup saved to your Google Drive'); render(); }).catch(function () { t.disabled = false; }); return; }
     if (act === 'display') {
-      modal('<h2><svg class="i"><use href="#i-sliders"/></svg> Display</h2><p class="muted">Make Scratch Quest easier for you to read.</p><form data-form="display" class="stack accom-form">' + displayFields(disp()) +
-        '<button class="btn primary big">Save</button></form>');
+      modal('<h2><svg class="i"><use href="#i-sliders"/></svg> Display</h2><p class="muted">Make Scratch Quest easier for you to read. Changes show right away so you can try them. Tap Save to keep them.</p><form data-form="display" class="stack accom-form">' + displayFields(disp()) +
+        '<div class="row"><button class="btn primary big">Save</button><button type="button" class="btn" data-act="display-reset">Back to normal</button></div></form>', 'wide');
       return;
     }
     if (act === 'bug') {
@@ -2629,6 +2650,10 @@
       modal('<h2><span class="hand">✋</span> Ask for help</h2><p class="muted">Your teacher will see where you are. Keep trying while you wait!</p><form data-form="ask-help" data-node="' + t.getAttribute('data-node') + '" data-step="' + esc(hs) + '" class="stack">' +
         '<label>What are you stuck on? <span class="muted">(optional)</span><input name="note" maxlength="140" placeholder="e.g. my sprite won’t move"></label><button class="btn primary big">Ask for help</button></form>');
       return;
+    }
+    if (act === 'display-reset') {
+      var df = t.closest('form'); df.querySelectorAll('select').forEach(function (s) { if (s.name !== 'lang') s.value = s.name === 'size' ? 'm' : s.name === 'speak' ? 'normal' : s.options[0].value; });
+      df.querySelectorAll('input[type=checkbox]').forEach(function (c) { c.checked = false; }); applyLook({}); return;
     }
     if (act === 'test-out') { testOutModal(t.getAttribute('data-node')); return; }
     if (act === 'wizard' || act === 'wizard-sw') {
@@ -2767,6 +2792,9 @@
     gf.querySelectorAll('.gc-num').forEach(function (el, i) { el.textContent = (gf.elements.unit.value.trim() ? gf.elements.unit.value.trim() + '.' : '') + (i + 1); });
   });
   document.addEventListener('change', function (e) {
+    // the student's Display window shows each change right away (the language changes when it is saved)
+    var dfm = e.target.closest && e.target.closest('form[data-form="display"]');
+    if (dfm) { var dv = {}; new FormData(dfm).forEach(function (val, k) { dv[k] = val; }); applyLook(displayFrom(dv)); }
     if (e.target.getAttribute && e.target.getAttribute('data-act') === 'cs-quest') csSave({ raceQuest: e.target.value }).catch(function () { });
   });
   ['input', 'change'].forEach(function (ev) {

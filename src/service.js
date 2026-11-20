@@ -128,7 +128,10 @@ function SQ_SERVICE(store) {
   // Display settings a student (or their teacher) can choose
   function cleanDisplay(d) {
     d = d || {};
-    return { size: ['m', 'l', 'xl'].indexOf(d.size) >= 0 ? d.size : 'm', font: d.font === 'easy' ? 'easy' : 'default',
+    function one(v, list) { return list.indexOf(v) >= 0 ? v : list[0]; }
+    return { size: one(d.size, ['m', 's', 'l', 'xl', 'xxl']), font: one(d.font === 'easy' ? 'lexend' : d.font, ['default', 'lexend', 'lexwide', 'lexxwide', 'atkinson', 'comic']),
+      line: one(d.line, ['n', 'w', 'x']), letters: one(d.letters, ['n', 'w', 'x']), theme: one(d.theme, ['auto', 'light', 'dark', 'cream', 'blue', 'green', 'pink']),
+      speak: one(d.speak, ['normal', 'slow', 'fast']),
       contrast: !!d.contrast, motion: !!d.motion, lang: LANGS.indexOf(d.lang) >= 0 ? d.lang : 'en' };
   }
   var LANGS = ['en', 'pt'];
