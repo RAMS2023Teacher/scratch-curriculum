@@ -1470,6 +1470,23 @@ html.hc .help-big { border-color: #000; }
 }
 html.hc .side-btn, html.hc .side-card { border-color: #000; }
 
+/* ===================== Class Screen clock: one countdown to the end of class ===================== */
+.cs-tl { font: 800 .85em Nunito, sans-serif; text-transform: uppercase; letter-spacing: .1em; color: var(--cs-muted); min-height: 0; }
+.cs-tl:empty { display: none; }
+.cs .cs-timecard.counting .cs-clock { font-size: 4.2em; color: #15803d; font-variant-numeric: tabular-nums; }
+.cs .cs-timecard.warn .cs-clock { color: #ea580c; }
+.cs .cs-timecard.over .cs-clock { color: #dc2626; }
+.cs .cs-timecard.warn { box-shadow: 0 0 0 .2em rgba(234, 88, 12, .35); }
+.cs .cs-timecard.over { box-shadow: 0 0 0 .2em rgba(220, 38, 38, .45); }
+.cs.dark .cs-timecard.counting .cs-clock { color: #4ade80; } .cs.dark .cs-timecard.warn .cs-clock { color: #fb923c; } .cs.dark .cs-timecard.over .cs-clock { color: #f87171; }
+.cs-endform { display: flex; gap: .5em; align-items: center; justify-content: center; flex-wrap: wrap; font-size: .85em; font-weight: 800; margin-top: .3em; }
+.cs-endform input { font: inherit; padding: .15em .4em; border-radius: .5em; border: 2px solid var(--cs-line); background: var(--cs-card); color: var(--cs-ink); }
+.cs-chip.on { background: #7b2ff7; color: #fff; border-color: #7b2ff7; }
+/* quick review rows */
+.rev-acts { display: flex; gap: 6px; flex: none; }
+.rev-back { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.rev-back select { max-width: 100%; font: inherit; padding: 4px 8px; border-radius: 8px; border: 2px solid var(--line); }
+
 </style>
 </head>
 <body>
@@ -13561,7 +13578,7 @@ var SQ_SOUND = (function () {
 })();
 
 
-var SQ_BUILD = "2026-11-20T18:21";
+var SQ_BUILD = "2026-11-20T18:33";
 var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
 
 /* Scratch Quest — page translation for students (Brazilian Portuguese).
@@ -15491,7 +15508,9 @@ var SQ_MAPART = (function () {
     };
     tick(); S.tHelpTimer = setInterval(tick, 15000);
   }
+  function helpKeep(list) { var g = S.helpGone || {}, n = Date.now(); return list.filter(function (h) { return !(g[h.who] && n - g[h.who] < 20000 && h.at < g[h.who]); }); }
   function tHelpPaint(res, classId) {
+    res.list = helpKeep(res.list); S.tHelpLast = res;
     var box = document.getElementById('t-helpbox'); if (!box) return;
     var seen = S.tHelpSeen || (S.tHelpSeen = {}), fresh = res.list.filter(function (h) { return !seen[h.who + h.at]; });
     if (S.tHelpLoaded && fresh.length) SQ_SOUND.play('doorbell');
@@ -16229,7 +16248,7 @@ var SQ_MAPART = (function () {
         '<div class="cs-card cs-helpbox" id="cs-helpbox"><h2><svg class="i"><use href="#i-help"/></svg> Who to ask for help</h2><div id="cs-help"></div></div></div>' +
         '</section><section class="cs-side">' +
         '<div class="cs-card cs-needhelp" id="cs-needhelp" hidden><h2><span class="hand">✋</span> Needs help</h2><div id="cs-needlist"></div></div>' +
-        '<div class="cs-card cs-timecard"><div class="cs-clock"><span id="cs-clock"></span><small id="cs-ampm"></small></div><div class="cs-date" id="cs-date"></div><div class="cs-left" id="cs-left"></div></div>' +
+        '<div class="cs-card cs-timecard" id="cs-timecard"><div class="cs-tl" id="cs-tl"></div><div class="cs-clock"><span id="cs-clock"></span><small id="cs-ampm"></small></div><div class="cs-date" id="cs-date"></div><div class="cs-left" id="cs-left"></div></div>' +
         '<div class="cs-card cs-think"><h2><svg class="i"><use href="#i-message"/></svg> Essential question</h2><div id="cs-question"></div></div>' +
         '<div class="cs-card cs-winsbox" id="cs-winsbox"><h2><svg class="i"><use href="#i-sparkles"/></svg> Recent wins</h2><div id="cs-wins"></div></div>' +
         '</section></div>';
@@ -16410,18 +16429,33 @@ var SQ_MAPART = (function () {
       csPaint(false);
     }, 200);
   });
+  // Long countdowns show hours (1:12:05); short ones show minutes and seconds (12:05)
+  function csFmt(ms) {
+    var sec = Math.max(0, Math.round(ms / 1000)), h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), r = sec % 60;
+    return (h ? h + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (r < 10 ? '0' : '') + r;
+  }
+  function csHM(t) { var d = new Date(t), h = d.getHours(), m = d.getMinutes(); return ((h + 11) % 12 + 1) + ':' + (m < 10 ? '0' : '') + m + ' ' + (h < 12 ? 'AM' : 'PM'); }
+  // The clock card. With an end time set, the big number is the time left in class (one clock, not two):
+  // orange in the last 5 minutes, red at the bell. Without one, it shows the time and asks when class ends.
   function csTick() {
-    if (!document.getElementById('cs-clock')) return;
-    var c = csClock();
-    csSet('cs-clock', c.time); csSet('cs-ampm', c.ampm); csSet('cs-date', esc(c.date));
-    var left = csLeft();
-    var html;
-    if (!left) html = '<div class="cs-left-l">Work time</div><div class="cs-quick">Start a timer: ' + [10, 15, 20, 30, 40].map(function (n) { return '<button class="cs-chip" data-act="cs-timer" data-min="' + n + '">' + n + ' min</button>'; }).join('') + '</div>';
-    else if (left.ms <= 0) html = '<div class="cs-done"><svg class="i"><use href="#i-clock"/></svg> Time to save &amp; share!</div><div class="cs-quick"><button class="cs-chip" data-act="cs-timer" data-min="5">+5 min</button><button class="cs-chip" data-act="cs-timer" data-min="0">Clear</button></div>';
-    else html = '<div class="cs-left-l">Time left</div><div class="cs-count' + (left.ms < 120000 ? ' soon' : '') + '">' + fmtLeft(left.ms) + '</div>' +
-      (left.pct != null ? '<div class="cs-bar sm"><i style="width:' + left.pct.toFixed(1) + '%"></i></div>' : '') +
-      '<div class="cs-quick sm"><button class="cs-chip" data-act="cs-timer" data-min="+5">+5 min</button><button class="cs-chip" data-act="cs-timer" data-min="0">Stop</button></div>';
-    csSet('cs-left', html);
+    var card = document.getElementById('cs-timecard');
+    if (!card) return;
+    var c = csClock(), sc = (S.cs && S.cs.data.cls.screen) || {}, left = csLeft();
+    if (left && left.ms < -3 * 3600e3) left = null; // an end time from an earlier class: ignore it
+    card.classList.toggle('counting', !!left);
+    card.classList.toggle('warn', !!left && left.ms > 0 && left.ms <= 5 * 60e3);
+    card.classList.toggle('over', !!left && left.ms <= 0);
+    if (!left) {
+      csSet('cs-tl', ''); csSet('cs-clock', c.time); csSet('cs-ampm', c.ampm); csSet('cs-date', esc(c.date));
+      csSet('cs-left', '<form data-form="cs-end" class="cs-endform"><label>Class ends at <input type="time" name="at" required aria-label="Class ends at"></label><button class="cs-chip on">Count down</button></form>' +
+        '<div class="cs-quick sm">or in ' + [10, 15, 20, 30, 40].map(function (n) { return '<button class="cs-chip" data-act="cs-timer" data-min="' + n + '">' + n + ' min</button>'; }).join('') + '</div>');
+      return;
+    }
+    csSet('cs-tl', left.ms <= 0 ? 'Class is over' : 'Time left in class');
+    csSet('cs-clock', csFmt(left.ms)); csSet('cs-ampm', '');
+    csSet('cs-date', left.ms <= 0 ? 'Time to save and share!' : 'Now ' + esc(c.time + ' ' + c.ampm) + ' · Class ends ' + csHM(sc.endAt - (S.cs.skew || 0)));
+    csSet('cs-left', (left.pct != null && left.ms > 0 ? '<div class="cs-bar sm"><i style="width:' + left.pct.toFixed(1) + '%"></i></div>' : '') +
+      '<div class="cs-quick sm"><button class="cs-chip" data-act="cs-timer" data-min="+5">+5 min</button><button class="cs-chip" data-act="cs-timer" data-min="0">' + (left.ms <= 0 ? 'Clear' : 'Change') + '</button></div>');
   }
   // Help requests are checked every 5 seconds (separately from the 20-second refresh), with a doorbell for new ones.
   function csHelpLoad() {
@@ -16431,21 +16465,38 @@ var SQ_MAPART = (function () {
       var seen = S.csHelpSeen || (S.csHelpSeen = {}), fresh = res.list.filter(function (h) { return !seen[h.who + h.at]; });
       if (S.csHelpLoaded && fresh.length) SQ_SOUND.play('doorbell');
       res.list.forEach(function (h) { seen[h.who + h.at] = 1; }); S.csHelpLoaded = true;
+      res.list = helpKeep(res.list);
       S.csHelp = res; csHelpPaint();
     }).catch(function () { });
   }
-  // Quick approve from the projector. It shows only names, quest titles and project links, and only
-  // offers Approve. Reflections, feedback and "send back" stay on the private Review tab.
+  // Quick review from the projector. It shows only names, quest titles and project links.
+  // Approve and Send back take effect on screen at once; the save happens in the background.
+  var SEND_BACK = ['Add your Scratch project link, then turn it in again.', 'Finish every step, then turn it in again.', 'Something is not working yet. Test it, fix it, and turn it in again.', 'Come and see me about this one.'];
   function csReviewPanel() {
     var list = pendingList();
     modal('<h2><svg class="i"><use href="#i-inbox"/></svg> Turned in, waiting for you</h2>' +
       (list.length ? '<ul class="help-list rev-list">' + list.map(function (x) {
-        return '<li>' + avatarImgTag(x.s.state.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.s.name) + '</b><div class="small">' + esc(title(x.id)) + (x.ns.link ? ' · <a href="' + esc(x.ns.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div></div>' +
-          '<button class="btn small primary" data-act="cs-approve" data-email="' + esc(x.s.email) + '" data-node="' + x.id + '"><svg class="i"><use href="#i-check"/></svg> Approve</button></li>';
-      }).join('') + '</ul><div class="row between"><span class="muted small">Only names and project links show here. To send work back with feedback, use the Review tab on your own device.</span>' +
+        return '<li data-email="' + esc(x.s.email) + '" data-node="' + x.id + '">' + avatarImgTag(x.s.state.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.s.name) + '</b><div class="small">' + esc(title(x.id)) + (x.ns.link ? ' · <a href="' + esc(x.ns.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div>' +
+          '<form class="rev-back" data-form="cs-back" hidden><select name="why" aria-label="Reason">' + SEND_BACK.map(function (r, i) { return '<option value="' + i + '">' + esc(r) + '</option>'; }).join('') + '</select><button class="btn small">Send</button><button type="button" class="btn small ghost" data-act="cs-back-cancel">Cancel</button></form></div>' +
+          '<span class="rev-acts"><button class="btn small primary" data-act="cs-approve"><svg class="i"><use href="#i-check"/></svg> Approve</button><button class="btn small" data-act="cs-back"><svg class="i"><use href="#i-undo"/></svg> Send back</button></span></li>';
+      }).join('') + '</ul><div class="row between"><span class="muted small">Only names and project links show here. A sent-back student sees the reason on their own screen; the class does not.</span>' +
         (list.length > 1 ? '<button class="btn small" data-act="cs-approve-all">Approve all ' + list.length + '</button>' : '') + '</div>'
         : '<p class="muted">Nothing is waiting. Nice!</p>') +
       '<div class="row"><button class="btn" data-act="close-modal">Close</button></div>', 'wide');
+  }
+  // Mark a review on screen straight away, then save it. If the save fails, reload so nothing is lost.
+  function reviewNow(email, node, approve, feedback) {
+    var st = S.teacher && S.teacher.students.filter(function (x) { return x.email === email; })[0];
+    if (st && st.state.nodes[node]) { st.state.nodes[node].status = approve ? 'done' : 'returned'; st.state.nodes[node].feedback = feedback || ''; }
+    if (S.cs && S.cs.data && S.cs.data.toReview) S.cs.data.toReview--;
+    return call('review', { email: email, node: node, approve: approve, feedback: feedback || '' }).catch(function () { return loadTeacher().then(function () { render(); }); });
+  }
+  function csReviewRowDone(li) {
+    var ul = li.parentNode; li.remove();
+    var all = document.querySelector('[data-act="cs-approve-all"]');
+    if (all) { if (ul.children.length > 1) all.textContent = 'Approve all ' + ul.children.length; else all.remove(); }
+    if (!ul.children.length) closeModal();
+    csPaint(false);
   }
   function csHelpPaint() { if (S.cs) csPaint(false); }
   function csStart() {
@@ -16758,19 +16809,19 @@ var SQ_MAPART = (function () {
     if (act === 'cs-setup') { if (S.cs) csSetup(); return; }
     if (act === 'cs-review') { loadTeacher().then(csReviewPanel).catch(function () { }); return; }
     if (act === 'cs-approve') {
-      t.disabled = true;
-      call('review', { email: t.getAttribute('data-email'), node: t.getAttribute('data-node'), approve: true, feedback: '' }).then(function () {
-        SQ_SOUND.play('correct'); return loadTeacher();
-      }).then(function () { csReviewPanel(); csLoad(false); }).catch(function () { t.disabled = false; });
+      var rli = t.closest('li'); SQ_SOUND.play('correct');
+      reviewNow(rli.getAttribute('data-email'), rli.getAttribute('data-node'), true, '');
+      csReviewRowDone(rli);
       return;
     }
+    if (act === 'cs-back') { var bl = t.closest('li'); bl.querySelector('.rev-back').hidden = false; bl.querySelector('.rev-acts').hidden = true; return; }
+    if (act === 'cs-back-cancel') { var cl = t.closest('li'); cl.querySelector('.rev-back').hidden = true; cl.querySelector('.rev-acts').hidden = false; return; }
     if (act === 'cs-approve-all') {
       var list = pendingList();
       ask('Approve all ' + list.length + ' turned-in quests? Each student gets their XP and can see their celebration.', 'Approve all').then(function (ok) {
         if (!ok) return;
-        var chain = Promise.resolve();
-        list.forEach(function (x) { chain = chain.then(function () { return call('review', { email: x.s.email, node: x.id, approve: true, feedback: '' }); }); });
-        chain.then(function () { return loadTeacher(); }).then(function () { toast('Approved ' + list.length + '.'); csLoad(false); }).catch(function () { });
+        list.forEach(function (x) { reviewNow(x.s.email, x.id, true, ''); });
+        SQ_SOUND.play('correct'); closeModal(); csPaint(false); toast('Approved ' + list.length + '.');
       });
       return;
     }
@@ -16889,8 +16940,12 @@ var SQ_MAPART = (function () {
       return;
     }
     if (act === 'help-done') {
-      var hc = t.getAttribute('data-class'); t.disabled = true; SQ_SOUND.play('equip');
-      call('helpDone', { classId: hc, who: t.getAttribute('data-who') }).then(function (res) { if (route()[1] === 'screen') { S.csHelp = res; csHelpPaint(); } else tHelpPaint(res, hc); }).catch(function () { t.disabled = false; });
+      // take the request off the screen at once; tell the server in the background
+      var hc = t.getAttribute('data-class'), who = t.getAttribute('data-who'); SQ_SOUND.play('equip');
+      S.helpGone = S.helpGone || {}; S.helpGone[who] = Date.now();
+      if (route()[1] === 'screen') { if (S.csHelp) S.csHelp.list = S.csHelp.list.filter(function (h) { return h.who !== who; }); csHelpPaint(); }
+      else if (S.tHelpLast) tHelpPaint(S.tHelpLast, hc);
+      API.call('helpDone', { classId: hc, who: who }).catch(function () { delete S.helpGone[who]; toast('That did not save. It will show again in a moment.', 'warn'); });
       return;
     }
     if (act === 'fb-all') { S.fbAll = t.checked; render(); return; }
@@ -17020,6 +17075,19 @@ var SQ_MAPART = (function () {
     var p;
     var lockBtn = f.querySelector('[aria-disabled="true"]');
     if (lockBtn) { if (btn) btn.disabled = false; lockedClick(lockBtn); return; }
+    if (kind === 'cs-back') {
+      var sli = f.closest('li');
+      reviewNow(sli.getAttribute('data-email'), sli.getAttribute('data-node'), false, SEND_BACK[+v.why] || SEND_BACK[0]);
+      SQ_SOUND.play('equip'); csReviewRowDone(sli); done(); return;
+    }
+    if (kind === 'cs-end') {
+      var hm = String(v.at || '').split(':'), end = new Date(); end.setHours(+hm[0], +hm[1], 0, 0);
+      var endAt = end.getTime() + ((S.cs && S.cs.skew) || 0), nowE = csNow();
+      if (!(endAt > nowE)) { toast('That time has already passed today. Pick a later time.'); done(); return; }
+      var updE = { endAt: endAt, startAt: nowE };
+      S.cs.data.cls.screen = Object.assign({}, S.cs.data.cls.screen || {}, updE); csTick();
+      csSave(updE).catch(function () { }); done(); return;
+    }
     if (kind === 'data-merge') { S.mergeSheet = v.sheet; p = call('dataMerge', { sheet: v.sheet, apply: false }).then(function (res) { S.mergePreview = res; render(); }); }
     else if (kind === 'data-reconnect') p = call('dataReconnect', { sheet: v.sheet }).then(function (d) { toast('Reconnected: ' + d.current.students + ' students found. Reloading…'); S = { boot: null, avatarTab: 'hair' }; boot(); });
     else if (kind === 'display') p = call('setDisplay', { display: displayFrom(v) }).then(function (res) { S.me = res.student; closeModal(); render(); toast('Display settings saved'); });
@@ -17054,7 +17122,8 @@ var SQ_MAPART = (function () {
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });
     } else if (kind === 'review') {
       var approve = btn && btn.value === '1';
-      p = call('review', { email: f.getAttribute('data-email'), node: f.getAttribute('data-node'), approve: approve, feedback: v.feedback }).then(function () { return loadTeacher(); }).then(function () { toast(approve ? '<svg class="i"><use href="#i-check-circle"/></svg> Approved' : '<svg class="i"><use href="#i-undo"/></svg> Sent back'); render(); });
+      reviewNow(f.getAttribute('data-email'), f.getAttribute('data-node'), approve, v.feedback);
+      toast(approve ? '<svg class="i"><use href="#i-check-circle"/></svg> Approved' : '<svg class="i"><use href="#i-undo"/></svg> Sent back'); render();
     } else if (kind === 'cs-setup') {
       var fsel = R.NODES.filter(function (n) { return v['f_' + n.id]; }).map(function (n) { return n.id; }).slice(0, 4);
       var T2 = S.csDraft.teams.map(function (t, i) { var inp = f.querySelector('[data-tname="' + i + '"]'); return { name: inp ? inp.value : t.name, color: t.color }; });

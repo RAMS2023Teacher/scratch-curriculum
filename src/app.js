@@ -1141,7 +1141,9 @@
     };
     tick(); S.tHelpTimer = setInterval(tick, 15000);
   }
+  function helpKeep(list) { var g = S.helpGone || {}, n = Date.now(); return list.filter(function (h) { return !(g[h.who] && n - g[h.who] < 20000 && h.at < g[h.who]); }); }
   function tHelpPaint(res, classId) {
+    res.list = helpKeep(res.list); S.tHelpLast = res;
     var box = document.getElementById('t-helpbox'); if (!box) return;
     var seen = S.tHelpSeen || (S.tHelpSeen = {}), fresh = res.list.filter(function (h) { return !seen[h.who + h.at]; });
     if (S.tHelpLoaded && fresh.length) SQ_SOUND.play('doorbell');
@@ -1879,7 +1881,7 @@
         '<div class="cs-card cs-helpbox" id="cs-helpbox"><h2><svg class="i"><use href="#i-help"/></svg> Who to ask for help</h2><div id="cs-help"></div></div></div>' +
         '</section><section class="cs-side">' +
         '<div class="cs-card cs-needhelp" id="cs-needhelp" hidden><h2><span class="hand">✋</span> Needs help</h2><div id="cs-needlist"></div></div>' +
-        '<div class="cs-card cs-timecard"><div class="cs-clock"><span id="cs-clock"></span><small id="cs-ampm"></small></div><div class="cs-date" id="cs-date"></div><div class="cs-left" id="cs-left"></div></div>' +
+        '<div class="cs-card cs-timecard" id="cs-timecard"><div class="cs-tl" id="cs-tl"></div><div class="cs-clock"><span id="cs-clock"></span><small id="cs-ampm"></small></div><div class="cs-date" id="cs-date"></div><div class="cs-left" id="cs-left"></div></div>' +
         '<div class="cs-card cs-think"><h2><svg class="i"><use href="#i-message"/></svg> Essential question</h2><div id="cs-question"></div></div>' +
         '<div class="cs-card cs-winsbox" id="cs-winsbox"><h2><svg class="i"><use href="#i-sparkles"/></svg> Recent wins</h2><div id="cs-wins"></div></div>' +
         '</section></div>';
@@ -2060,18 +2062,33 @@
       csPaint(false);
     }, 200);
   });
+  // Long countdowns show hours (1:12:05); short ones show minutes and seconds (12:05)
+  function csFmt(ms) {
+    var sec = Math.max(0, Math.round(ms / 1000)), h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), r = sec % 60;
+    return (h ? h + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (r < 10 ? '0' : '') + r;
+  }
+  function csHM(t) { var d = new Date(t), h = d.getHours(), m = d.getMinutes(); return ((h + 11) % 12 + 1) + ':' + (m < 10 ? '0' : '') + m + ' ' + (h < 12 ? 'AM' : 'PM'); }
+  // The clock card. With an end time set, the big number is the time left in class (one clock, not two):
+  // orange in the last 5 minutes, red at the bell. Without one, it shows the time and asks when class ends.
   function csTick() {
-    if (!document.getElementById('cs-clock')) return;
-    var c = csClock();
-    csSet('cs-clock', c.time); csSet('cs-ampm', c.ampm); csSet('cs-date', esc(c.date));
-    var left = csLeft();
-    var html;
-    if (!left) html = '<div class="cs-left-l">Work time</div><div class="cs-quick">Start a timer: ' + [10, 15, 20, 30, 40].map(function (n) { return '<button class="cs-chip" data-act="cs-timer" data-min="' + n + '">' + n + ' min</button>'; }).join('') + '</div>';
-    else if (left.ms <= 0) html = '<div class="cs-done"><svg class="i"><use href="#i-clock"/></svg> Time to save &amp; share!</div><div class="cs-quick"><button class="cs-chip" data-act="cs-timer" data-min="5">+5 min</button><button class="cs-chip" data-act="cs-timer" data-min="0">Clear</button></div>';
-    else html = '<div class="cs-left-l">Time left</div><div class="cs-count' + (left.ms < 120000 ? ' soon' : '') + '">' + fmtLeft(left.ms) + '</div>' +
-      (left.pct != null ? '<div class="cs-bar sm"><i style="width:' + left.pct.toFixed(1) + '%"></i></div>' : '') +
-      '<div class="cs-quick sm"><button class="cs-chip" data-act="cs-timer" data-min="+5">+5 min</button><button class="cs-chip" data-act="cs-timer" data-min="0">Stop</button></div>';
-    csSet('cs-left', html);
+    var card = document.getElementById('cs-timecard');
+    if (!card) return;
+    var c = csClock(), sc = (S.cs && S.cs.data.cls.screen) || {}, left = csLeft();
+    if (left && left.ms < -3 * 3600e3) left = null; // an end time from an earlier class: ignore it
+    card.classList.toggle('counting', !!left);
+    card.classList.toggle('warn', !!left && left.ms > 0 && left.ms <= 5 * 60e3);
+    card.classList.toggle('over', !!left && left.ms <= 0);
+    if (!left) {
+      csSet('cs-tl', ''); csSet('cs-clock', c.time); csSet('cs-ampm', c.ampm); csSet('cs-date', esc(c.date));
+      csSet('cs-left', '<form data-form="cs-end" class="cs-endform"><label>Class ends at <input type="time" name="at" required aria-label="Class ends at"></label><button class="cs-chip on">Count down</button></form>' +
+        '<div class="cs-quick sm">or in ' + [10, 15, 20, 30, 40].map(function (n) { return '<button class="cs-chip" data-act="cs-timer" data-min="' + n + '">' + n + ' min</button>'; }).join('') + '</div>');
+      return;
+    }
+    csSet('cs-tl', left.ms <= 0 ? 'Class is over' : 'Time left in class');
+    csSet('cs-clock', csFmt(left.ms)); csSet('cs-ampm', '');
+    csSet('cs-date', left.ms <= 0 ? 'Time to save and share!' : 'Now ' + esc(c.time + ' ' + c.ampm) + ' · Class ends ' + csHM(sc.endAt - (S.cs.skew || 0)));
+    csSet('cs-left', (left.pct != null && left.ms > 0 ? '<div class="cs-bar sm"><i style="width:' + left.pct.toFixed(1) + '%"></i></div>' : '') +
+      '<div class="cs-quick sm"><button class="cs-chip" data-act="cs-timer" data-min="+5">+5 min</button><button class="cs-chip" data-act="cs-timer" data-min="0">' + (left.ms <= 0 ? 'Clear' : 'Change') + '</button></div>');
   }
   // Help requests are checked every 5 seconds (separately from the 20-second refresh), with a doorbell for new ones.
   function csHelpLoad() {
@@ -2081,21 +2098,38 @@
       var seen = S.csHelpSeen || (S.csHelpSeen = {}), fresh = res.list.filter(function (h) { return !seen[h.who + h.at]; });
       if (S.csHelpLoaded && fresh.length) SQ_SOUND.play('doorbell');
       res.list.forEach(function (h) { seen[h.who + h.at] = 1; }); S.csHelpLoaded = true;
+      res.list = helpKeep(res.list);
       S.csHelp = res; csHelpPaint();
     }).catch(function () { });
   }
-  // Quick approve from the projector. It shows only names, quest titles and project links, and only
-  // offers Approve. Reflections, feedback and "send back" stay on the private Review tab.
+  // Quick review from the projector. It shows only names, quest titles and project links.
+  // Approve and Send back take effect on screen at once; the save happens in the background.
+  var SEND_BACK = ['Add your Scratch project link, then turn it in again.', 'Finish every step, then turn it in again.', 'Something is not working yet. Test it, fix it, and turn it in again.', 'Come and see me about this one.'];
   function csReviewPanel() {
     var list = pendingList();
     modal('<h2><svg class="i"><use href="#i-inbox"/></svg> Turned in, waiting for you</h2>' +
       (list.length ? '<ul class="help-list rev-list">' + list.map(function (x) {
-        return '<li>' + avatarImgTag(x.s.state.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.s.name) + '</b><div class="small">' + esc(title(x.id)) + (x.ns.link ? ' · <a href="' + esc(x.ns.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div></div>' +
-          '<button class="btn small primary" data-act="cs-approve" data-email="' + esc(x.s.email) + '" data-node="' + x.id + '"><svg class="i"><use href="#i-check"/></svg> Approve</button></li>';
-      }).join('') + '</ul><div class="row between"><span class="muted small">Only names and project links show here. To send work back with feedback, use the Review tab on your own device.</span>' +
+        return '<li data-email="' + esc(x.s.email) + '" data-node="' + x.id + '">' + avatarImgTag(x.s.state.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.s.name) + '</b><div class="small">' + esc(title(x.id)) + (x.ns.link ? ' · <a href="' + esc(x.ns.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div>' +
+          '<form class="rev-back" data-form="cs-back" hidden><select name="why" aria-label="Reason">' + SEND_BACK.map(function (r, i) { return '<option value="' + i + '">' + esc(r) + '</option>'; }).join('') + '</select><button class="btn small">Send</button><button type="button" class="btn small ghost" data-act="cs-back-cancel">Cancel</button></form></div>' +
+          '<span class="rev-acts"><button class="btn small primary" data-act="cs-approve"><svg class="i"><use href="#i-check"/></svg> Approve</button><button class="btn small" data-act="cs-back"><svg class="i"><use href="#i-undo"/></svg> Send back</button></span></li>';
+      }).join('') + '</ul><div class="row between"><span class="muted small">Only names and project links show here. A sent-back student sees the reason on their own screen; the class does not.</span>' +
         (list.length > 1 ? '<button class="btn small" data-act="cs-approve-all">Approve all ' + list.length + '</button>' : '') + '</div>'
         : '<p class="muted">Nothing is waiting. Nice!</p>') +
       '<div class="row"><button class="btn" data-act="close-modal">Close</button></div>', 'wide');
+  }
+  // Mark a review on screen straight away, then save it. If the save fails, reload so nothing is lost.
+  function reviewNow(email, node, approve, feedback) {
+    var st = S.teacher && S.teacher.students.filter(function (x) { return x.email === email; })[0];
+    if (st && st.state.nodes[node]) { st.state.nodes[node].status = approve ? 'done' : 'returned'; st.state.nodes[node].feedback = feedback || ''; }
+    if (S.cs && S.cs.data && S.cs.data.toReview) S.cs.data.toReview--;
+    return call('review', { email: email, node: node, approve: approve, feedback: feedback || '' }).catch(function () { return loadTeacher().then(function () { render(); }); });
+  }
+  function csReviewRowDone(li) {
+    var ul = li.parentNode; li.remove();
+    var all = document.querySelector('[data-act="cs-approve-all"]');
+    if (all) { if (ul.children.length > 1) all.textContent = 'Approve all ' + ul.children.length; else all.remove(); }
+    if (!ul.children.length) closeModal();
+    csPaint(false);
   }
   function csHelpPaint() { if (S.cs) csPaint(false); }
   function csStart() {
@@ -2408,19 +2442,19 @@
     if (act === 'cs-setup') { if (S.cs) csSetup(); return; }
     if (act === 'cs-review') { loadTeacher().then(csReviewPanel).catch(function () { }); return; }
     if (act === 'cs-approve') {
-      t.disabled = true;
-      call('review', { email: t.getAttribute('data-email'), node: t.getAttribute('data-node'), approve: true, feedback: '' }).then(function () {
-        SQ_SOUND.play('correct'); return loadTeacher();
-      }).then(function () { csReviewPanel(); csLoad(false); }).catch(function () { t.disabled = false; });
+      var rli = t.closest('li'); SQ_SOUND.play('correct');
+      reviewNow(rli.getAttribute('data-email'), rli.getAttribute('data-node'), true, '');
+      csReviewRowDone(rli);
       return;
     }
+    if (act === 'cs-back') { var bl = t.closest('li'); bl.querySelector('.rev-back').hidden = false; bl.querySelector('.rev-acts').hidden = true; return; }
+    if (act === 'cs-back-cancel') { var cl = t.closest('li'); cl.querySelector('.rev-back').hidden = true; cl.querySelector('.rev-acts').hidden = false; return; }
     if (act === 'cs-approve-all') {
       var list = pendingList();
       ask('Approve all ' + list.length + ' turned-in quests? Each student gets their XP and can see their celebration.', 'Approve all').then(function (ok) {
         if (!ok) return;
-        var chain = Promise.resolve();
-        list.forEach(function (x) { chain = chain.then(function () { return call('review', { email: x.s.email, node: x.id, approve: true, feedback: '' }); }); });
-        chain.then(function () { return loadTeacher(); }).then(function () { toast('Approved ' + list.length + '.'); csLoad(false); }).catch(function () { });
+        list.forEach(function (x) { reviewNow(x.s.email, x.id, true, ''); });
+        SQ_SOUND.play('correct'); closeModal(); csPaint(false); toast('Approved ' + list.length + '.');
       });
       return;
     }
@@ -2539,8 +2573,12 @@
       return;
     }
     if (act === 'help-done') {
-      var hc = t.getAttribute('data-class'); t.disabled = true; SQ_SOUND.play('equip');
-      call('helpDone', { classId: hc, who: t.getAttribute('data-who') }).then(function (res) { if (route()[1] === 'screen') { S.csHelp = res; csHelpPaint(); } else tHelpPaint(res, hc); }).catch(function () { t.disabled = false; });
+      // take the request off the screen at once; tell the server in the background
+      var hc = t.getAttribute('data-class'), who = t.getAttribute('data-who'); SQ_SOUND.play('equip');
+      S.helpGone = S.helpGone || {}; S.helpGone[who] = Date.now();
+      if (route()[1] === 'screen') { if (S.csHelp) S.csHelp.list = S.csHelp.list.filter(function (h) { return h.who !== who; }); csHelpPaint(); }
+      else if (S.tHelpLast) tHelpPaint(S.tHelpLast, hc);
+      API.call('helpDone', { classId: hc, who: who }).catch(function () { delete S.helpGone[who]; toast('That did not save. It will show again in a moment.', 'warn'); });
       return;
     }
     if (act === 'fb-all') { S.fbAll = t.checked; render(); return; }
@@ -2670,6 +2708,19 @@
     var p;
     var lockBtn = f.querySelector('[aria-disabled="true"]');
     if (lockBtn) { if (btn) btn.disabled = false; lockedClick(lockBtn); return; }
+    if (kind === 'cs-back') {
+      var sli = f.closest('li');
+      reviewNow(sli.getAttribute('data-email'), sli.getAttribute('data-node'), false, SEND_BACK[+v.why] || SEND_BACK[0]);
+      SQ_SOUND.play('equip'); csReviewRowDone(sli); done(); return;
+    }
+    if (kind === 'cs-end') {
+      var hm = String(v.at || '').split(':'), end = new Date(); end.setHours(+hm[0], +hm[1], 0, 0);
+      var endAt = end.getTime() + ((S.cs && S.cs.skew) || 0), nowE = csNow();
+      if (!(endAt > nowE)) { toast('That time has already passed today. Pick a later time.'); done(); return; }
+      var updE = { endAt: endAt, startAt: nowE };
+      S.cs.data.cls.screen = Object.assign({}, S.cs.data.cls.screen || {}, updE); csTick();
+      csSave(updE).catch(function () { }); done(); return;
+    }
     if (kind === 'data-merge') { S.mergeSheet = v.sheet; p = call('dataMerge', { sheet: v.sheet, apply: false }).then(function (res) { S.mergePreview = res; render(); }); }
     else if (kind === 'data-reconnect') p = call('dataReconnect', { sheet: v.sheet }).then(function (d) { toast('Reconnected: ' + d.current.students + ' students found. Reloading…'); S = { boot: null, avatarTab: 'hair' }; boot(); });
     else if (kind === 'display') p = call('setDisplay', { display: displayFrom(v) }).then(function (res) { S.me = res.student; closeModal(); render(); toast('Display settings saved'); });
@@ -2704,7 +2755,8 @@
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });
     } else if (kind === 'review') {
       var approve = btn && btn.value === '1';
-      p = call('review', { email: f.getAttribute('data-email'), node: f.getAttribute('data-node'), approve: approve, feedback: v.feedback }).then(function () { return loadTeacher(); }).then(function () { toast(approve ? '<svg class="i"><use href="#i-check-circle"/></svg> Approved' : '<svg class="i"><use href="#i-undo"/></svg> Sent back'); render(); });
+      reviewNow(f.getAttribute('data-email'), f.getAttribute('data-node'), approve, v.feedback);
+      toast(approve ? '<svg class="i"><use href="#i-check-circle"/></svg> Approved' : '<svg class="i"><use href="#i-undo"/></svg> Sent back'); render();
     } else if (kind === 'cs-setup') {
       var fsel = R.NODES.filter(function (n) { return v['f_' + n.id]; }).map(function (n) { return n.id; }).slice(0, 4);
       var T2 = S.csDraft.teams.map(function (t, i) { var inp = f.querySelector('[data-tname="' + i + '"]'); return { name: inp ? inp.value : t.name, color: t.color }; });

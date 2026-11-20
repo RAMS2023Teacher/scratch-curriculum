@@ -1460,3 +1460,20 @@ html.hc .help-big { border-color: #000; }
   .side-card .xpbar.lvl i { background: linear-gradient(90deg, #ffc83d, #ff8a1f); }
 }
 html.hc .side-btn, html.hc .side-card { border-color: #000; }
+
+/* ===================== Class Screen clock: one countdown to the end of class ===================== */
+.cs-tl { font: 800 .85em Nunito, sans-serif; text-transform: uppercase; letter-spacing: .1em; color: var(--cs-muted); min-height: 0; }
+.cs-tl:empty { display: none; }
+.cs .cs-timecard.counting .cs-clock { font-size: 4.2em; color: #15803d; font-variant-numeric: tabular-nums; }
+.cs .cs-timecard.warn .cs-clock { color: #ea580c; }
+.cs .cs-timecard.over .cs-clock { color: #dc2626; }
+.cs .cs-timecard.warn { box-shadow: 0 0 0 .2em rgba(234, 88, 12, .35); }
+.cs .cs-timecard.over { box-shadow: 0 0 0 .2em rgba(220, 38, 38, .45); }
+.cs.dark .cs-timecard.counting .cs-clock { color: #4ade80; } .cs.dark .cs-timecard.warn .cs-clock { color: #fb923c; } .cs.dark .cs-timecard.over .cs-clock { color: #f87171; }
+.cs-endform { display: flex; gap: .5em; align-items: center; justify-content: center; flex-wrap: wrap; font-size: .85em; font-weight: 800; margin-top: .3em; }
+.cs-endform input { font: inherit; padding: .15em .4em; border-radius: .5em; border: 2px solid var(--cs-line); background: var(--cs-card); color: var(--cs-ink); }
+.cs-chip.on { background: #7b2ff7; color: #fff; border-color: #7b2ff7; }
+/* quick review rows */
+.rev-acts { display: flex; gap: 6px; flex: none; }
+.rev-back { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.rev-back select { max-width: 100%; font: inherit; padding: 4px 8px; border-radius: 8px; border: 2px solid var(--line); }
