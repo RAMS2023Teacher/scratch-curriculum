@@ -264,6 +264,10 @@ test('moving on: a student can start the next quest while their work waits for r
   as(T, 'updateClass', { id: cid, patch: { moveOn: true } });
   assert.ok(as(N, 'toggleStep', { node: 't2', idx: 0, value: true }).student.state.nodes.t2.steps[0], 'with the setting on, they can keep going');
   assert.throws(() => as(N, 'toggleStep', { node: 't4', idx: 0, value: true }), /still locked/, 'but only one quest ahead of their finished work');
+  const pend = as(T, 'pendingReviews', { classId: cid }).list;
+  assert.strictEqual(pend.length, 1); assert.strictEqual(pend[0].email, N); assert.strictEqual(pend[0].id, 't1'); assert.ok(/scratch\.mit\.edu/.test(pend[0].link));
+  assert.ok(!('reflection' in pend[0]) && !('state' in pend[0]), 'the quick list carries no reflections or progress data');
+  assert.throws(() => as(N, 'pendingReviews', { classId: cid }), /Teachers only/);
   const scr = as(T, 'classScreen', { classId: cid });
   assert.strictEqual(scr.toReview, 1, 'the Class Screen gets a count of work to review');
   assert.ok(!/submitted|returned|reflection|scratch\.mit/.test(JSON.stringify(scr)), 'and nothing else about it');

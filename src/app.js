@@ -1894,6 +1894,7 @@
     var nh = document.getElementById('cs-needhelp');
     if (nh) { nh.hidden = !hl.length; csSet('cs-needlist', hl.length ? helpListHTML(hl, d.cls.id, S.csHelp.serverNow) : ''); }
     var rb = document.getElementById('cs-revbtn');
+    if (S.csPendN !== d.toReview) { S.csPendN = d.toReview; if (d.toReview) csPendingLoad(); else S.csPending = null; }
     if (rb) { rb.hidden = !d.toReview; csSet('cs-revbtn', '<svg class="i"><use href="#i-inbox"/></svg> <span>' + (d.toReview || 0) + ' to review</span>'); }
     var tcl = tc(), arcOn = tcl && tcl.arcade && tcl.arcade.mode !== 'off';
     csSet('cs-arcbtn', '<svg class="i"><use href="#i-gamepad"/></svg> <span>' + (arcOn ? 'Arcade open · Lock' : 'Open arcade') + '</span>');
@@ -2105,11 +2106,31 @@
   // Quick review from the projector. It shows only names, quest titles and project links.
   // Approve and Send back take effect on screen at once; the save happens in the background.
   var SEND_BACK = ['Add your Scratch project link, then turn it in again.', 'Finish every step, then turn it in again.', 'Something is not working yet. Test it, fix it, and turn it in again.', 'Come and see me about this one.'];
+  // The list of turned-in work: the small list fetched in the background if we have it,
+  // otherwise whatever the teacher pages already loaded.
+  function csPendingList() {
+    var c = tc();
+    if (S.csPending && c && S.csPending.classId === c.id) return S.csPending.list;
+    return pendingList().map(function (x) { return { email: x.s.email, name: x.s.name, avatar: x.s.state.avatar, id: x.id, link: x.ns.link || '' }; });
+  }
+  function csPendingLoad() {
+    var c = tc(); if (!c) return Promise.resolve();
+    return API.call('pendingReviews', { classId: c.id }).then(function (res) {
+      var g = S.revGone || {}, n = Date.now();
+      // leave out anything the teacher approved or sent back a moment ago (its save may still be on the way)
+      S.csPending = { classId: c.id, list: res.list.filter(function (x) { var k = x.email + '|' + x.id; return !(g[k] && n - g[k] < 30000); }) };
+      // if the panel is open and nobody is in the middle of a send-back, show the fresh list
+      var ul = document.querySelector('.rev-list'), panel = document.querySelector('.rev-panel');
+      var shown = ul ? [].map.call(ul.children, function (li) { return li.getAttribute('data-email') + '|' + li.getAttribute('data-node'); }).join(',') : '';
+      var fresh = S.csPending.list.map(function (x) { return x.email + '|' + x.id; }).join(',');
+      if (panel && shown !== fresh && !(ul && ul.querySelector('.rev-back:not([hidden])'))) csReviewPanel(); // only redraw when something changed
+    }).catch(function () { });
+  }
   function csReviewPanel() {
-    var list = pendingList();
-    modal('<h2><svg class="i"><use href="#i-inbox"/></svg> Turned in, waiting for you</h2>' +
+    var list = csPendingList();
+    modal('<h2 class="rev-panel"><svg class="i"><use href="#i-inbox"/></svg> Turned in, waiting for you</h2>' +
       (list.length ? '<ul class="help-list rev-list">' + list.map(function (x) {
-        return '<li data-email="' + esc(x.s.email) + '" data-node="' + x.id + '">' + avatarImgTag(x.s.state.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.s.name) + '</b><div class="small">' + esc(title(x.id)) + (x.ns.link ? ' · <a href="' + esc(x.ns.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div>' +
+        return '<li data-email="' + esc(x.email) + '" data-node="' + x.id + '">' + avatarImgTag(x.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.name) + '</b><div class="small">' + esc(title(x.id)) + (x.link ? ' · <a href="' + esc(x.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div>' +
           '<form class="rev-back" data-form="cs-back" hidden><select name="why" aria-label="Reason">' + SEND_BACK.map(function (r, i) { return '<option value="' + i + '">' + esc(r) + '</option>'; }).join('') + '</select><button class="btn small">Send</button><button type="button" class="btn small ghost" data-act="cs-back-cancel">Cancel</button></form></div>' +
           '<span class="rev-acts"><button class="btn small primary" data-act="cs-approve"><svg class="i"><use href="#i-check"/></svg> Approve</button><button class="btn small" data-act="cs-back"><svg class="i"><use href="#i-undo"/></svg> Send back</button></span></li>';
       }).join('') + '</ul><div class="row between"><span class="muted small">Only names and project links show here. A sent-back student sees the reason on their own screen; the class does not.</span>' +
@@ -2122,6 +2143,8 @@
     var st = S.teacher && S.teacher.students.filter(function (x) { return x.email === email; })[0];
     if (st && st.state.nodes[node]) { st.state.nodes[node].status = approve ? 'done' : 'returned'; st.state.nodes[node].feedback = feedback || ''; }
     if (S.cs && S.cs.data && S.cs.data.toReview) S.cs.data.toReview--;
+    S.revGone = S.revGone || {}; S.revGone[email + '|' + node] = Date.now();
+    if (S.csPending) S.csPending.list = S.csPending.list.filter(function (x) { return !(x.email === email && x.id === node); });
     return call('review', { email: email, node: node, approve: approve, feedback: feedback || '' }).catch(function () { return loadTeacher().then(function () { render(); }); });
   }
   function csReviewRowDone(li) {
@@ -2440,7 +2463,7 @@
       return;
     }
     if (act === 'cs-setup') { if (S.cs) csSetup(); return; }
-    if (act === 'cs-review') { loadTeacher().then(csReviewPanel).catch(function () { }); return; }
+    if (act === 'cs-review') { csReviewPanel(); csPendingLoad(); return; } // open at once, then freshen in the background
     if (act === 'cs-approve') {
       var rli = t.closest('li'); SQ_SOUND.play('correct');
       reviewNow(rli.getAttribute('data-email'), rli.getAttribute('data-node'), true, '');
@@ -2450,7 +2473,7 @@
     if (act === 'cs-back') { var bl = t.closest('li'); bl.querySelector('.rev-back').hidden = false; bl.querySelector('.rev-acts').hidden = true; return; }
     if (act === 'cs-back-cancel') { var cl = t.closest('li'); cl.querySelector('.rev-back').hidden = true; cl.querySelector('.rev-acts').hidden = false; return; }
     if (act === 'cs-approve-all') {
-      var list = pendingList();
+      var list = csPendingList().map(function (x) { return { s: { email: x.email }, id: x.id }; });
       ask('Approve all ' + list.length + ' turned-in quests? Each student gets their XP and can see their celebration.', 'Approve all').then(function (ok) {
         if (!ok) return;
         list.forEach(function (x) { reviewNow(x.s.email, x.id, true, ''); });

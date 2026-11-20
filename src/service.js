@@ -608,6 +608,19 @@ function SQ_SERVICE(store) {
       if (args.approve) ns.doneAt = ns.doneAt || now();
       return { student: persist(st) };
     },
+    // Just the turned-in work for one class (small and quick, for the Class Screen's review button)
+    pendingReviews: function (user, args) {
+      requireTeacher(user);
+      var out = [];
+      store.getStudents().forEach(function (s) {
+        if (s.classId !== args.classId || s.isTeacher) return;
+        Object.keys(s.state.nodes || {}).forEach(function (id) {
+          var ns = s.state.nodes[id];
+          if (ns.status === 'submitted') out.push({ email: s.email, name: s.name, avatar: s.state.avatar || A.DEFAULT, id: id, link: ns.link || '', at: ns.submittedAt || 0 });
+        });
+      });
+      return { list: out.sort(function (a, b) { return a.at - b.at; }) };
+    },
     reopen: function (user, args) {
       requireTeacher(user);
       var st = store.getStudent(args.email);
