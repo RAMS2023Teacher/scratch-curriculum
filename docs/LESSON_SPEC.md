@@ -79,6 +79,14 @@ SQ_LESSONS.g1 = {
 }
 ```
 
+### Test out (optional, top level)
+
+A lesson may carry `testOut: { goal, spec, quiz }` so students who already know the skills can skip the steps:
+
+- `quiz`: exactly 5 questions `{ q, blocks?, choices, answer }`, harder than the quick checks (trace and predict, edge cases, debugging). No `explain`; students only see their score. 4 of 5 passes; one try.
+- `goal`: one or two sentences describing a proof project that uses every skill of the quest, and is NOT the project the steps build.
+- `spec`: 3 to 6 checklist lines the student ticks before turning in. The link is always required for a tested-out quest.
+
 ### Fading (the most important rule)
 Within each lesson, support fades: early code steps `scaffold: "full"` (student sees the whole script), middle steps `"parsons"` (the app shows the needed blocks one-by-one in SHUFFLED order and the student puts them together; keep these scripts ≤ 8 lines), and at least ONE core step near the end `"goal"` (no blocks shown — the student builds it from the description using blocks they already know; the solution is behind "Stuck? Show me"). Across the course fade further: t1–t2 mostly full; t3–t5 full→parsons→goal; branches and later: more parsons/goal. f-lessons are mostly goal/planning.
 A goal step's `short` + `text` must give enough of a spec to succeed (what should happen, which blocks/categories might help) without giving the script.

@@ -24,7 +24,9 @@ function SQ_SERVICE(store) {
       // stepCheck: students must tick "I did this step in Scratch" before "I did it!" works
       stepSec: 10, stepCheck: false, quizWait: 8, inOrder: true, nudgeSec: 45,
       // students may start the next quest while their turned-in work waits for review
-      moveOn: true };
+      moveOn: true,
+      // testOut: students may test out of a starter quest; wizards: classmates who finished a quest may help
+      testOut: true, wizards: true };
     for (var k in d) if (c[k] === undefined) c[k] = d[k];
     // the first version of the step timer was 20 seconds; the default is now 10
     if (c.paceV !== 2) { if (c.stepSec === 20) c.stepSec = 10; c.paceV = 2; }
@@ -35,7 +37,7 @@ function SQ_SERVICE(store) {
     classDefaults(c);
     return { id: c.id, name: c.name, code: c.code, openThrough: c.openThrough, requireApproval: c.requireApproval,
       requireLink: c.requireLink, showLeaderboard: c.showLeaderboard, classGoal: c.classGoal, archived: c.archived, sounds: c.sounds !== false, shop: c.shop !== false, arcade: arcadeInfo(c),
-      stepSec: c.stepSec, stepCheck: !!c.stepCheck, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec, moveOn: c.moveOn !== false };
+      stepSec: c.stepSec, stepCheck: !!c.stepCheck, quizWait: c.quizWait, inOrder: c.inOrder !== false, nudgeSec: c.nudgeSec, moveOn: c.moveOn !== false, testOut: c.testOut !== false, wizards: c.wizards !== false };
   }
   // What students may know about the arcade: its live mode, closing time and pass rules
   function arcadeInfo(c) {
@@ -119,7 +121,7 @@ function SQ_SERVICE(store) {
       var p = R.profile(s.state);
       return { id: memberId(s.email),
         name: s.name, avatar: s.state.avatar || A.DEFAULT, xp: p.xp, level: p.level, rank: p.rank,
-        current: p.current, done: Object.keys(p.done), badges: p.badges.length, teacher: !!s.isTeacher };
+        current: p.current, done: Object.keys(p.done), badges: p.badges.length, teacher: !!s.isTeacher, wiz: !!(s.state.wizard && s.state.wizard.on) };
     });
   }
 
@@ -131,6 +133,16 @@ function SQ_SERVICE(store) {
   }
   var LANGS = ['en', 'pt'];
   var HELP_TTL = 60 * 60e3; // a help request expires after an hour
+  var WIZ_DAY = 5;          // a Quest Wizard earns XP for at most this many helps a day
+  // Up to three classmates who signed up as Quest Wizards and have finished this quest.
+  // Wizards who have helped the least go first, so the same student is not asked every time.
+  function wizardsFor(st, node) {
+    if (classDefaults(findClass(st.classId) || {}).wizards === false) return [];
+    return store.getStudents().filter(function (s) {
+      return s.classId === st.classId && s.email !== st.email && !s.isTeacher && s.state.wizard && s.state.wizard.on && R.isDone(s.state, node);
+    }).sort(function (a, b) { return (a.state.wizard.helped || 0) - (b.state.wizard.helped || 0); }).slice(0, 3)
+      .map(function (s) { return { id: memberId(s.email), name: s.name }; });
+  }
   var FB_REASONS = ['unclear', 'broken', 'hard', 'easy', 'other'];
   // Feedback lives on the student record OUTSIDE quest progress (state.nodes), so reopening
   // or resetting a quest never wipes it.
@@ -298,7 +310,7 @@ function SQ_SERVICE(store) {
       for (var q = 0; q < L.quiz.length; q++) if (!(ns.quiz[q] && ns.quiz[q].correct)) err('Answer the Quick Check questions first.');
       var link = clean(args.link, 300);
       if (link && !/^https?:\/\//i.test(link)) err('That link should start with https://');
-      if (w.cls.requireLink && !link) err('Paste the link to your Scratch project.');
+      if ((w.cls.requireLink || (ns.test && ns.test.pass)) && !link) err('Paste the link to your Scratch project.');
       ns.link = link;
       ns.reflection = clean(args.reflection, 600);
       ns.submittedAt = now(); touch(ns);
@@ -315,12 +327,12 @@ function SQ_SERVICE(store) {
       else if (step === 'quiz') where += ' · Quick check';
       else if (step === 'turnin') where += ' · Turning in';
       else if (step === 'challenge') where += ' · Expert challenge';
-      var id = memberId(st.email);
-      store.helpPut(id, { who: id, name: st.name, classId: st.classId, at: now(), node: node, where: where, note: clean(args.note, 140), avatar: st.state.avatar || A.DEFAULT });
+      var id = memberId(st.email), wz = wizardsFor(st, node);
+      store.helpPut(id, { who: id, name: st.name, classId: st.classId, at: now(), node: node, where: where, note: clean(args.note, 140), avatar: st.state.avatar || A.DEFAULT, wz: wz });
       var fb = fbOf(st, node), sk = String(step == null ? 'other' : step);
       fb.help[sk] = (fb.help[sk] || 0) + 1;
       persist(st);
-      return { help: { open: true, at: now() } };
+      return { help: { open: true, at: now(), wz: wz } };
     },
     cancelHelp: function (user) {
       var st = requireStudent(user);
@@ -329,7 +341,7 @@ function SQ_SERVICE(store) {
     },
     myHelp: function (user) {
       var st = requireStudent(user), h = store.helpAll()[memberId(st.email)];
-      return { help: h && now() - h.at < HELP_TTL ? { open: true, at: h.at } : { open: false } };
+      return { help: h && now() - h.at < HELP_TTL ? { open: true, at: h.at, wz: h.wz || [] } : { open: false } };
     },
     helpList: function (user, args) {
       requireTeacher(user);
@@ -343,6 +355,59 @@ function SQ_SERVICE(store) {
       var h = store.helpAll()[String(args.who || '')];
       if (h) store.helpPut(h.who, null);
       return api.helpList(user, { classId: args.classId });
+    },
+
+    // ---------------------------------------------------------- Quest Wizards (students who help classmates)
+    setWizard: function (user, args) {
+      var st = requireStudent(user);
+      if (classDefaults(findClass(st.classId) || {}).wizards === false) err('Quest Wizards are turned off for your class.');
+      if (args.on && !R.profile(st.state).doneCount) err('Finish a quest first. Then you can help classmates with it.');
+      var z = st.state.wizard = st.state.wizard || { helped: 0, log: [] };
+      z.on = !!args.on;
+      if (store.cachePut) store.cachePut('cv:' + st.classId, null, 1);
+      return { student: persist(st) };
+    },
+    // "A classmate helped me": closes the help request and rewards the Wizard who helped.
+    thankWizard: function (user, args) {
+      var st = requireStudent(user), me = memberId(st.email), h = store.helpAll()[me], who = String(args.who || '');
+      if (!h || !(h.wz || []).some(function (x) { return x.id === who; })) err('That help request is closed.');
+      store.helpPut(me, null);
+      var wiz = store.getStudents().filter(function (s) { return s.classId === st.classId && memberId(s.email) === who; })[0];
+      var th = st.state.thanks = st.state.thanks || {}, paid = false;
+      if (wiz && wiz.state.wizard && wiz.state.wizard.on && !th[h.node]) {
+        var z = wiz.state.wizard, dayAgo = now() - 20 * 3600e3;
+        z.log = (z.log || []).slice(-30);
+        // one reward for each quest a classmate was stuck on, and at most WIZ_DAY rewards a day
+        if (z.log.filter(function (x) { return x.at > dayAgo; }).length < WIZ_DAY) {
+          z.helped = (z.helped || 0) + 1; z.log.push({ at: now(), node: h.node });
+          th[h.node] = now(); paid = true;
+          persist(wiz);
+        }
+      }
+      return { help: { open: false }, thanked: wiz ? wiz.name : '', paid: paid, student: persist(st) };
+    },
+
+    // ---------------------------------------------------------- testing out of a starter quest
+    // A student who already knows the skills answers a harder check. Passing marks the steps and quick
+    // checks done; the student still builds the proof project and turns it in for review. One try per quest.
+    testOut: function (user, args) {
+      var st = requireStudent(user), id = args.node, L = lesson(id), T = L.testOut;
+      if (!T) err('This quest has no test.');
+      var w = workable(st, id);
+      if (w.cls.testOut === false) err('Testing out is turned off for your class.');
+      if (w.status !== 'available' && w.status !== 'started') err('This quest is already turned in.');
+      var ns = R.nodeState(st.state, id);
+      if (ns.test) err('You already tried the test for this quest.');
+      var ans = args.answers || [], score = 0;
+      T.quiz.forEach(function (Q, i) { if (Number(ans[i]) === Q.answer) score++; });
+      var pass = score >= T.quiz.length - 1;
+      ns.test = { at: now(), score: score, pass: pass };
+      if (pass) {
+        R.coreSteps(L).forEach(function (i) { ns.steps[i] = true; });
+        L.quiz.forEach(function (_, q) { if (!(ns.quiz[q] && ns.quiz[q].correct)) ns.quiz[q] = { tries: 1, correct: true, firstTry: score === T.quiz.length }; });
+      }
+      touch(ns);
+      return { pass: pass, score: score, total: T.quiz.length, student: persist(st) };
     },
 
     // ---------------------------------------------------------- display settings and translation
@@ -589,7 +654,7 @@ function SQ_SERVICE(store) {
       var p = args.patch || {};
       if (p.name !== undefined) c.name = clean(p.name, 40) || c.name;
       if (p.openThrough !== undefined) c.openThrough = Math.max(1, Math.min(R.MAX_TIER, Number(p.openThrough) || 1));
-      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder', 'moveOn', 'stepCheck'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
+      ['requireApproval', 'requireLink', 'showLeaderboard', 'archived', 'sounds', 'shop', 'inOrder', 'moveOn', 'stepCheck', 'testOut', 'wizards'].forEach(function (k) { if (p[k] !== undefined) c[k] = !!p[k]; });
       [['stepSec', 120], ['quizWait', 60], ['nudgeSec', 600]].forEach(function (x) { if (p[x[0]] !== undefined) c[x[0]] = Math.max(0, Math.min(x[1], Math.round(Number(p[x[0]]) || 0))); });
       if (p.classGoal !== undefined) c.classGoal = Math.max(0, Number(p.classGoal) || 0);
       if (p.newCode) c.code = makeCode();
@@ -616,7 +681,7 @@ function SQ_SERVICE(store) {
         if (s.classId !== args.classId || s.isTeacher) return;
         Object.keys(s.state.nodes || {}).forEach(function (id) {
           var ns = s.state.nodes[id];
-          if (ns.status === 'submitted') out.push({ email: s.email, name: s.name, avatar: s.state.avatar || A.DEFAULT, id: id, link: ns.link || '', at: ns.submittedAt || 0 });
+          if (ns.status === 'submitted') out.push({ email: s.email, name: s.name, avatar: s.state.avatar || A.DEFAULT, id: id, link: ns.link || '', at: ns.submittedAt || 0, tested: !!(ns.test && ns.test.pass) });
         });
       });
       return { list: out.sort(function (a, b) { return a.at - b.at; }) };
@@ -674,7 +739,7 @@ function SQ_SERVICE(store) {
       var members = studs.map(function (s) {
         var p = R.profile(s.state);
         return { key: s.email, name: s.name, avatar: s.state.avatar || A.DEFAULT, level: p.level, current: p.current, done: Object.keys(p.done),
-          doneCount: p.doneCount, hid: memberId(s.email), card: A.titleCard(s.state.avatar), team: teamOf[s.email] || null, helper: p.badges.indexOf('helper') >= 0, xp: p.xp };
+          doneCount: p.doneCount, hid: memberId(s.email), card: A.titleCard(s.state.avatar), team: teamOf[s.email] || null, helper: p.badges.indexOf('helper') >= 0, wiz: !!(s.state.wizard && s.state.wizard.on), xp: p.xp };
       });
       // recent wins across the class (newest first, last 7 days)
       var since = now() - 7 * 864e5, wins = [];
@@ -695,7 +760,7 @@ function SQ_SERVICE(store) {
       members.forEach(function (m) { if (m.current && m.done.indexOf(m.current) < 0) counts[m.current] = (counts[m.current] || 0) + 1; });
       var helpers = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).slice(0, 4).map(function (q) {
         var who = members.filter(function (m) { return m.done.indexOf(q) >= 0; })
-          .sort(function (a, b) { return (b.helper - a.helper) || (b.xp - a.xp); }).slice(0, 3).map(function (m) { return { name: m.name, avatar: m.avatar }; });
+          .sort(function (a, b) { return (b.wiz - a.wiz) || (b.helper - a.helper) || (b.xp - a.xp); }).slice(0, 3).map(function (m) { return { name: m.name, avatar: m.avatar, wiz: m.wiz }; });
         return { quest: q, title: SQ_LESSONS[q] ? SQ_LESSONS[q].title : q, working: counts[q], helpers: who };
       }).filter(function (h) { return h.helpers.length; });
       // "Race to the finish": where each student is inside today's quest (positive-only stages).

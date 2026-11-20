@@ -76,7 +76,8 @@ var SQ_AVATAR = (function () {
   };
   CATALOG.aura = [{ id: 'none', name: 'None' }];
   CATALOG.effect = [{ id: 'none', name: 'None' }];
-  CATALOG.title = [{ id: 'none', name: 'No title' }, { id: 'rookie', name: 'Rookie Coder' }, { id: 'ace', name: 'Arcade Ace', rarity: 'rare', unlock: { arcade: 600 } }, { id: 'champ', name: 'Block Rush Champion', rarity: 'epic', unlock: { arcade: 2000 } }, { id: 'myth', name: 'Arcade Legend', rarity: 'legendary', unlock: { arcade: 4000 } }];
+  CATALOG.title = [{ id: 'none', name: 'No title' }, { id: 'rookie', name: 'Rookie Coder' }, { id: 'ace', name: 'Arcade Ace', rarity: 'rare', unlock: { arcade: 600 } }, { id: 'champ', name: 'Block Rush Champion', rarity: 'epic', unlock: { arcade: 2000 } }, { id: 'myth', name: 'Arcade Legend', rarity: 'legendary', unlock: { arcade: 4000 } },
+    { id: 'qwiz', name: 'Quest Wizard', rarity: 'rare', unlock: { badge: 'quest_wizard' } }, { id: 'gwiz', name: 'Grand Wizard', rarity: 'epic', unlock: { badge: 'grand_wizard' } }];
   Object.keys(SHOP).forEach(function (cat) {
     SHOP[cat].forEach(function (x) {
       CATALOG[cat].push({ id: x[0], name: x[1], rarity: x[3], unlock: { price: x[2], key: cat + ':' + x[0] } });
@@ -421,7 +422,7 @@ var SQ_AVATAR = (function () {
   // A title worn on the Class Screen is shown as a "card": an emoji plus the title.
   // kind says how it was won, so the board can colour it: earned (free or by level/badge),
   // bought (coin shop), game (arcade score).
-  var TITLE_ICON = { rookie: '🌱', ace: '🕹️', champ: '🏆', myth: '👾', sprite: '🐱', loops: '🔁', bugs: '🐞', pixel: '🎨', games: '🎮', stories: '📖',
+  var TITLE_ICON = { qwiz: '🧙', gwiz: '🪄', rookie: '🌱', ace: '🕹️', champ: '🏆', myth: '👾', sprite: '🐱', loops: '🔁', bugs: '🐞', pixel: '🎨', games: '🎮', stories: '📖',
     apps: '📱', racer: '🏎️', drift: '💨', pit: '🔧', wizard: '🧙', legend: '👑' };
   function titleCard(av) {
     var t = itemOf('title', (av || {}).title);

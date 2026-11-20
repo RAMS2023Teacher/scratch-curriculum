@@ -111,6 +111,18 @@ SQ_LESSONS.t5 = {
       explain: "4 is not less than 4, so the condition is false. The else part runs."
     }
   ],
+  // Test out: a harder check for students who already know this quest, plus the project that proves it
+  testOut: {
+    goal: "Build a clicker game with a score variable and a timer variable. Clicking a sprite scores points, a message makes another sprite react, and the game ends when the timer reaches 0.",
+    spec: ["A score variable and a timer variable show on the Stage.", "Both variables reset when the green flag is clicked.", "Clicking a sprite changes the score and broadcasts a message that another sprite receives.", "An if-else block makes a sprite say different things for low and high scores.", "The game stops when the timer equals 0.", "My project has a name and is shared."],
+    quiz: [
+      { q: "You click the green flag. What is score at the end?", blocks: "when green flag clicked\nset [score v] to (3)\nrepeat (4)\nchange [score v] by (2)\nend\nchange [score v] by (-1)", choices: ["10", "11", "7", "9"], answer: 0 },
+      { q: "Energy is exactly 10 when this runs. What happens?", blocks: "if <(energy) > (10)> then\nset [energy v] to (0)\nend", choices: ["Energy becomes 0", "Nothing. 10 is not greater than 10.", "Energy becomes 20", "The script stops forever"], answer: 1 },
+      { q: "Sprite A runs broadcast feed. Which scripts start?", choices: ["Only scripts in Sprite A", "Every script in the project", "Every when I receive feed script, in any sprite", "Only the green flag scripts"], answer: 2 },
+      { q: "Nothing in this project ever changes lives. What happens?", blocks: "when green flag clicked\nset [lives v] to (3)\nwait until <(lives) = (0)>\nsay [Game over] for (2) seconds", choices: ["It says Game over right away", "It says Game over after 3 seconds", "Lives turns into 0", "It waits forever and never says Game over"], answer: 3 },
+      { q: "What is the difference between set and change?", choices: ["Set makes the variable exactly that number. Change adds to what it already has.", "Set adds to the variable. Change replaces it.", "They do the same thing.", "Set works only for scores."], answer: 0 }
+    ]
+  },
   challenge: {
     title: "Play time",
     short: "Add a toy and a happiness variable that drops and goes up.",

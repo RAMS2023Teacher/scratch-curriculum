@@ -98,6 +98,18 @@ SQ_LESSONS.t4 = {
       explain: "A sprite can jump over a thin wall between checks. Thick walls are always caught."
     }
   ],
+  // Test out: a harder check for students who already know this quest, plus the project that proves it
+  testOut: {
+    goal: "Build a maze game with two kinds of danger. Walls send the player back to the start, a lava color ends the game, and reaching the goal sprite wins.",
+    spec: ["Arrow keys move the player smoothly, inside a forever loop.", "Touching a wall color sends the player back to the start.", "Touching a second color says a message and stops the game.", "Touching the goal sprite shows a win message.", "My project has a name and is shared."],
+    quiz: [
+      { q: "A script checks the arrow keys with if blocks, but the if blocks are NOT inside a forever loop. What happens?", choices: ["The keys work for the whole game", "The keys are checked one time, right when the flag is clicked", "The sprite moves forever", "Scratch shows an error"], answer: 1 },
+      { q: "The player touches the Star. What happens?", blocks: "when green flag clicked\nforever\nif <touching color [#ff0000]?> then\ngo to x: (-200) y: (-150)\nend\nif <touching (Star v)?> then\nstop [all v]\nend\nend", choices: ["Nothing happens", "It jumps back to the start", "Every script in the game stops", "Only the Star stops"], answer: 2 },
+      { q: "Which one is a condition, a true or false question?", choices: ["touching Star?", "change x by 3", "forever", "stop all"], answer: 0 },
+      { q: "You hold the right arrow and the up arrow together. Each key has its own if block inside the forever loop. What does the player do?", choices: ["Moves right only", "Stops moving", "Moves up only", "Moves diagonally, up and to the right"], answer: 3 },
+      { q: "Your wall check never comes true, even when the player is on the wall. What is the most likely cause?", choices: ["The color in the block is not exactly the wall color. Pick it again with the eyedropper.", "The maze is too big", "The player is too slow", "You need a second forever loop"], answer: 0 }
+    ]
+  },
   challenge: {
     title: "Moving enemy",
     short: "Add an enemy that glides back and forth and sends you home.",

@@ -49,7 +49,7 @@ var SQ_RULES = (function () {
   NODES.forEach(function (n) { NODE[n.id] = n; });
 
   // ---- XP ---------------------------------------------------------------
-  var XP = { step: 10, quiz: 20, quizFirstTry: 10, challenge: 50, lesson: 100, award: 50, rate: 10 };
+  var XP = { step: 10, quiz: 20, quizFirstTry: 10, challenge: 50, lesson: 100, award: 50, rate: 10, wizard: 25 };
 
   function xpForLevel(level) { return 20 * (level - 1) * (level + 4); } // L2=120, L5=720, L10=2520, L13=4080
   function levelFor(xp) {
@@ -97,6 +97,9 @@ var SQ_RULES = (function () {
     { id: 'high_scorer',  icon: '🎯', name: 'High Scorer',      desc: 'Score 1,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 1000; } },
     { id: 'arcade_master', icon: '👾', name: 'Arcade Master',   desc: 'Score 3,000 in Block Rush.',               test: function (c) { return ((c.state.arcade || {}).allBest || 0) >= 3000; } },
     { id: 'kart_racer',   icon: '🏎️', name: 'Kart Racer',      desc: 'Finish your first Kart Dash race.',        test: function (c) { return (((c.state.arcade || {}).kart || {}).plays || 0) >= 1; } },
+    { id: 'quest_wizard', icon: '🧙', name: 'Quest Wizard',     desc: 'Help a classmate who was stuck.',          test: function (c) { return ((c.state.wizard || {}).helped || 0) >= 1; } },
+    { id: 'grand_wizard', icon: '🪄', name: 'Grand Wizard',     desc: 'Help classmates 10 times.',                test: function (c) { return ((c.state.wizard || {}).helped || 0) >= 10; } },
+    { id: 'test_ace',     icon: '🎓', name: 'Test Ace',         desc: 'Test out of a quest and prove it.',        test: function (c) { return Object.keys(c.done).some(function (id) { var t = c.state.nodes[id].test; return t && t.pass; }); } },
     { id: 'round_champ',  icon: '🏆', name: 'Round Champion',   desc: 'Finish a leaderboard round in the top 3.', test: function (c) { return ((c.state.arcade || {}).roundWins || 0) >= 1; } }
   ];
   // Awarded by the teacher only
@@ -175,6 +178,9 @@ var SQ_RULES = (function () {
     (state.bonus || []).forEach(function (b) { xp += Number(b.amount) || 0; });
     // rating a quest (feedback for the teacher) earns a little XP, once per quest
     Object.keys(state.fb || {}).forEach(function (k) { if (state.fb[k] && state.fb[k].rating) xp += XP.rate; });
+    // helping a stuck classmate as a Quest Wizard
+    var helps = (state.wizard || {}).helped || 0;
+    xp += helps * XP.wizard;
 
     var ctx = { done: done, challenges: challenges, firstTry: firstTry, perfect: perfect, xp: xp, state: state };
     var badges = [];
@@ -187,7 +193,7 @@ var SQ_RULES = (function () {
     var arc = state.arcade || {};
     var coins = typeof SQ_AVATAR !== 'undefined' ? SQ_AVATAR.coinsFor(xp, owned, (arc.spent || 0) - (arc.earned || 0)) : { earned: 0, spent: 0, balance: 0 };
     return {
-      owned: owned, coins: coins.balance, coinsEarned: coins.earned, goal: state.goal || null, arcadeBest: arc.allBest || 0,
+      owned: owned, coins: coins.balance, coinsEarned: coins.earned, goal: state.goal || null, arcadeBest: arc.allBest || 0, helps: helps,
       xp: xp, level: level, rank: rankFor(level),
       levelStart: xpForLevel(level), levelNext: xpForLevel(level + 1),
       done: done, doneCount: Object.keys(done).length,

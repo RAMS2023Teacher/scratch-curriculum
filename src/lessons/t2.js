@@ -105,6 +105,18 @@ SQ_LESSONS.t2 = {
       explain: "A reset puts the sprite back, so the project starts the same way every time."
     }
   ],
+  // Test out: a harder check for students who already know this quest, plus the project that proves it
+  testOut: {
+    goal: "Build an interactive greeting card with two sprites. The green flag resets everything, each sprite reacts when it is clicked, and three different keys each make something happen.",
+    spec: ["The green flag puts both sprites back in their starting spots.", "Each sprite does something when it is clicked.", "Three or more keys each do something different.", "It has speech and at least one sound.", "My project has a name and is shared."],
+    quiz: [
+      { q: "The sprite is at x: 0, y: 0. You press space 3 times. Where is it now?", blocks: "when [space v] key pressed\nchange x by (10)\nchange y by (-10)", choices: ["x: 10, y: -10", "x: 30, y: 30", "x: 30, y: -30", "x: -30, y: 30"], answer: 2 },
+      { q: "One sprite has two scripts. Both start with when green flag clicked. You click the flag. What happens?", choices: ["Only the first script runs", "Both scripts run at the same time", "Scratch picks one at random", "Nothing. A sprite can have only one flag script."], answer: 1 },
+      { q: "Your sprite was dragged into a corner. You click the flag. What do you see first?", blocks: "when green flag clicked\nsay [Go!] for (2) seconds\ngo to x: (0) y: (0)", choices: ["It says Go! in the corner, then jumps to the center", "It jumps to the center, then says Go!", "It says Go! while it slides to the center", "Nothing happens"], answer: 0 },
+      { q: "Which of these is a hat block?", choices: ["go to x: 0 y: 0", "start sound Meow", "say Hello! for 2 seconds", "when this sprite clicked"], answer: 3 },
+      { q: "Your project works the first time. The second time, the sprite starts in the wrong place. What is the best fix?", choices: ["Add a go to x: y: block at the top of the green flag script", "Drag the sprite back by hand each time", "Delete the sprite and add it again", "Click the flag two times"], answer: 0 }
+    ]
+  },
   challenge: {
     title: "Costume and backdrop keys",
     short: "Make one key change the costume and another key change the backdrop.",

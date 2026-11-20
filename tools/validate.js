@@ -60,6 +60,15 @@ for (const id of ids) {
     if (q.blocks) scripts.push([id + ' quiz ' + (i + 1), q.blocks]);
   });
   if (!/^f/.test(id) && !(L.quiz || []).some(q => q.blocks)) E('at least one quiz question must be predict/trace with blocks');
+  if (L.testOut) {
+    const T = L.testOut;
+    if (!T.goal || !Array.isArray(T.spec) || T.spec.length < 3) E('testOut needs a goal and a spec list');
+    if (!Array.isArray(T.quiz) || T.quiz.length !== 5) E('testOut needs exactly 5 questions');
+    (T.quiz || []).forEach((q, i) => {
+      if (!q.q || !Array.isArray(q.choices) || q.choices.length < 3 || typeof q.answer !== 'number' || q.answer >= q.choices.length) E('testOut question ' + (i + 1) + ' malformed');
+      if (q.blocks) scripts.push([id + ' testOut ' + (i + 1), q.blocks]);
+    });
+  }
   const c = L.challenge || {};
   if (!c.title || !c.short || !c.text) E('challenge needs title/short/text');
   if (c.blocks) E('challenge must be spec-only: put the solution in challenge.answer, not challenge.blocks');

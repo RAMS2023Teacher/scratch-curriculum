@@ -109,6 +109,18 @@ SQ_LESSONS.t1 = {
       explain: "A script runs from the top block down to the bottom block, in order."
     }
   ],
+  // Test out: a harder check for students who already know this quest, plus the project that proves it
+  testOut: {
+    goal: "Make your sprite trace the outline of a house: glide around a square, then up and over a pointed roof, and finish in the exact center of the Stage.",
+    spec: ["My script starts with a go to block.", "It uses at least six glide blocks.", "The path makes a square with a pointed roof.", "My sprite finishes at x: 0, y: 0.", "My project has a name and is shared."],
+    quiz: [
+      { q: "Your sprite faces right. You click this script. What is x at the end?", blocks: "go to x: (100) y: (0)\nmove (-50) steps", choices: ["150", "50", "-50", "100"], answer: 1 },
+      { q: "Which spot is closest to the bottom left corner of the Stage?", choices: ["x: -200, y: -150", "x: 200, y: -150", "x: -200, y: 150", "x: -150, y: 200"], answer: 0 },
+      { q: "You click this script once. Which way does the sprite face at the end?", blocks: "turn cw (90) degrees\nturn cw (90) degrees\nturn cw (90) degrees\nturn cw (90) degrees", choices: ["The opposite way", "To the left of where it started", "The same way it started", "It keeps spinning"], answer: 2 },
+      { q: "How is glide different from go to?", choices: ["Glide only moves left and right.", "They do exactly the same thing.", "Go to is slower than glide.", "Glide takes time, so you see the sprite travel. Go to jumps there at once."], answer: 3 },
+      { q: "What does the sprite do LAST?", blocks: "glide (1) secs to x: (0) y: (100)\ngo to x: (-100) y: (0)\nglide (1) secs to x: (100) y: (0)", choices: ["Jumps to the left side", "Slides across from left to right", "Slides up to the top", "Slides from the top down to the right"], answer: 1 }
+    ]
+  },
   challenge: {
     title: "Shape master",
     short: "Walk a square. Then a triangle. Then, if you dare, a star.",

@@ -103,6 +103,18 @@ SQ_LESSONS.t3 = {
       explain: "Effects stay after you click stop. clear graphic effects at the start resets them every run."
     }
   ],
+  // Test out: a harder check for students who already know this quest, plus the project that proves it
+  testOut: {
+    goal: "Paint your own creature with at least two costumes. Make it walk back and forth across the Stage forever, and do a special trick when you click it.",
+    spec: ["I painted the sprite myself, with two or more costumes.", "A forever loop animates it and bounces it off the edges.", "Clicking it runs a repeat loop trick, like a spin or a grow.", "Size and effects reset, so it works the same every time.", "My project has a name and is shared."],
+    quiz: [
+      { q: "You click the green flag. What is the sprite's x at the end?", blocks: "when green flag clicked\ngo to x: (0) y: (0)\npoint in direction (90)\nrepeat (3)\nmove (20) steps\nmove (-5) steps\nend", choices: ["60", "15", "45", "75"], answer: 2 },
+      { q: "A repeat 10 loop has turn 36 degrees inside. Which way does the sprite face after the loop?", choices: ["The same way it started", "Upside down", "To the left", "It never stops turning"], answer: 0 },
+      { q: "When does the sprite say Done!?", blocks: "when green flag clicked\nforever\nnext costume\nwait (0.2) seconds\nend\nsay [Done!] for (2) seconds", choices: ["After 0.2 seconds", "After every costume has shown once", "Never", "Right away"], answer: 2 },
+      { q: "Your animation flips costumes too fast. What do you change?", choices: ["Make the wait number smaller", "Make the wait number bigger", "Add more move steps", "Take the blocks out of the loop"], answer: 1 },
+      { q: "The sprite's size is 100. You click it. What is its size right after the script ends?", blocks: "when this sprite clicked\nrepeat (4)\nchange size by (10)\nend\nset size to (100) %", choices: ["140", "110", "40", "100"], answer: 3 }
+    ]
+  },
   challenge: {
     title: "Spiral tunnel",
     short: "Make your sprite fly in a spiral and grow bigger each time.",

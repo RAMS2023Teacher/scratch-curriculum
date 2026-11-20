@@ -1487,3 +1487,24 @@ html.hc .side-btn, html.hc .side-card { border-color: #000; }
 .fx-tk .ft-stub b { font-size: 2.6rem; }
 .fx-tk small { font: 900 .75rem Nunito, sans-serif; letter-spacing: .12em; }
 @keyframes fxTicket { 0% { transform: translateY(160px) rotate(-25deg) scale(.4); opacity: 0; } 70% { transform: translateY(0) rotate(4deg) scale(1.05); opacity: 1; } 100% { transform: rotate(-3deg); } }
+
+/* ---- testing out of a quest, and Quest Wizards ---- */
+.test-box, .wiz-ask { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border: 2px dashed #c4b5fd; background: #f5f3ff; color: #2e1065; border-radius: 12px; padding: 10px 14px; margin: 12px 0; }
+.test-box.got { border-style: solid; border-color: #f2c94c; background: #fff8dc; color: #5c3d00; }
+.test-box .grow, .wiz-ask .grow { min-width: 200px; flex: 1; }
+.test-box b, .test-box span, .wiz-ask b, .wiz-ask .grow span { display: block; }
+.tb-ico, .wz-ico { font-size: 2rem; line-height: 1; }
+.p-goal.proof { border: 2px solid #f2c94c; background: #fff8dc; color: #5c3d00; }
+.modal.wide { max-width: 720px; }
+.tq { border: 2px solid var(--line, #e5e7eb); border-radius: 12px; padding: 10px 14px; margin: 0; min-width: 0; }
+.tq legend { font-weight: 700; padding: 0 6px; }
+.tq-c { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-weight: 400; }
+.tq-c:hover { background: var(--bg); }
+.tq-c:has(input:checked) { background: #ede9fe; color: #2e1065; font-weight: 700; }
+.tq-c input { margin-top: 4px; flex: none; width: auto; }
+.wiz-card { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 12px 0; }
+.wiz-card .grow { flex: 1; min-width: 240px; }
+.wiz-card p { margin: 4px 0 0; }
+.banner.helpwait .grow { flex: 1; min-width: 200px; }
+.banner.helpwait .row { margin-left: auto; flex-wrap: wrap; gap: 6px; }
+.banner.helpwait .row .btn { margin-left: 0; }

@@ -459,6 +459,63 @@ test('teacher-only settings: accommodations note is not sent to the student', ()
   assert.ok(!/chunk tasks/.test(self));
   assert.ok(/chunk tasks/.test(JSON.stringify(as(T, 'teacherData'))));
 });
+test('testing out: one try, 4 of 5 passes, steps are skipped, and a proof link is still required', () => {
+  const c = as(T, 'createClass', { name: 'Wizards' }).cls;
+  as(T, 'updateClass', { id: c.id, patch: { requireApproval: true } });
+  ['ada', 'ben', 'cy'].forEach(n => as(n + '@school.org', 'joinClass', { code: c.code, name: n }));
+  const Lt = ctx.SQ_LESSONS.t1, right = Lt.testOut.quiz.map(q => q.answer);
+  assert.throws(() => as('ada@school.org', 'testOut', { node: 't9', answers: right }), /no test|locked|Unknown/);
+  // Ben misses two: no pass, no penalty, and no second try
+  const wrong = right.slice(); wrong[0] = (wrong[0] + 1) % 4; wrong[1] = (wrong[1] + 1) % 4;
+  const f = as('ben@school.org', 'testOut', { node: 't1', answers: wrong });
+  assert.strictEqual(f.pass, false); assert.strictEqual(f.score, 3);
+  assert.ok(!f.student.state.nodes.t1.steps.some(Boolean), 'no steps are marked');
+  assert.throws(() => as('ben@school.org', 'testOut', { node: 't1', answers: right }), /already tried/);
+  // Ada misses one: passes, the steps and quick checks are done, and she must still turn in a link
+  const one = right.slice(); one[4] = (one[4] + 1) % 4;
+  const r = as('ada@school.org', 'testOut', { node: 't1', answers: one });
+  assert.strictEqual(r.pass, true);
+  const ns = r.student.state.nodes.t1;
+  assert.ok(ctx.SQ_RULES.coreSteps(Lt).every(i => ns.steps[i]) && Lt.quiz.every((_, i) => ns.quiz[i].correct && !ns.quiz[i].firstTry));
+  assert.throws(() => as('ada@school.org', 'submitLesson', { node: 't1', link: '' }), /Paste the link/);
+  const sub = as('ada@school.org', 'submitLesson', { node: 't1', link: 'https://scratch.mit.edu/projects/1' });
+  assert.strictEqual(sub.student.state.nodes.t1.status, 'submitted');
+  assert.strictEqual(as(T, 'pendingReviews', { classId: c.id }).list[0].tested, true);
+  as(T, 'review', { email: 'ada@school.org', node: 't1', approve: true });
+  assert.ok(as('ada@school.org', 'bootstrap').student.profile.badges.includes('test_ace'));
+  // the teacher can turn it off
+  as(T, 'updateClass', { id: c.id, patch: { testOut: false } });
+  assert.throws(() => as('cy@school.org', 'testOut', { node: 't1', answers: right }), /turned off/);
+  as(T, 'updateClass', { id: c.id, patch: { testOut: true } });
+});
+test('Quest Wizards: sign up after finishing, get suggested to a stuck classmate, earn XP once per quest', () => {
+  assert.throws(() => as('ben@school.org', 'setWizard', { on: true }), /Finish a quest first/);
+  const xp0 = as('ada@school.org', 'bootstrap').student.profile.xp;
+  as('ada@school.org', 'setWizard', { on: true });
+  const h = as('ben@school.org', 'askHelp', { node: 't1', step: 0, note: 'stuck' }).help;
+  assert.deepStrictEqual(h.wz.map(w => w.name), ['ada']);
+  assert.ok(!JSON.stringify(h).includes('@'), 'no emails reach the student');
+  assert.deepStrictEqual(as('ben@school.org', 'myHelp').help.wz.length, 1);
+  assert.ok(as(T, 'helpList', { classId: as('ben@school.org', 'bootstrap').cls.id }).list[0].wz.length === 1);
+  assert.throws(() => as('ben@school.org', 'thankWizard', { who: 'm-nobody' }), /closed/);
+  const t = as('ben@school.org', 'thankWizard', { who: h.wz[0].id });
+  assert.strictEqual(t.paid, true); assert.strictEqual(t.help.open, false);
+  const ada = as('ada@school.org', 'bootstrap').student;
+  assert.strictEqual(ada.profile.xp, xp0 + ctx.SQ_RULES.XP.wizard);
+  assert.ok(ada.profile.badges.includes('quest_wizard'));
+  // asking again about the same quest does not pay the Wizard twice
+  const h2 = as('ben@school.org', 'askHelp', { node: 't1', step: 1 }).help;
+  assert.strictEqual(as('ben@school.org', 'thankWizard', { who: h2.wz[0].id }).paid, false);
+  assert.strictEqual(as('ada@school.org', 'bootstrap').student.profile.xp, xp0 + ctx.SQ_RULES.XP.wizard);
+  // a Wizard who has not finished the quest is not suggested, and neither is the student who is asking
+  assert.deepStrictEqual(as('ada@school.org', 'askHelp', { node: 't2', step: 0 }).help.wz, []);
+  as('ada@school.org', 'cancelHelp');
+  // off for the class: nobody is suggested
+  const cid = as('ben@school.org', 'bootstrap').cls.id;
+  as(T, 'updateClass', { id: cid, patch: { wizards: false } });
+  assert.deepStrictEqual(as('cy@school.org', 'askHelp', { node: 't1', step: 0 }).help.wz, []);
+  assert.throws(() => as('ada@school.org', 'setWizard', { on: true }), /turned off/);
+});
 test('delete class needs the class code, then removes its students everywhere', () => {
   const code = as(T, 'teacherData').classes.find(c => c.id === classId).code;
   assert.throws(() => as(T, 'deleteClass', { id: classId, confirm: 'nope' }), /class code/);

@@ -807,6 +807,7 @@
         '<div class="p-goal"><b><svg class="i"><use href="#i-target"/></svg> Your mission</b><p class="say">' + esc(Ls.mission || Ls.goal) + '</p></div>' +
         (SQ_UBD.lessons[id] ? '<div class="p-bigq"><b><svg class="i"><use href="#i-help"/></svg> Big question</b><p class="say">' + esc(SQ_UBD.lessons[id].eq) + '</p></div>' : '') +
         '<div class="p-meta"><span><svg class="i"><use href="#i-clock"/></svg> ' + esc(Ls.minutes) + ' min</span><span><svg class="i"><use href="#i-list"/></svg> ' + core + ' steps' + (Ls.steps.length > core && !accom().coreOnly ? ' + ' + (Ls.steps.length - core) + ' stretch' : '') + '</span></div>' +
+        testOutBox(id, Ls, ns, readOnly || frozen || status === 'returned') +
         (Ls.starter && starter ? '<div class="starter"><svg class="i"><use href="#i-briefcase"/></svg> <b>Missed the last quest, or lost your project?</b> <a href="' + esc(starter) + '" target="_blank" rel="noopener">Open the starter project <svg class="i"><use href="#i-external"/></svg></a>, click <b>Remix</b>, and start from here.</div>' : '') +
         (Ls.warmup ? '<details class="p-more"><summary><svg class="i"><use href="#i-flame"/></svg> Warm-up question</summary><p class="say">' + esc(Ls.warmup) + '</p></details>' : '') +
         (stdOf(id).s.length ? '<details class="p-more std-mini"><summary><svg class="i"><use href="#i-ruler"/></svg> Standards</summary><ul>' + stdOf(id).s.map(function (x) { return '<li><b>6-8.' + esc(x[0]) + '</b> ' + esc(SQ_DLCS.standards[x[0]]) + '</li>'; }).join('') + '</ul></details>' : '') +
@@ -855,6 +856,7 @@
       var quizLeft = Ls.quiz.filter(function (_, i) { return !(ns.quiz[i] && ns.quiz[i].correct); }).length;
       if (status === 'done') {
         h += '<div class="p-celebrate">🏆</div><h2 class="p-h center say">Quest complete!</h2>' + (ns.feedback ? '<div class="p-goal"><b>Teacher says:</b><p>' + esc(ns.feedback) + '</p></div>' : '') +
+          (S.cls.wizards !== false && !wizOn() ? '<div class="wiz-ask"><span class="wz-ico">🧙</span><div class="grow"><b>Become a Quest Wizard</b><span>You finished this quest. Help classmates who get stuck on it and earn +' + R.XP.wizard + ' XP each time.</span></div><button class="btn" data-act="wizard" data-on="1">Sign me up</button></div>' : '') +
           rateBox(id) + '<div class="p-nav center"><a class="btn primary big" href="#/map">Back to the map <svg class="i"><use href="#i-arrow-right"/></svg></a></div>';
       } else if (status === 'submitted') {
         h += rateBox(id);
@@ -866,9 +868,10 @@
           '<div class="p-nav">' + backBtn + '<button class="btn primary big" data-act="card" data-node="' + id + '" data-to="' + firstOpenCard(id) + '">Show me <svg class="i"><use href="#i-arrow-right"/></svg></button></div>';
       } else {
         h += '<div class="lockzone"><div class="p-kicker">Last step!</div><h2 class="p-h say"><svg class="i"><use href="#i-send"/></svg> Turn in your quest</h2>' +
-          (Ls.checklist ? '<div class="checklist"><b class="say">Check your project has:</b>' + Ls.checklist.map(function (x, j) { return '<label class="check small-check"><input type="checkbox" data-need="checklist"' + (ns.link ? ' checked' : '') + '><span class="box"></span><span class="say">' + esc(x) + '</span></label>'; }).join('') + '</div>' : '') +
+          (tested(ns) ? '<div class="p-goal proof"><b>🎓 You tested out. Now prove it!</b><p class="say">' + esc(Ls.testOut.goal) + '</p></div>' : '') +
+          ((tested(ns) ? Ls.testOut.spec : Ls.checklist) ? '<div class="checklist"><b class="say">Check your project has:</b>' + (tested(ns) ? Ls.testOut.spec : Ls.checklist).map(function (x, j) { return '<label class="check small-check"><input type="checkbox" data-need="checklist"' + (ns.link ? ' checked' : '') + '><span class="box"></span><span class="say">' + esc(x) + '</span></label>'; }).join('') + '</div>' : '') +
           '<p class="p-text say">' + esc(Ls.submit) + '</p>' +
-          '<form data-form="submit" data-node="' + id + '"><label>Paste your Scratch link ' + (S.cls.requireLink ? '' : '<span class="muted">(or just show your teacher)</span>') + '<input name="link" type="url" placeholder="https://scratch.mit.edu/projects/…" value="' + esc(ns.link || '') + '"' + (S.cls.requireLink ? ' data-need="paste your Scratch link"' : '') + '></label>' +
+          '<form data-form="submit" data-node="' + id + '"><label>Paste your Scratch link ' + (S.cls.requireLink || tested(ns) ? '' : '<span class="muted">(or just show your teacher)</span>') + '<input name="link" type="url" placeholder="https://scratch.mit.edu/projects/…" value="' + esc(ns.link || '') + '"' + (S.cls.requireLink || tested(ns) ? ' data-need="paste your Scratch link"' : '') + '></label>' +
           '<label>One thing you\'re proud of <span class="muted">(optional)</span><input name="reflection" maxlength="300" value="' + esc(ns.reflection || '') + '"></label>' +
           '<p class="lock-note" hidden></p><div class="p-nav">' + backBtn + '<button class="btn primary big" data-lock-btn>' + (status === 'returned' ? 'Turn in again' : 'Turn it in!') + ' <small>+' + R.XP.lesson + ' XP</small></button></div></form></div>' + rateBox(id);
       }
@@ -1117,7 +1120,40 @@
   }
   function helpWhere(c) { return c.type === 'step' ? c.i : (c.type === 'quiz' || c.type === 'turnin' || c.type === 'challenge') ? c.type : null; }
   function helpBanner() {
-    return S.help && S.help.open ? '<div class="banner helpwait" role="status"><span class="hand">✋</span> <b>Help is on the way!</b> Keep trying while you wait… <button class="btn small" data-act="cancel-help">I figured it out 👍</button></div>' : '';
+    if (!(S.help && S.help.open)) return '';
+    var wz = S.help.wz || [];
+    return '<div class="banner helpwait" role="status"><span class="hand">✋</span> <span class="grow"><b>Help is on the way!</b> ' +
+      (wz.length ? 'While you wait, ask a Quest Wizard 🧙 who finished this quest: <b class="notr">' + wz.map(function (w) { return esc(w.name); }).join(', ') + '</b>.' : 'Keep trying while you wait…') + '</span>' +
+      '<span class="row">' + wz.map(function (w) { return '<button class="btn small" data-act="thank-wizard" data-who="' + w.id + '"><span class="notr">' + esc(w.name) + '</span> helped me 🧙</button>'; }).join('') +
+      '<button class="btn small" data-act="cancel-help">I figured it out 👍</button></span></div>';
+  }
+  function wizOn() { var z = S.me && S.me.state.wizard; return !!(z && z.on); }
+  function tested(ns) { return !!(ns && ns.test && ns.test.pass); }
+  // "Already know this? Prove it": the door to testing out of a starter quest
+  function testOutBox(id, Ls, ns, closed) {
+    if (!Ls.testOut || S.cls.testOut === false) return '';
+    if (tested(ns)) return '<div class="test-box got"><span class="tb-ico">🎓</span><div class="grow"><b>You tested out of the steps!</b><span>Build your proof project and turn it in.</span></div></div>';
+    if (ns.test) return '<div class="test-box"><span class="tb-ico">💪</span><div class="grow"><b>You tried the test: ' + ns.test.score + ' of ' + Ls.testOut.quiz.length + '.</b><span>This quest has something new for you. Work through the steps.</span></div></div>';
+    if (closed) return '';
+    return '<div class="test-box"><span class="tb-ico">🎓</span><div class="grow"><b>Already know this?</b><span>Pass a 5-question test to skip the steps. Then build a project to prove it.</span></div><button class="btn" data-act="test-out" data-node="' + id + '">Prove it</button></div>';
+  }
+  function testOutModal(id) {
+    var T = L[id].testOut;
+    modal('<h2>🎓 Prove it: ' + esc(L[id].title) + '</h2><p>Get <b>' + (T.quiz.length - 1) + ' of ' + T.quiz.length + '</b> right and you skip the steps. Then you build this and turn it in:</p><div class="p-goal"><p>' + esc(T.goal) + '</p></div>' +
+      '<p class="muted small">You get one try. If you miss, nothing is lost: you do the quest the normal way.</p>' +
+      '<form data-form="test-out" data-node="' + id + '" class="stack test-form">' + T.quiz.map(function (q, i) {
+        return '<fieldset class="tq"><legend>' + (i + 1) + '. ' + esc(q.q) + '</legend>' + (q.blocks ? '<pre class="blocks">' + esc(q.blocks) + '</pre>' : '') +
+          q.choices.map(function (ch, ci) { return '<label class="tq-c"><input type="radio" name="q' + i + '" value="' + ci + '"><span>' + esc(ch) + '</span></label>'; }).join('') + '</fieldset>';
+      }).join('') + '<button class="btn primary big">Check my answers</button></form>', 'wide');
+    renderBlocks();
+  }
+  function wizardCard() {
+    if (!S.me || S.cls.wizards === false) return '';
+    var z = S.me.state.wizard || {}, can = prof().doneCount > 0;
+    return '<div class="card wiz-card"><span class="wz-ico">🧙</span><div class="grow"><b>Quest Wizards</b>' +
+      '<p>Wizards help classmates who are stuck on a quest the Wizard already finished. Give hints and ask questions. Never take the mouse! Each time a classmate says you helped, you earn <b>+' + R.XP.wizard + ' XP</b>.</p>' +
+      (z.helped ? '<p class="small"><b>' + z.helped + '</b> classmate' + (z.helped > 1 ? 's' : '') + ' helped so far.</p>' : '') + '</div>' +
+      (can ? '<label class="switch"><input type="checkbox" data-act="wizard-sw"' + (z.on ? ' checked' : '') + '> I am a Quest Wizard</label>' : '<span class="muted small">Finish a quest to sign up.</span>') + '</div>';
   }
   function helpLoadMine() {
     if (document.hidden) return;
@@ -1132,7 +1168,7 @@
   function helpListHTML(list, classId, nowT) {
     return '<ul class="help-list">' + list.map(function (h) {
       return '<li>' + avatarImgTag(h.avatar, 'hl-av') + '<div class="grow"><b>' + esc(h.name) + '</b> <span class="muted small">' + agoShort(h.at, nowT) + '</span><div class="small">' + esc(h.where) + '</div>' +
-        (h.note ? '<div class="hl-note">“' + esc(h.note) + '”</div>' : '') + '</div><button class="btn small primary" data-act="help-done" data-who="' + h.who + '" data-class="' + classId + '"><svg class="i"><use href="#i-check"/></svg> Helped</button></li>';
+        (h.note ? '<div class="hl-note">“' + esc(h.note) + '”</div>' : '') + (h.wz && h.wz.length ? '<div class="small muted">🧙 Wizards who can help: ' + esc(h.wz.map(function (w) { return w.name; }).join(', ')) + '</div>' : '') + '</div><button class="btn small primary" data-act="help-done" data-who="' + h.who + '" data-class="' + classId + '"><svg class="i"><use href="#i-check"/></svg> Helped</button></li>';
     }).join('') + '</ul>';
   }
   // Teacher Dashboard: the "needs help" card, refreshed every 10 seconds while the Dashboard is open
@@ -1591,7 +1627,7 @@
 
   // ------------------------------------------------------------ class
   function viewClass() {
-    return '<div class="class-page"><h1><svg class="i"><use href="#i-users"/></svg> ' + esc(S.cls.name) + '</h1><div id="goal-box"></div><div id="class-box">' + (S.view ? classBody(S.view) : '<div class="loading"><div class="spinner"></div></div>') + '</div></div>';
+    return '<div class="class-page"><h1><svg class="i"><use href="#i-users"/></svg> ' + esc(S.cls.name) + '</h1><div id="goal-box"></div>' + wizardCard() + '<div id="class-box">' + (S.view ? classBody(S.view) : '<div class="loading"><div class="spinner"></div></div>') + '</div></div>';
   }
   function goalBar(v) {
     var goal = v.cls.classGoal;
@@ -1606,7 +1642,7 @@
     var h = '<p class="muted">' + ms.length + ' adventurers' + (lb ? ' · sorted by XP' : '') + '</p><div class="hall">';
     ms.forEach(function (m, i) {
       h += '<div class="hall-card' + (S.me && m.name === S.me.name ? ' me' : '') + '">' + (lb && i < 3 ? '<span class="medal">' + ['🥇', '🥈', '🥉'][i] + '</span>' : '') + A.svg(m.avatar, 88) +
-        '<b>' + esc(m.name) + '</b>' + (A.titleText(m.avatar) ? '<span class="np-title sm">' + esc(A.titleText(m.avatar)) + '</span>' : '') + '<span>Lv ' + m.level + ' · ' + esc(m.rank) + '</span><span class="muted small"><svg class="i"><use href="#i-pin"/></svg> ' + esc(title(m.current)) + '</span><span class="muted small"><svg class="i"><use href="#i-award"/></svg> ' + m.badges + ' · <svg class="i"><use href="#i-check"/></svg> ' + m.done.length + ' quests</span></div>';
+        '<b>' + esc(m.name) + (m.wiz ? ' <span title="Quest Wizard">🧙</span>' : '') + '</b>' + (A.titleText(m.avatar) ? '<span class="np-title sm">' + esc(A.titleText(m.avatar)) + '</span>' : '') + '<span>Lv ' + m.level + ' · ' + esc(m.rank) + '</span><span class="muted small"><svg class="i"><use href="#i-pin"/></svg> ' + esc(title(m.current)) + '</span><span class="muted small"><svg class="i"><use href="#i-award"/></svg> ' + m.badges + ' · <svg class="i"><use href="#i-check"/></svg> ' + m.done.length + ' quests</span></div>';
     });
     return h + '</div>';
   }
@@ -1999,7 +2035,7 @@
     var hb = document.getElementById('cs-helpbox'); if (hb) hb.hidden = sc.showHelpers === false;
     csSet('cs-help', d.helpers.length ? '<ul class="cs-help">' + d.helpers.map(function (h) {
       return '<li><div class="cs-hq" style="--c:' + br(h.quest).color + '">Stuck on <b>' + esc(h.title) + '</b>? Ask</div><div class="cs-hwho">' +
-        h.helpers.map(function (p) { return '<span class="cs-hp">' + avatarImgTag(p.avatar, 'cs-av sm') + esc(p.name) + '</span>'; }).join(' ') + '</div></li>';
+        h.helpers.map(function (p) { return '<span class="cs-hp">' + avatarImgTag(p.avatar, 'cs-av sm') + esc(p.name) + (p.wiz ? ' 🧙' : '') + '</span>'; }).join(' ') + '</div></li>';
     }).join('') + '</ul><p class="cs-tip">Try 3 before me: the hint, a classmate, then the teacher.</p>' : '<p class="cs-empty">Try 3 before me: the hint, a classmate, then the teacher.</p>');
     csFit();
     csTick();
@@ -2135,7 +2171,7 @@
     var list = csPendingList();
     modal('<h2 class="rev-panel"><svg class="i"><use href="#i-inbox"/></svg> Turned in, waiting for you</h2>' +
       (list.length ? '<ul class="help-list rev-list">' + list.map(function (x) {
-        return '<li data-email="' + esc(x.email) + '" data-node="' + x.id + '">' + avatarImgTag(x.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.name) + '</b><div class="small">' + esc(title(x.id)) + (x.link ? ' · <a href="' + esc(x.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div>' +
+        return '<li data-email="' + esc(x.email) + '" data-node="' + x.id + '">' + avatarImgTag(x.avatar, 'hl-av') + '<div class="grow"><b>' + esc(x.name) + '</b>' + (x.tested ? ' <span class="chip gold">🎓 tested out</span>' : '') + '<div class="small">' + esc(title(x.id)) + (x.link ? ' · <a href="' + esc(x.link) + '" target="_blank" rel="noopener">open project <svg class="i"><use href="#i-external"/></svg></a>' : ' · no link (shown in person)') + '</div>' +
           '<form class="rev-back" data-form="cs-back" hidden><select name="why" aria-label="Reason">' + SEND_BACK.map(function (r, i) { return '<option value="' + i + '">' + esc(r) + '</option>'; }).join('') + '</select><button class="btn small">Send</button><button type="button" class="btn small ghost" data-act="cs-back-cancel">Cancel</button></form></div>' +
           '<span class="rev-acts"><button class="btn small primary" data-act="cs-approve"><svg class="i"><use href="#i-check"/></svg> Approve</button><button class="btn small" data-act="cs-back"><svg class="i"><use href="#i-undo"/></svg> Send back</button></span></li>';
       }).join('') + '</ul><div class="row between"><span class="muted small">Only names and project links show here. A sent-back student sees the reason on their own screen; the class does not.</span>' +
@@ -2290,6 +2326,8 @@
         '<label class="switch"><input type="checkbox" name="requireApproval"' + (c.requireApproval ? ' checked' : '') + '> Teacher approves each quest before it counts (recommended)</label>' +
         '<label class="switch"><input type="checkbox" name="moveOn"' + (c.moveOn !== false ? ' checked' : '') + '> Students can start the next quest while their work waits for your review (XP and badges still wait for approval)</label>' +
         '<label class="switch"><input type="checkbox" name="requireLink"' + (c.requireLink ? ' checked' : '') + '> Require a Scratch project link to turn in</label>' +
+        '<label class="switch"><input type="checkbox" name="testOut"' + (c.testOut !== false ? ' checked' : '') + '> Students can test out of the five starter quests (a harder 5-question test, then a proof project you review)</label>' +
+        '<label class="switch"><input type="checkbox" name="wizards"' + (c.wizards !== false ? ' checked' : '') + '> Quest Wizards: students who finished a quest can sign up to help classmates who are stuck on it</label>' +
         '<label class="switch"><input type="checkbox" name="sounds"' + (c.sounds !== false ? ' checked' : '') + '> Sound effects for students (they can still mute themselves)</label>' +
         '<label class="switch"><input type="checkbox" name="shop"' + (c.shop !== false ? ' checked' : '') + '> Coin shop in the Character Studio</label>' +
         '<label class="switch"><input type="checkbox" name="showLeaderboard"' + (c.showLeaderboard ? ' checked' : '') + '> Show an XP leaderboard to students (off = alphabetical hall)</label>' +
@@ -2592,6 +2630,16 @@
         '<label>What are you stuck on? <span class="muted">(optional)</span><input name="note" maxlength="140" placeholder="e.g. my sprite won’t move"></label><button class="btn primary big">Ask for help</button></form>');
       return;
     }
+    if (act === 'test-out') { testOutModal(t.getAttribute('data-node')); return; }
+    if (act === 'wizard' || act === 'wizard-sw') {
+      var won = act === 'wizard' ? true : t.checked;
+      call('setWizard', { on: won }).then(function (res) { updateMe(res, t); S.view = null; SQ_SOUND.play(won ? 'sparkle' : 'equip'); toast(won ? '🧙 <div><b>You are a Quest Wizard!</b><br>Classmates who are stuck may ask you for help.</div>' : 'You are no longer on the Wizard list.'); S.keepScroll = true; var yw = window.scrollY; render(); window.scrollTo(0, yw); }).catch(function () { if (act === 'wizard-sw') t.checked = !won; });
+      return;
+    }
+    if (act === 'thank-wizard') {
+      call('thankWizard', { who: t.getAttribute('data-who') }).then(function (res) { S.help = res.help; updateMe(res, t); SQ_SOUND.play('sparkle'); toast('🧙 <div><b>Thanks sent' + (res.thanked ? ' to <span class="notr">' + esc(res.thanked) + '</span>' : '') + '!</b><br>Nice teamwork.</div>'); S.keepScroll = true; var yz = window.scrollY; render(); window.scrollTo(0, yz); }).catch(function () { });
+      return;
+    }
     if (act === 'cancel-help') { call('cancelHelp', {}).then(function (res) { S.help = res.help; SQ_SOUND.play('equip'); toast('👍 Nice work figuring it out!'); S.keepScroll = true; var y8 = window.scrollY; render(); window.scrollTo(0, y8); }).catch(function () { }); return; }
     if (act === 'confusing') {
       var cf = (fbFor(t.getAttribute('data-node')).flags || {})[t.getAttribute('data-kind') + ':' + t.getAttribute('data-idx')] || {};
@@ -2763,6 +2811,22 @@
         S.me = res.student; closeModal(); SQ_SOUND.play('equip'); toast('Thanks! Your teacher will see this.'); S.keepScroll = true; var y10 = window.scrollY; render(); window.scrollTo(0, y10);
       });
     }
+    else if (kind === 'test-out') {
+      var tid = f.getAttribute('data-node'), tq = L[tid].testOut.quiz, tans = tq.map(function (_, i) { return v['q' + i]; });
+      if (tans.some(function (x) { return x == null || x === ''; })) { SQ_SOUND.play('buzz'); toast('Answer every question first.'); done(); return; }
+      p = call('testOut', { node: tid, answers: tans.map(Number) }).then(function (res) {
+        updateMe(res, btn);
+        if (res.pass) S.card[tid] = questCards(tid).length - 1;
+        render(); // (render closes any open window, so the result window opens after it)
+        if (res.pass) {
+          SQ_SOUND.play('fanfare');
+          modal('<div class="center"><div class="p-celebrate">🎓</div><h2>You passed! ' + res.score + ' of ' + res.total + '</h2><p>The steps are checked off. One thing left: build your proof project and turn it in.</p><button class="btn primary big" data-act="close-modal">Show me what to build</button></div>');
+        } else {
+          SQ_SOUND.play('pop');
+          modal('<div class="center"><div class="p-celebrate">💪</div><h2>' + res.score + ' of ' + res.total + '</h2><p>Not this time, and that is fine. This quest has something new for you. Work through the steps and you will have it.</p><button class="btn primary big" data-act="close-modal">Start the quest</button></div>');
+        }
+      });
+    }
     else if (kind === 'rate') {
       if (!v.rating) { SQ_SOUND.play('buzz'); toast('Pick a face first.'); done(); return; }
       p = call('rateLesson', { node: f.getAttribute('data-node'), rating: +v.rating, hardest: v.hardest, change: v.change }).then(function (res) {
@@ -2779,7 +2843,7 @@
     else if (kind === 'create-class') p = call('createClass', v).then(function (res) { return loadTeacher().then(function () { S.tClass = res.cls.id; toast('Class created! Code: <b>' + esc(res.cls.code) + '</b>'); go('#/t/dash'); }); });
     else if (kind === 'arc-set') { var aid = f.getAttribute('data-id'); S.arcMin = +v.minutes; p = call('setArcade', { classId: aid, passMin: +v.passMin, ticketPrice: +v.ticketPrice, questsPerTicket: +v.questsPerTicket }).then(function () { return loadTeacher(); }).then(function () { toast('Arcade settings saved'); render(); }); }
     else if (kind === 'class-set') {
-      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop, stepSec: +v.stepSec, quizWait: +v.quizWait, nudgeSec: +v.nudgeSec, inOrder: !!v.inOrder, moveOn: !!v.moveOn, stepCheck: !!v.stepCheck };
+      var patch = { name: v.name, openThrough: +v.openThrough, classGoal: +v.classGoal, requireApproval: !!v.requireApproval, requireLink: !!v.requireLink, showLeaderboard: !!v.showLeaderboard, archived: !!v.archived, sounds: !!v.sounds, shop: !!v.shop, stepSec: +v.stepSec, quizWait: +v.quizWait, nudgeSec: +v.nudgeSec, inOrder: !!v.inOrder, moveOn: !!v.moveOn, stepCheck: !!v.stepCheck, testOut: !!v.testOut, wizards: !!v.wizards };
       p = call('updateClass', { id: f.getAttribute('data-id'), patch: patch }).then(function () { return loadTeacher(); }).then(function () { toast('<svg class="i"><use href="#i-check-circle"/></svg> Saved'); render(); });
     } else if (kind === 'review') {
       var approve = btn && btn.value === '1';
