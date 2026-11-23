@@ -1555,3 +1555,9 @@ html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .p-h, ht
   :root:not([data-theme="light"]) .p-more.hint summary { color: #7a5200; }
   :root:not([data-theme="light"]) .btn .coin-tag { color: inherit; }
 }
+/* pop-up messages look the same in light and dark mode (they used to turn pale in dark mode) */
+.toast { background: #2a1650; color: #fff; border: 2px solid rgba(255, 255, 255, .28); }
+/* Quest Map: the side column scrolls on its own when it is taller than the screen */
+@media (min-width: 1001px) {
+  .map-side { max-height: calc(100vh / var(--z, 1) - 108px); overflow-y: auto; overscroll-behavior: contain; padding: 0 6px 8px 0; scrollbar-width: thin; }
+}
