@@ -1873,12 +1873,16 @@
     return h + '</div>';
   }
   // ------------------------------------------------------------ Google Classroom (teacher)
-  function gcImport(courseId, classId, style) {
-    return call('classroomImport', { courseId: courseId, classId: classId || '', nameStyle: style || 'initial' }).then(function (r) {
+  function gcImport(courseId, classId, style, anyway) {
+    return call('classroomImport', { courseId: courseId, classId: classId || '', nameStyle: style || 'initial', removeAnyway: !!anyway }).then(function (r) {
       S.tClass = r.classId;
-      S.gc.msg = '<svg class="i"><use href="#i-check-circle"/></svg> Imported ' + r.total + ' students: ' + r.added + ' new' + (r.moved ? ', ' + r.moved + ' moved from another class' : '') + (r.kept ? ', ' + r.kept + ' already here' : '') + '.' +
+      var names = function (l) { return l.map(function (x) { return esc(x.name); }).join(', '); };
+      S.gc.msg = '<svg class="i"><use href="#i-check-circle"/></svg> Synced ' + r.total + ' students: ' + r.added + ' new' + (r.moved ? ', ' + r.moved + ' moved from another class' : '') + (r.back ? ', ' + r.back + ' back in the class' : '') + (r.kept ? ', ' + r.kept + ' already here' : '') + '.' +
         (r.missingEmails ? ' <svg class="i"><use href="#i-alert"/></svg> ' + r.missingEmails + ' students had no email visible (check Classroom settings).' : '') +
-        (r.notInRoster.length ? ' Not in the Classroom roster (left alone): ' + r.notInRoster.map(esc).join(', ') + '.' : '');
+        (r.removed.length ? '<div class="gc-left"><b>Removed ' + r.removed.length + ' who left the Classroom roster:</b> ' + names(r.removed) + '<br><span class="small">Their progress is saved. If they come back to the roster, they return with it. </span>' +
+          '<button class="btn small" data-act="gc-undo" data-class="' + esc(r.classId) + '" data-emails="' + esc(r.removed.map(function (x) { return x.email; }).join(',')) + '">Undo</button></div>' : '') +
+        (r.held.length ? '<div class="gc-left warn"><b>' + r.held.length + (r.held.length > 1 ? ' students are' : ' student is') + ' not in the Classroom roster:</b> ' + names(r.held) + '<br><span class="small">' + esc(r.holdWhy) + ' Nobody was removed. </span>' +
+          '<button class="btn small" data-act="gc-remove-anyway" data-course="' + esc(courseId) + '" data-class="' + esc(r.classId) + '" data-style="' + esc(style || 'initial') + '">Remove them anyway</button></div>' : '');
       return loadTeacher().then(function () { return call('classroomCourses'); }).then(function (c) { S.gc.courses = c.courses; render(); });
     }).catch(function () { render(); });
   }
@@ -2588,6 +2592,19 @@
     if (act === 'gc-load') {
       t.disabled = true; t.textContent = 'Loading…';
       call('classroomCourses').then(function (r) { S.gc = { courses: r.courses }; render(); }).catch(function () { t.disabled = false; t.textContent = 'Try again'; });
+      return;
+    }
+    if (act === 'gc-undo') {
+      t.disabled = true;
+      call('classroomRestore', { classId: t.getAttribute('data-class'), emails: t.getAttribute('data-emails').split(',') }).then(function (r) {
+        S.gc.msg = '<svg class="i"><use href="#i-undo"/></svg> Put ' + r.restored + (r.restored === 1 ? ' student' : ' students') + ' back in the class.'; return loadTeacher();
+      }).then(function () { render(); }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'gc-remove-anyway') {
+      var ra = t; ask('Take these students out of the class? Their progress is kept, and Undo puts them back.', 'Remove them').then(function (ok) {
+        if (ok) { ra.disabled = true; gcImport(ra.getAttribute('data-course'), ra.getAttribute('data-class'), ra.getAttribute('data-style'), true); }
+      });
       return;
     }
     if (act === 'gc-import') {

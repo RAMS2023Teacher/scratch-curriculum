@@ -1566,6 +1566,11 @@ html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .p-h, ht
   .map-side { max-height: calc(100vh / var(--z, 1) - 108px); overflow-y: auto; overscroll-behavior: contain; padding: 0 6px 8px 0; scrollbar-width: thin; }
 }
 
+/* Classroom sync: who was taken out of the class */
+.gc-left { margin-top: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(108, 76, 241, .1); }
+.gc-left.warn { background: #fff3c4; color: #5c3d00; }
+.gc-left .btn { margin-left: 6px; }
+
 </style>
 
 <div id="app"><div style="padding:60px 16px;text-align:center;font:18px/1.5 system-ui,sans-serif;color:#555">Loading Scratch Quest…</div></div>
@@ -12297,7 +12302,7 @@ function SQ_SERVICE(store) {
       var name = clean(args.name, 24) || clean(user.name, 24) || 'Coder';
       var st = store.getStudent(user.email);
       if (!st) st = { email: user.email, state: R.newState() };
-      st.name = name; st.classId = c.id; st.isTeacher = !!user.isTeacher;
+      st.name = name; st.classId = c.id; st.isTeacher = !!user.isTeacher; delete st.left;
       if (!st.state.avatar) st.state.avatar = A.randomAvatar();
       st.joined = st.joined || now();
       return { student: persist(st), cls: publicClass(c) };
@@ -13072,6 +13077,16 @@ function SQ_CLASSROOM(store, gc) {
   function clean(s, max) { return String(s == null ? '' : s).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 200); }
   function findClass(id) { return store.getClasses().filter(function (c) { return c.id === id; })[0] || null; }
 
+  // Take students out of a class without deleting their progress
+  function takeOut(list, classId, at) {
+    var out = list.map(function (s) {
+      s.left = { classId: classId, at: at || now() }; s.classId = '';
+      store.saveStudent(s);
+      return { email: s.email, name: s.name };
+    });
+    if (store.cachePut) store.cachePut('cv:' + classId, null, 1);
+    return out;
+  }
   // "Maya Lopez" -> "Maya L." (or "Maya" with nameStyle 'first')
   function displayName(given, family, style) {
     var g = clean(given, 20) || 'Student';
@@ -13121,7 +13136,7 @@ function SQ_CLASSROOM(store, gc) {
       store.saveClass(cls);
 
       var roster = gc.listStudents(course.id);
-      var added = 0, moved = 0, kept = 0, seen = {};
+      var added = 0, moved = 0, kept = 0, back = 0, seen = {};
       roster.forEach(function (p) {
         var email = String(p.email || '').toLowerCase();
         if (!email) return;
@@ -13132,16 +13147,45 @@ function SQ_CLASSROOM(store, gc) {
           st.state.avatar = A.randomAvatar();
           added++;
         } else {
-          if (st.classId !== cls.id) moved++; else kept++;
-          st.classId = cls.id;
+          if (st.left && st.left.classId === cls.id && st.classId !== cls.id) back++;
+          else if (st.classId !== cls.id) moved++; else kept++;
+          st.classId = cls.id; delete st.left;
           if (st.fromClassroom || args.renameExisting) st.name = displayName(p.given, p.family, style);
         }
         var prof = R.profile(st.state);
         st.xp = prof.xp; st.level = prof.level; st.doneCount = prof.doneCount; st.current = prof.current; st.updated = st.updated || now();
         store.saveStudent(st);
       });
-      var notInRoster = store.getStudents().filter(function (s) { return s.classId === cls.id && !s.isTeacher && !seen[s.email]; }).map(function (s) { return s.name; });
-      return { classId: cls.id, added: added, moved: moved, kept: kept, total: roster.length, missingEmails: roster.filter(function (p) { return !p.email; }).length, notInRoster: notInRoster };
+      // Students in this class who are no longer on the Classroom roster are taken out of the class.
+      // Their progress is kept (not deleted): if they come back on the roster, or the teacher taps Undo,
+      // they return with everything they earned.
+      var missingEmails = roster.filter(function (p) { return !p.email; }).length;
+      var gone = store.getStudents().filter(function (s) { return s.classId === cls.id && !s.isTeacher && !seen[s.email]; });
+      var classSize = gone.length + roster.length;
+      // Safety: never empty a class because Google sent back a short or blank roster
+      var hold = '';
+      if (gone.length && missingEmails) hold = 'Some students in Classroom have no email showing, so Scratch Quest cannot tell who left.';
+      else if (gone.length && !roster.length) hold = 'Google Classroom sent back an empty roster.';
+      else if (gone.length > 3 && gone.length > classSize / 2) hold = 'That would remove more than half the class.';
+      var removed = [];
+      if (gone.length && (!hold || args.removeAnyway)) { removed = takeOut(gone, cls.id, cls.syncedAt); hold = ''; }
+      return { classId: cls.id, added: added, moved: moved, kept: kept, back: back, total: roster.length, missingEmails: missingEmails,
+        removed: removed, held: hold ? gone.map(function (s) { return { email: s.email, name: s.name }; }) : [], holdWhy: hold };
+    },
+
+    // "Undo" after a sync: put the students that sync took out back into the class
+    classroomRestore: function (user, args) {
+      requireTeacher(user);
+      var cls = findClass(args.classId);
+      if (!cls) err('Class not found.');
+      var want = {}; (args.emails || []).forEach(function (e) { want[String(e).toLowerCase()] = true; });
+      var n = 0;
+      store.getStudents().forEach(function (s) {
+        if (!want[s.email] || !s.left || s.left.classId !== cls.id || s.classId) return;
+        s.classId = cls.id; delete s.left; store.saveStudent(s); n++;
+      });
+      if (store.cachePut) store.cachePut('cv:' + cls.id, null, 1);
+      return { restored: n };
     },
 
     // Post quests (by tier) to the linked Classroom class as assignments under a "Scratch Quest" topic.
@@ -13804,7 +13848,7 @@ var SQ_SOUND = (function () {
 })();
 
 
-var SQ_BUILD = "2026-11-23T14:05";
+var SQ_BUILD = "2026-11-24T15:01";
 var SQ_BLOCKS_PT = {"commands":{"MOTION_MOVESTEPS":"mova %1 passos","MOTION_TURNRIGHT":"gire @turnRight %1 graus","MOTION_TURNLEFT":"gire @turnLeft %1 graus","MOTION_POINTINDIRECTION":"aponte para a direção %1","MOTION_POINTTOWARDS":"aponte para %1","MOTION_GOTOXY":"vá para x: %1 y: %2","MOTION_GOTO":"vá para %1","MOTION_GLIDESECSTOXY":"deslize por %1 segs. até x: %2 y: %3","MOTION_GLIDETO":"deslize por %1 segs. até %2","MOTION_CHANGEXBY":"adicione %1 a x","MOTION_SETX":"mude x para %1","MOTION_CHANGEYBY":"adicione %1 a y","MOTION_SETY":"mude y para %1","MOTION_SETROTATIONSTYLE":"defina o estilo de rotação para %1","LOOKS_SAYFORSECS":"diga %1 por %2 segundos","LOOKS_SAY":"diga %1","LOOKS_THINKFORSECS":"pense %1 por %2 segundos","LOOKS_THINK":"pense %1","LOOKS_SHOW":"mostre","LOOKS_HIDE":"esconda","LOOKS_SWITCHCOSTUMETO":"mude para a fantasia %1","LOOKS_NEXTCOSTUME":"próxima fantasia","LOOKS_NEXTBACKDROP_BLOCK":"próximo cenário","LOOKS_SWITCHBACKDROPTO":"mude para o cenário %1","LOOKS_SWITCHBACKDROPTOANDWAIT":"mude para o cenário %1 e espere","LOOKS_CHANGEEFFECTBY":"mude %2 ao efeito %1","LOOKS_SETEFFECTTO":"defina o efeito %1 como %2","LOOKS_CLEARGRAPHICEFFECTS":"remova os efeitos gráficos","LOOKS_CHANGESIZEBY":"mude %1 no tamanho","LOOKS_SETSIZETO":"defina o tamanho como %1 %","LOOKS_GOTOFRONTBACK":"vá para a camada %1","LOOKS_GOFORWARDBACKWARDLAYERS":"vá para %1 %2 camadas","SOUND_PLAY":"toque o som %1","SOUND_CHANGEEFFECTBY":"mude  %2 no efeito %1","SOUND_SETEFFECTO":"mude o efeito %1 para %2","SOUND_CLEAREFFECTS":"remova os efeitos sonoros","SOUND_PLAYUNTILDONE":"toque o som %1 até o fim","SOUND_STOPALLSOUNDS":"pare todos os sons","music.playDrumForBeats":"toque instrumento %1 por %2 batidas","music.restForBeats":"pausa por %1 batidas","music.playNoteForBeats":"toque a nota %1 por %2 batidas","music.setInstrument":"mudar instrumento para %1","SOUND_CHANGEVOLUMEBY":"mude volume em %1","SOUND_SETVOLUMETO":"mude o volume para %1%","music.changeTempo":"alterar ritmo por %1","music.setTempo":"ajuste ritmo para %1","pen.clear":"apague tudo","pen.stamp":"carimbe","pen.penDown":"use a caneta","pen.penUp":"levante a caneta","pen.setColor":"mude a cor da caneta para %1","pen.changeHue":"adicione %1 a cor da caneta","pen.setColorParam":"mude %1 da caneta para %2","pen.changeColorParam":"adicione %2 %1 da caneta","pen.setHue":"mude a cor da caneta para %1","pen.changeShade":"adicione %1 a tonalidade da caneta","pen.setShade":"mude a tonalidade da caneta para %1","pen.changeSize":"adicione %1 ao tamanho da caneta","pen.setSize":"mude o tamanho da caneta para %1","EVENT_WHENFLAGCLICKED":"quando @greenFlag for clicado","EVENT_WHENKEYPRESSED":"quando a tecla %1 for pressionada","EVENT_WHENTHISSPRITECLICKED":"quando este ator for clicado","EVENT_WHENSTAGECLICKED":"quando o palco for clicado","EVENT_WHENBACKDROPSWITCHESTO":"quando o cenário mudar para %1","EVENT_WHENGREATERTHAN":"quando %1 > %2","EVENT_WHENBROADCASTRECEIVED":"quando eu receber %1","EVENT_BROADCAST":"transmita %1","EVENT_BROADCASTANDWAIT":"transmita %1 e espere","CONTROL_WAIT":"espere %1 seg","CONTROL_REPEAT":"repita %1 vezes","CONTROL_FOREVER":"sempre","CONTROL_IF":"se %1 então","CONTROL_WAITUNTIL":"espere até que %1","CONTROL_REPEATUNTIL":"repita até que %1","CONTROL_STOP":"pare %1","CONTROL_STARTASCLONE":"quando eu começar como um clone","CONTROL_CREATECLONEOF":"crie clone de %1","CONTROL_DELETETHISCLONE":"apague este clone","SENSING_ASKANDWAIT":"pergunte %1 e espere","videoSensing.videoToggle":"mude vídeo para %1","videoSensing.setVideoTransparency":"ajuste transparência do vídeo para %1","videoSensing.whenMotionGreaterThan":"quando detectar sensor de vídeo > %1","SENSING_RESETTIMER":"zere o cronômetro","DATA_SETVARIABLETO":"mude %1 para %2","DATA_CHANGEVARIABLEBY":"adicione %2 a %1","DATA_SHOWVARIABLE":"mostre a variável %1","DATA_HIDEVARIABLE":"esconda a variável %1","DATA_ADDTOLIST":"adicione %1 a %2","DATA_DELETEOFLIST":"apague %1 de %2","DATA_DELETEALLOFLIST":"apague todos os itens de %1","MOTION_IFONEDGEBOUNCE":"se tocar na borda, volte","DATA_INSERTATLIST":"insira %1 na posição %2 de %3","DATA_REPLACEITEMOFLIST":"substitua o item %1 de %2 por %3","DATA_SHOWLIST":"mostre a lista %1","DATA_HIDELIST":"esconda a lista %1","SENSING_OF_XPOSITION":"posição x","SENSING_OF_YPOSITION":"posição y","SENSING_OF_DIRECTION":"direção","SENSING_OF_COSTUMENUMBER":"n° da fantasia","LOOKS_COSTUMENUMBERNAME":"fantasia %1","SENSING_OF_SIZE":"tamanho","SENSING_OF_BACKDROPNAME":"nome do cenário","LOOKS_BACKDROPNUMBERNAME":"cenário %1","SENSING_OF_BACKDROPNUMBER":"n° do cenário","SOUND_VOLUME":"volume","music.getTempo":"ritmo","SENSING_TOUCHINGOBJECT":"tocando em %1?","SENSING_TOUCHINGCOLOR":"tocando na cor %1?","SENSING_COLORISTOUCHINGCOLOR":"a cor %1 está tocando na cor %2?","SENSING_DISTANCETO":"distância até %1","SENSING_ANSWER":"resposta","SENSING_KEYPRESSED":"tecla %1 pressionada?","SENSING_MOUSEDOWN":"mouse pressionado?","SENSING_MOUSEX":"posição x do mouse","SENSING_MOUSEY":"posição y do mouse","SENSING_SETDRAGMODE":"defina modo de arrasto para %1","SENSING_LOUDNESS":"ruído","videoSensing.videoOn":"vídeo %1 para %2","SENSING_TIMER":"cronômetro","SENSING_OF":"%1 de %2","SENSING_CURRENT":"%1 atual","SENSING_DAYSSINCE2000":"número de dias desde 2000","SENSING_USERNAME":"nome de usuário","OPERATORS_ADD":"%1 + %2","OPERATORS_SUBTRACT":"%1 - %2","OPERATORS_MULTIPLY":"%1 * %2","OPERATORS_DIVIDE":"%1 / %2","OPERATORS_RANDOM":"número aleatório entre %1 e %2","OPERATORS_LT":"%1 < %2","OPERATORS_EQUALS":"%1 = %2","OPERATORS_GT":"%1 > %2","OPERATORS_AND":"%1 e %2","OPERATORS_OR":"%1 ou %2","OPERATORS_NOT":"não %1","OPERATORS_JOIN":"junte %1 com %2","OPERATORS_LETTEROF":"letra %1 de %2","OPERATORS_LENGTH":"tamanho de %1","OPERATORS_MOD":"resto de %1 por %2","OPERATORS_ROUND":"arredondamento de %1","OPERATORS_MATHOP":"%1 de %2","OPERATORS_CONTAINS":"%1 contém %2?","DATA_ITEMOFLIST":"item %1 de %2","DATA_ITEMNUMOFLIST":"item # de %1 em %2","DATA_LENGTHOFLIST":"tamanho de %1","DATA_LISTCONTAINSITEM":"%1 contém %2?","CONTROL_ELSE":"senão","SENSING_USERID":"id do usuário","SENSING_LOUD":"alto?","text2speech.speakAndWaitBlock":"falar %1","text2speech.setVoiceBlock":"defina a voz para %1","text2speech.setLanguageBlock":"defina o idioma como %1","translate.translateBlock":"traduza %1 para %2","translate.viewerLanguage":"idioma","makeymakey.whenKeyPressed":"quando a tecla %1 for pressionada","makeymakey.whenKeysPressedInOrder":"quando %1 forem pressionados em ordem","microbit.whenButtonPressed":"quando o botão %1 for pressionado","microbit.isButtonPressed":"botão %1 pressionado?","microbit.whenGesture":"quando %1","microbit.displaySymbol":"exiba %1","microbit.displayText":"exiba o texto %1","microbit.clearDisplay":"limpe a tela","microbit.whenTilted":"quando inclinado para %1","microbit.isTilted":"inclinado para %1?","microbit.tiltAngle":"ângulo de inclinação para %1","microbit.whenPinConnected":"quando o pino %1 for conectado","ev3.motorTurnClockwise":"gire o motor %1 nesse sentido por %2 segundos","ev3.motorTurnCounterClockwise":"gire o motor %1 naquele sentido por %2 segundos","ev3.motorSetPower":"defina potência do motor %1 em %2 %","ev3.getMotorPosition":"posição do motor %1","ev3.whenButtonPressed":"quando botão %1 for pressionado","ev3.whenDistanceLessThan":"quando distância < %1","ev3.whenBrightnessLessThan":"quando brilho < %1","ev3.buttonPressed":"botão %1 pressionado?","ev3.getDistance":"distância","ev3.getBrightness":"brilho","ev3.beepNote":"som de bip %1 por %2 segundos","wedo2.motorOn":"ligue o motor %1","wedo2.motorOff":"desligue o motor %1","wedo2.startMotorPower":"defina a potência de %1 como %2","wedo2.setMotorDirection":"defina a direção de %1 como %2","wedo2.whenDistance":"quando distância %1 %2","wedo2.getDistance":"distância","wedo2.motorOnFor":"ligue o motor %1 por %2 segundos","wedo2.setLightHue":"defina a cor como %1","wedo2.playNoteFor":"toque a nota %1 por %2 segundos","wedo2.whenTilted":"quando inclinado para %1","wedo2.isTilted":"inclinado para %1?","wedo2.getTiltAngle":"ângulo de inclinação %1","gdxfor.whenGesture":"quando %1","gdxfor.whenForcePushedOrPulled":"quando o sensor de força estiver sendo %1","gdxfor.getForce":"força","gdxfor.whenTilted":"quando inclinado para %1","gdxfor.isTilted":"inclinado para %1?","gdxfor.getTilt":"ângulo de inclinação para %1","gdxfor.isFreeFalling":"caindo?","gdxfor.getSpin":"velocidade de rotação %1","gdxfor.getAcceleration":"aceleração %1","boost.motorOnFor":"ligue o motor %1 por %2 segundos","boost.motorOnForRotation":"ligue o motor %1 por %2 rotações","boost.motorOn":"ligue o motor %1","boost.motorOff":"desligue o motor %1","boost.setMotorPower":"mude a velocidade do motor %1 para %2 %","boost.setMotorDirection":"mude a direção do motor %1 para %2","boost.getMotorPosition":"posição do motor %1","boost.whenColor":"quando um bloco %1 for visto","boost.seeingColor":"vendo bloco %1?","boost.whenTilted":"quando inclinado para %1","boost.getTiltAngle":"ângulo de inclinação %1","boost.setLightHue":"defina a cor como %1"},"dropdowns":{},"ignorelt":[],"soundEffects":["tom","balanço esquerda/direita"],"microbitWhen":["mover","agitar","pular"],"osis":["outros scripts no ator"],"definePrefix":["defina"],"defineSuffix":[],"palette":{"Motion":"Movimento","Looks":"Aparência","Sound":"Som","Events":"Eventos","Control":"Controle","Sensing":"Sensores","Operators":"Operadores","Variables":"Variáveis","My Blocks":"Meus Blocos"},"math":["módulo","arredondamento para baixo de","arredondamento para cima de","raiz quadrada","sen","cos","tg","arcsen","arccos","arctg","ln","logaritmo","e elevado à","10 elevado à"],"aliases":{},"name":"Português Brasileiro","percentTranslated":100};
 
 /* Scratch Quest — page translation for students (Brazilian Portuguese).
@@ -16476,12 +16520,16 @@ var SQ_MAPART = (function () {
     return h + '</div>';
   }
   // ------------------------------------------------------------ Google Classroom (teacher)
-  function gcImport(courseId, classId, style) {
-    return call('classroomImport', { courseId: courseId, classId: classId || '', nameStyle: style || 'initial' }).then(function (r) {
+  function gcImport(courseId, classId, style, anyway) {
+    return call('classroomImport', { courseId: courseId, classId: classId || '', nameStyle: style || 'initial', removeAnyway: !!anyway }).then(function (r) {
       S.tClass = r.classId;
-      S.gc.msg = '<svg class="i"><use href="#i-check-circle"/></svg> Imported ' + r.total + ' students: ' + r.added + ' new' + (r.moved ? ', ' + r.moved + ' moved from another class' : '') + (r.kept ? ', ' + r.kept + ' already here' : '') + '.' +
+      var names = function (l) { return l.map(function (x) { return esc(x.name); }).join(', '); };
+      S.gc.msg = '<svg class="i"><use href="#i-check-circle"/></svg> Synced ' + r.total + ' students: ' + r.added + ' new' + (r.moved ? ', ' + r.moved + ' moved from another class' : '') + (r.back ? ', ' + r.back + ' back in the class' : '') + (r.kept ? ', ' + r.kept + ' already here' : '') + '.' +
         (r.missingEmails ? ' <svg class="i"><use href="#i-alert"/></svg> ' + r.missingEmails + ' students had no email visible (check Classroom settings).' : '') +
-        (r.notInRoster.length ? ' Not in the Classroom roster (left alone): ' + r.notInRoster.map(esc).join(', ') + '.' : '');
+        (r.removed.length ? '<div class="gc-left"><b>Removed ' + r.removed.length + ' who left the Classroom roster:</b> ' + names(r.removed) + '<br><span class="small">Their progress is saved. If they come back to the roster, they return with it. </span>' +
+          '<button class="btn small" data-act="gc-undo" data-class="' + esc(r.classId) + '" data-emails="' + esc(r.removed.map(function (x) { return x.email; }).join(',')) + '">Undo</button></div>' : '') +
+        (r.held.length ? '<div class="gc-left warn"><b>' + r.held.length + (r.held.length > 1 ? ' students are' : ' student is') + ' not in the Classroom roster:</b> ' + names(r.held) + '<br><span class="small">' + esc(r.holdWhy) + ' Nobody was removed. </span>' +
+          '<button class="btn small" data-act="gc-remove-anyway" data-course="' + esc(courseId) + '" data-class="' + esc(r.classId) + '" data-style="' + esc(style || 'initial') + '">Remove them anyway</button></div>' : '');
       return loadTeacher().then(function () { return call('classroomCourses'); }).then(function (c) { S.gc.courses = c.courses; render(); });
     }).catch(function () { render(); });
   }
@@ -17191,6 +17239,19 @@ var SQ_MAPART = (function () {
     if (act === 'gc-load') {
       t.disabled = true; t.textContent = 'Loading…';
       call('classroomCourses').then(function (r) { S.gc = { courses: r.courses }; render(); }).catch(function () { t.disabled = false; t.textContent = 'Try again'; });
+      return;
+    }
+    if (act === 'gc-undo') {
+      t.disabled = true;
+      call('classroomRestore', { classId: t.getAttribute('data-class'), emails: t.getAttribute('data-emails').split(',') }).then(function (r) {
+        S.gc.msg = '<svg class="i"><use href="#i-undo"/></svg> Put ' + r.restored + (r.restored === 1 ? ' student' : ' students') + ' back in the class.'; return loadTeacher();
+      }).then(function () { render(); }).catch(function () { t.disabled = false; });
+      return;
+    }
+    if (act === 'gc-remove-anyway') {
+      var ra = t; ask('Take these students out of the class? Their progress is kept, and Undo puts them back.', 'Remove them').then(function (ok) {
+        if (ok) { ra.disabled = true; gcImport(ra.getAttribute('data-course'), ra.getAttribute('data-class'), ra.getAttribute('data-style'), true); }
+      });
       return;
     }
     if (act === 'gc-import') {

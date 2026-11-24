@@ -214,7 +214,7 @@ function SQ_SERVICE(store) {
       var name = clean(args.name, 24) || clean(user.name, 24) || 'Coder';
       var st = store.getStudent(user.email);
       if (!st) st = { email: user.email, state: R.newState() };
-      st.name = name; st.classId = c.id; st.isTeacher = !!user.isTeacher;
+      st.name = name; st.classId = c.id; st.isTeacher = !!user.isTeacher; delete st.left;
       if (!st.state.avatar) st.state.avatar = A.randomAvatar();
       st.joined = st.joined || now();
       return { student: persist(st), cls: publicClass(c) };

@@ -22,6 +22,16 @@ function SQ_CLASSROOM(store, gc) {
   function clean(s, max) { return String(s == null ? '' : s).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 200); }
   function findClass(id) { return store.getClasses().filter(function (c) { return c.id === id; })[0] || null; }
 
+  // Take students out of a class without deleting their progress
+  function takeOut(list, classId, at) {
+    var out = list.map(function (s) {
+      s.left = { classId: classId, at: at || now() }; s.classId = '';
+      store.saveStudent(s);
+      return { email: s.email, name: s.name };
+    });
+    if (store.cachePut) store.cachePut('cv:' + classId, null, 1);
+    return out;
+  }
   // "Maya Lopez" -> "Maya L." (or "Maya" with nameStyle 'first')
   function displayName(given, family, style) {
     var g = clean(given, 20) || 'Student';
@@ -71,7 +81,7 @@ function SQ_CLASSROOM(store, gc) {
       store.saveClass(cls);
 
       var roster = gc.listStudents(course.id);
-      var added = 0, moved = 0, kept = 0, seen = {};
+      var added = 0, moved = 0, kept = 0, back = 0, seen = {};
       roster.forEach(function (p) {
         var email = String(p.email || '').toLowerCase();
         if (!email) return;
@@ -82,16 +92,45 @@ function SQ_CLASSROOM(store, gc) {
           st.state.avatar = A.randomAvatar();
           added++;
         } else {
-          if (st.classId !== cls.id) moved++; else kept++;
-          st.classId = cls.id;
+          if (st.left && st.left.classId === cls.id && st.classId !== cls.id) back++;
+          else if (st.classId !== cls.id) moved++; else kept++;
+          st.classId = cls.id; delete st.left;
           if (st.fromClassroom || args.renameExisting) st.name = displayName(p.given, p.family, style);
         }
         var prof = R.profile(st.state);
         st.xp = prof.xp; st.level = prof.level; st.doneCount = prof.doneCount; st.current = prof.current; st.updated = st.updated || now();
         store.saveStudent(st);
       });
-      var notInRoster = store.getStudents().filter(function (s) { return s.classId === cls.id && !s.isTeacher && !seen[s.email]; }).map(function (s) { return s.name; });
-      return { classId: cls.id, added: added, moved: moved, kept: kept, total: roster.length, missingEmails: roster.filter(function (p) { return !p.email; }).length, notInRoster: notInRoster };
+      // Students in this class who are no longer on the Classroom roster are taken out of the class.
+      // Their progress is kept (not deleted): if they come back on the roster, or the teacher taps Undo,
+      // they return with everything they earned.
+      var missingEmails = roster.filter(function (p) { return !p.email; }).length;
+      var gone = store.getStudents().filter(function (s) { return s.classId === cls.id && !s.isTeacher && !seen[s.email]; });
+      var classSize = gone.length + roster.length;
+      // Safety: never empty a class because Google sent back a short or blank roster
+      var hold = '';
+      if (gone.length && missingEmails) hold = 'Some students in Classroom have no email showing, so Scratch Quest cannot tell who left.';
+      else if (gone.length && !roster.length) hold = 'Google Classroom sent back an empty roster.';
+      else if (gone.length > 3 && gone.length > classSize / 2) hold = 'That would remove more than half the class.';
+      var removed = [];
+      if (gone.length && (!hold || args.removeAnyway)) { removed = takeOut(gone, cls.id, cls.syncedAt); hold = ''; }
+      return { classId: cls.id, added: added, moved: moved, kept: kept, back: back, total: roster.length, missingEmails: missingEmails,
+        removed: removed, held: hold ? gone.map(function (s) { return { email: s.email, name: s.name }; }) : [], holdWhy: hold };
+    },
+
+    // "Undo" after a sync: put the students that sync took out back into the class
+    classroomRestore: function (user, args) {
+      requireTeacher(user);
+      var cls = findClass(args.classId);
+      if (!cls) err('Class not found.');
+      var want = {}; (args.emails || []).forEach(function (e) { want[String(e).toLowerCase()] = true; });
+      var n = 0;
+      store.getStudents().forEach(function (s) {
+        if (!want[s.email] || !s.left || s.left.classId !== cls.id || s.classId) return;
+        s.classId = cls.id; delete s.left; store.saveStudent(s); n++;
+      });
+      if (store.cachePut) store.cachePut('cv:' + cls.id, null, 1);
+      return { restored: n };
     },
 
     // Post quests (by tier) to the linked Classroom class as assignments under a "Scratch Quest" topic.

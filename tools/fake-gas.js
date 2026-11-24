@@ -103,6 +103,6 @@ ctx.HtmlService = {
 vm.createContext(ctx);
 for (const f of ['Shared.gs', 'Code.gs']) vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
 
-  return { ctx, props, flags, counters, fakeCache, sheetsById, created, setUser: (e) => { currentEmail = e; }, api: (email, action, args) => { currentEmail = email; return JSON.parse(JSON.stringify(ctx.api(action, args))); } };
+  return { ctx, props, flags, counters, fakeCache, sheetsById, created, ROSTER, setUser: (e) => { currentEmail = e; }, api: (email, action, args) => { currentEmail = email; return JSON.parse(JSON.stringify(ctx.api(action, args))); } };
 }
 module.exports = { makeEnv };

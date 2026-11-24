@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { makeEnv } = require('./fake-gas');
 const env = makeEnv();
-const { ctx, props, sheetsById, created } = env;
+const { ctx, props, sheetsById, created, ROSTER } = env;
 const as = env.api;
 const T = 'teacher@school.org';
 let passed = 0;
@@ -48,6 +48,41 @@ test('re-sync does not duplicate students', () => {
   const r = as(T, 'classroomImport', { courseId: '111' });
   assert.strictEqual(r.added, 0); assert.strictEqual(r.kept, 3);
   assert.strictEqual(as(T, 'teacherData').students.filter(s => s.classId === classId).length, 3);
+});
+test('sync removes students who left the Classroom roster, keeps their progress, and Undo puts them back', () => {
+  as(T, 'updateClass', { id: classId, patch: { requireApproval: false } });
+  as('ava.smith@school.org', 'toggleStep', { node: 't1', idx: 0, value: true });
+  const xp = as('ava.smith@school.org', 'bootstrap').student.profile.xp;
+  const ava = ROSTER['111'].pop();
+  const r = as(T, 'classroomImport', { courseId: '111' });
+  assert.deepStrictEqual(r.removed.map(x => x.name), ['Ava S.']); assert.strictEqual(r.kept, 2);
+  assert.strictEqual(as(T, 'teacherData').students.filter(s => s.classId === classId).length, 2);
+  assert.ok(!as('ava.smith@school.org', 'bootstrap').student, 'Ava is no longer in the class');
+  assert.ok(!as(T, 'classView', { classId }).members.some(m => m.name === 'Ava S.'), 'gone from the class page right away');
+  // Undo
+  assert.strictEqual(as(T, 'classroomRestore', { classId, emails: ['ava.smith@school.org'] }).restored, 1);
+  assert.strictEqual(as('ava.smith@school.org', 'bootstrap').student.profile.xp, xp, 'progress kept');
+  // removed again, then back on the roster: she returns with her progress
+  as(T, 'classroomImport', { courseId: '111' });
+  ROSTER['111'].push(ava);
+  const back = as(T, 'classroomImport', { courseId: '111' });
+  assert.strictEqual(back.back, 1); assert.strictEqual(back.removed.length, 0);
+  assert.strictEqual(as('ava.smith@school.org', 'bootstrap').student.profile.xp, xp);
+  // safety: a blank roster from Google never empties the class
+  const saved = ROSTER['111'].splice(0);
+  const blank = as(T, 'classroomImport', { courseId: '111' });
+  assert.strictEqual(blank.removed.length, 0); assert.strictEqual(blank.held.length, 3); assert.ok(/empty roster/.test(blank.holdWhy));
+  assert.strictEqual(as(T, 'teacherData').students.filter(s => s.classId === classId).length, 3);
+  ROSTER['111'].push(...saved);
+  // students whose email Classroom hides: nobody is removed
+  ROSTER['111'].push({ profile: { name: { givenName: 'Hidden' } } });
+  const lost = ROSTER['111'].splice(0, 1);
+  const hid = as(T, 'classroomImport', { courseId: '111' });
+  assert.strictEqual(hid.removed.length, 0); assert.strictEqual(hid.held.length, 1);
+  ROSTER['111'].unshift(...lost); ROSTER['111'].pop();
+  as(T, 'classroomImport', { courseId: '111' });
+  assert.strictEqual(as(T, 'teacherData').students.filter(s => s.classId === classId).length, 3);
+  as(T, 'updateClass', { id: classId, patch: { requireApproval: true } });
 });
 test('"first name only" style works', () => {
   const r = as(T, 'classroomImport', { courseId: '222', nameStyle: 'first' });

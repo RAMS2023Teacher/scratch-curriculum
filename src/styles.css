@@ -1561,3 +1561,8 @@ html.font-easy h1, html.font-easy h2, html.font-easy h3, html.font-easy .p-h, ht
 @media (min-width: 1001px) {
   .map-side { max-height: calc(100vh / var(--z, 1) - 108px); overflow-y: auto; overscroll-behavior: contain; padding: 0 6px 8px 0; scrollbar-width: thin; }
 }
+
+/* Classroom sync: who was taken out of the class */
+.gc-left { margin-top: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(108, 76, 241, .1); }
+.gc-left.warn { background: #fff3c4; color: #5c3d00; }
+.gc-left .btn { margin-left: 6px; }

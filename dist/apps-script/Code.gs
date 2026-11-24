@@ -68,7 +68,7 @@ function setup() {
   }
 }
 
-var CLASSROOM_ACTIONS_ = { classroomCourses: 1, classroomImport: 1, classroomPost: 1, classroomUnlink: 1 };
+var CLASSROOM_ACTIONS_ = { classroomCourses: 1, classroomImport: 1, classroomPost: 1, classroomUnlink: 1, classroomRestore: 1 };
 var NO_LOCK_ = { translate: 1, reportBug: 1, askHelp: 0 };
 var READ_ONLY_ = { bootstrap: 1, classView: 1, teacherData: 1, classroomCourses: 1, lessons: 1, classScreen: 1, arcade: 1, arcadeBoardFor: 1, myHelp: 1, helpList: 1, bugList: 1, pendingReviews: 1 };
 
