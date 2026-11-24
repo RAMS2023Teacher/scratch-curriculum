@@ -106,12 +106,10 @@ function SQ_CLASSROOM(store, gc) {
       // they return with everything they earned.
       var missingEmails = roster.filter(function (p) { return !p.email; }).length;
       var gone = store.getStudents().filter(function (s) { return s.classId === cls.id && !s.isTeacher && !seen[s.email]; });
-      var classSize = gone.length + roster.length;
       // Safety: never empty a class because Google sent back a short or blank roster
       var hold = '';
       if (gone.length && missingEmails) hold = 'Some students in Classroom have no email showing, so Scratch Quest cannot tell who left.';
       else if (gone.length && !roster.length) hold = 'Google Classroom sent back an empty roster.';
-      else if (gone.length > 3 && gone.length > classSize / 2) hold = 'That would remove more than half the class.';
       var removed = [];
       if (gone.length && (!hold || args.removeAnyway)) { removed = takeOut(gone, cls.id, cls.syncedAt); hold = ''; }
       return { classId: cls.id, added: added, moved: moved, kept: kept, back: back, total: roster.length, missingEmails: missingEmails,

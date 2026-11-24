@@ -82,6 +82,12 @@ test('sync removes students who left the Classroom roster, keeps their progress,
   ROSTER['111'].unshift(...lost); ROSTER['111'].pop();
   as(T, 'classroomImport', { courseId: '111' });
   assert.strictEqual(as(T, 'teacherData').students.filter(s => s.classId === classId).length, 3);
+  // most of the class leaving at once (a class split in Classroom) is removed on sync, no extra step
+  const two = ROSTER['111'].splice(1);
+  const most = as(T, 'classroomImport', { courseId: '111' });
+  assert.strictEqual(most.removed.length, 2); assert.strictEqual(most.held.length, 0);
+  assert.strictEqual(as(T, 'teacherData').students.filter(s => s.classId === classId).length, 1);
+  ROSTER['111'].push(...two); as(T, 'classroomImport', { courseId: '111' });
   as(T, 'updateClass', { id: classId, patch: { requireApproval: true } });
 });
 test('"first name only" style works', () => {

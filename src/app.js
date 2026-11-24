@@ -1883,7 +1883,11 @@
           '<button class="btn small" data-act="gc-undo" data-class="' + esc(r.classId) + '" data-emails="' + esc(r.removed.map(function (x) { return x.email; }).join(',')) + '">Undo</button></div>' : '') +
         (r.held.length ? '<div class="gc-left warn"><b>' + r.held.length + (r.held.length > 1 ? ' students are' : ' student is') + ' not in the Classroom roster:</b> ' + names(r.held) + '<br><span class="small">' + esc(r.holdWhy) + ' Nobody was removed. </span>' +
           '<button class="btn small" data-act="gc-remove-anyway" data-course="' + esc(courseId) + '" data-class="' + esc(r.classId) + '" data-style="' + esc(style || 'initial') + '">Remove them anyway</button></div>' : '');
-      return loadTeacher().then(function () { return call('classroomCourses'); }).then(function (c) { S.gc.courses = c.courses; render(); });
+      return loadTeacher().then(function () { return call('classroomCourses'); }).then(function (c) {
+        S.gc.courses = c.courses; render();
+        // removals (or a removal that needs a yes) open in a window so they are not missed at the top of the page
+        if (r.removed.length || r.held.length) modal('<h2><svg class="i"><use href="#i-refresh"/></svg> Roster synced</h2><div class="gc-result">' + S.gc.msg + '</div><div class="row"><button class="btn primary" data-act="close-modal">OK</button></div>');
+      });
     }).catch(function () { render(); });
   }
   // ============================================================ CLASS SCREEN (projector, teacher only)
